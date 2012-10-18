@@ -296,3 +296,12 @@ $string['workshop:viewpublishedsubmissions'] = 'View published submissions';
 $string['workshop:viewreviewernames'] = 'View reviewer names';
 $string['yourassessment'] = 'Your assessment';
 $string['yoursubmission'] = 'Your submission';
+
+//Additions: Team Mode
+$string['teammode'] = 'Team mode';
+$string['teammode_desc'] = 'Allow students to submit work as a team.';
+$string['teammode_help'] = 'Team mode help here'; //todo
+$string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode, then users MUST be part of at least one group to submit work.<br/>
+	<br/>
+These users are currently not in a group: {$a}';
+$string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';

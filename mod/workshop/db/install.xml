@@ -33,7 +33,8 @@
         <FIELD NAME="submissionend" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be closed manually, greater than 0 the timestamp of the end of the submission phase" PREVIOUS="submissionstart" NEXT="assessmentstart"/>
         <FIELD NAME="assessmentstart" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be started manually, greater than 0 the timestamp of the start of the assessment phase" PREVIOUS="submissionend" NEXT="assessmentend"/>
         <FIELD NAME="assessmentend" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be closed manually, greater than 0 the timestamp of the end of the assessment phase" PREVIOUS="assessmentstart" NEXT="phaseswitchassessment"/>
-        <FIELD NAME="phaseswitchassessment" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Automatically switch to the assessment phase after the submissions deadline" PREVIOUS="assessmentend"/>
+        <FIELD NAME="phaseswitchassessment" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Automatically switch to the assessment phase after the submissions deadline" PREVIOUS="assessmentend" NEXT="teammode" />
+        <FIELD NAME="teammode" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="phaseswitchassessment" />
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="course_fk"/>
