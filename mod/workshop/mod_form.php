@@ -96,6 +96,11 @@ class mod_workshop_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'useselfassessment', $label, $text);
         $mform->addHelpButton('useselfassessment', 'useselfassessment', 'workshop');
 
+        $label = get_string('teammode', 'workshop');
+        $text = get_string('teammode_desc', 'workshop');
+        $mform->addElement('checkbox','teammode',$label,$text);
+        $mform->addHelpButton('teammode','teammode','workshop');
+
         // Grading settings -----------------------------------------------------------
         $mform->addElement('header', 'gradingsettings', get_string('gradingsettings', 'workshop'));
 

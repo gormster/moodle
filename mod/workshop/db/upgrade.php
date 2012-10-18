@@ -90,6 +90,14 @@ function xmldb_workshop_upgrade($oldversion) {
     // Moodle v2.3.0 release upgrade line
     // Put any upgrade step following this
 
-
+		// Teammode
+		if ($oldversion < 2011112901) {
+			if (! $dbman->field_exists('workshop','teammode')) {
+				$table = new xmldb_table('workshop');
+				$field = new xmldb_field('teammode', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+				$dbman->add_field($table, $field);
+			}
+		}
+		
     return true;
 }

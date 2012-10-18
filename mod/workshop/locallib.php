@@ -148,6 +148,9 @@ class workshop {
 
     /** @var bool automatically switch to the assessment phase after the submissions deadline */
     public $phaseswitchassessment;
+    
+    /** @var bool allows users to submit work as a group */
+    public $teammode;
 
     /**
      * @var workshop_strategy grading strategy instance
@@ -336,6 +339,19 @@ class workshop {
     public static function lcm($a, $b) {
         return ($a / self::gcd($a,$b)) * $b;
     }
+    
+    public function user_group($userid) {
+        //todo: cache this result
+        $rslt = groups_get_all_groups($this->cm->course, $userid, $this->cm->groupingid);
+        if ( count($rslt) == 1 ) {
+            $ret = current($rslt);
+            return $ret;
+        } else if ( count($rslt) > 1 ) {
+            print_error("You have users in multiple groups ({$userid}). Please select a grouping with unique groups.");
+        }
+        return NULL;
+    }
+    
 
     /**
      * Returns an object suitable for strings containing dates/times
@@ -401,8 +417,15 @@ class workshop {
         }
 
         $sql .= " ORDER BY lastname ASC, firstname ASC, id ASC";
-
-        return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+        
+        $users = $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+        
+        if($this->teammode) {
+        	return array_slice($this->get_grouped($users),1,NULL,true);
+        }
+        
+        return $users;
+        
     }
 
     /**
@@ -414,6 +437,11 @@ class workshop {
      */
     public function count_potential_authors($musthavesubmission=true, $groupid=0) {
         global $DB;
+        
+        if ($this->teammode) {
+            //there's no shortcut: you just have to get it
+            return count($this->get_potential_authors($musthavesubmission, $groupid));
+        }
 
         list($sql, $params) = $this->get_users_with_capability_sql('mod/workshop:submit', $musthavesubmission, $groupid);
 
@@ -449,8 +477,29 @@ class workshop {
         }
 
         $sql .= " ORDER BY lastname ASC, firstname ASC, id ASC";
+        
+        $rslt = $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+        
+        if($this->teammode and $musthavesubmission) {
+            //we need to add everyone's teammates
+            //this is three more database hits but no joins so nice & fast
+            $userids = array();
+            foreach ($rslt as $k => $v) { 
+                $userids[$k] = $k;
+            }
+            $groups = groups_get_all_groups($this->cm->course, $userids, $this->cm->groupingid, 'g.id');
+            
+            $members = $DB->get_records_list('groups_members','groupid',array_keys($groups),'','userid');
+            $users = $DB->get_records_list('user','id',array_keys($members),'',user_picture::fields());
+            
+            foreach($users as $k => $v) {
+                if (isset($rslt[$k]))
+                    continue;
+                $rslt[$k] = $v;
+            }
+        }
 
-        return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+        return $rslt;
     }
 
     /**
@@ -473,6 +522,35 @@ class workshop {
                   FROM ($sql) tmp";
 
         return $DB->count_records_sql($sql, $params);
+    }
+    
+    //Always returns a flat list of users, even when in teammode
+    public function get_all_participants() {
+        // this is a little hacky :P
+        $_teammode = $this->teammode;
+        $this->teammode = false;
+        $retval = $this->get_potential_authors() + $this->get_potential_reviewers();
+        $this->teammode = $_teammode;
+        return $retval;
+    }
+    
+    public function get_ungrouped_users() {
+    
+         $users = $this->get_all_participants();
+         $users = $this->get_grouped($users);
+         if (isset($users[0])) {
+             $nogroupusers = $users[0];
+             foreach ($users as $groupid => $groupusers) {
+                 if ($groupid == 0) {
+                     continue;
+                 }
+                 foreach ($groupusers as $groupuserid => $groupuser) {
+                     unset($nogroupusers[$groupuserid]);
+                 }
+             }
+    		return $nogroupusers;
+         }
+    
     }
 
     /**
@@ -700,6 +778,37 @@ class workshop {
 
         return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
     }
+    
+    
+    //TODO: documentation
+    //TODO: pagination
+    public function get_submissions_grouped($authorid='all',$groupid=0) {
+       $rslt = $this->get_submissions($authorid);
+       
+       //todo: pay attention to the $groupid parameter
+       
+       $groups = array();
+       foreach($rslt as $a) {
+    	    $grslt = $this->user_group($a->authorid);
+    	    $g = $grslt->id;
+    	    if (isset($groups[$g])) {
+    		    if($groups[$g]->timemodified < $a->timemodified) {
+    			    $groups[$g] = $a;
+    			    $groups[$g]->group = $grslt;
+    		    }
+    	    } else {
+    		    $groups[$g] = $a;
+    		    $groups[$g]->group = $grslt;
+    	    }
+       }
+       
+    	$submissions = array();
+    	foreach($groups as $k => $v) {
+    		$submissions[$v->id] = $v;
+    	}
+    	
+       return $submissions;
+    }
 
     /**
      * Returns a submission record with the author's data
@@ -729,19 +838,32 @@ class workshop {
      * @param int $id author id
      * @return stdclass|false
      */
-    public function get_submission_by_author($authorid) {
+    public function get_submission_by_author($authorid, $fields='s.*') {
         global $DB;
 
         if (empty($authorid)) {
             return false;
         }
+        
+        // TEAMMODE :: Morgan Harris
+        if ($this->teammode) {
+           $group = groups_get_activity_group($this->cm);
+           $authorids = array_keys( groups_get_members($group, "u.id") );
+           $authorids[] = $authorid;
+           $authorids_str = implode($authorids, ", ");
+           $authorclause = "s.authorid IN ($authorids_str)";
+        } else {
+           $authorclause = "s.authorid = :authorid";
+        }
+        
+        
         $authorfields      = user_picture::fields('u', null, 'authoridx', 'author');
         $gradeoverbyfields = user_picture::fields('g', null, 'gradeoverbyx', 'gradeoverby');
-        $sql = "SELECT s.*, $authorfields, $gradeoverbyfields
+        $sql = "SELECT $fields, $authorfields, $gradeoverbyfields
                   FROM {workshop_submissions} s
             INNER JOIN {user} u ON (s.authorid = u.id)
              LEFT JOIN {user} g ON (s.gradeoverby = g.id)
-                 WHERE s.example = 0 AND s.workshopid = :workshopid AND s.authorid = :authorid";
+                 WHERE s.example = 0 AND s.workshopid = :workshopid AND $authorclause";
         $params = array('workshopid' => $this->id, 'authorid' => $authorid);
         return $DB->get_record_sql($sql, $params);
     }
@@ -842,8 +964,14 @@ class workshop {
      */
     public function prepare_submission_summary(stdClass $record, $showauthor = false) {
 
-        $summary        = new workshop_submission_summary($record, $showauthor);
-        $summary->url   = $this->submission_url($record->id);
+        if($this->teammode) {
+        	$summary		= new workshop_group_submission_summary($record, $showauthor);
+        	$summary->group	= $this->user_group($record->authorid);
+        	$summary->url   = $this->submission_url($record->id);
+        } else {
+            $summary        = new workshop_submission_summary($record, $showauthor);
+            $summary->url   = $this->submission_url($record->id);
+        }   
 
         return $summary;
     }
@@ -1262,6 +1390,12 @@ class workshop {
             throw new coding_exception('Unable to find the allocation library ' . $allocationlib);
         }
         $classname = 'workshop_' . $method . '_allocator';
+        if ($this->teammode) {
+            $teammode_class = $classname::teammode_class(); //teammode class
+            if (!is_null($teammode_class)) { //if not NULL or void
+                return new $teammode_class($this);
+            }
+        }
         return new $classname($this);
     }
 
@@ -1820,6 +1954,137 @@ class workshop {
         $data->maxgradinggrade = $this->real_grading_grade(100);
         return $data;
     }
+    
+    
+    /**
+     * Prepares the grading report data as above, but this is grouped.
+     * @param int $userid the user we are preparing the report for
+     * @param mixed $groups single group or array of groups - only show users who are in one of these group(s). Defaults to all
+     * @param int $page the current page (for the pagination)
+     * @param int $perpage participants per page (for the pagination)
+     * @param string $sortby name|submissiontitle|submissiongrade|gradinggrade
+     * @param string $sorthow ASC|DESC
+     * @return stdclass data for the renderer
+     */
+    public function prepare_grading_report_data_grouped($userid, $groups, $page, $perpage, $sortby, $sorthow) {
+        global $DB;
+    	
+    	//First we're going to check permissions
+        $canviewall     = has_capability('mod/workshop:viewallassessments', $this->context, $userid);
+        $isparticipant  = has_any_capability(array('mod/workshop:submit', 'mod/workshop:peerassess'), $this->context, $userid);
+    
+        if (!$canviewall and !$isparticipant) {
+            // who the hell is this?
+            return array();
+        }
+    	
+    	//initialise some vars
+        if (!in_array($sortby, array('name','submissiontitle','submissiongrade','gradinggrade'))) {
+            $sortby = 'name';
+        }
+    
+        if (!($sorthow === 'ASC' or $sorthow === 'DESC')) {
+            $sorthow = 'ASC';
+        }
+    	$sorthow_const = $sorthow == 'ASC' ? SORT_ASC : SORT_DESC;
+    	
+    	
+    	//We return two arrays: "grades" and "userinfo"
+    	//Grades contains information about each submission, its reviewers and the grades they have been given
+    	//Userinfo contains data about the reviewers for normalisation purposes
+    	$grades = array();
+    	$userinfo = array();
+    	
+    	//First thing we have to do is initialise the "grades" array with the group id and name
+    	//We do this because the group might not have submitted anything
+    	
+    	$groups = groups_get_all_groups($this->course->id,0,$this->cm->groupingid);
+    	foreach($groups as $k => $g) {
+    		$gradeitem = new stdClass;
+    		$gradeitem->groupid = $k;
+    		$gradeitem->name = $g->name;
+    		$gradeitem->submissionid = null;
+    		$gradeitem->submissiontitle = null;
+    		$gradeitem->submissiongrade = null;
+    		$gradeitem->submissiongradeover = null;
+    		$gradeitem->submissiongradeoverby = null;
+    		$gradeitem->submissionpublished = null;
+    		$gradeitem->reviewedby = array();
+    		$gradeitem->reviewerof = array();
+    		$grades[$k] = $gradeitem;
+    	}
+    	
+    	//first get all the submissions
+    	$submissions = $this->get_submissions_grouped();
+    	if (!$canviewall) {
+    		$grpid = $this->user_group($userid);
+    		$submissions = array($grpid => $submissions[$grpid]);
+    	}
+    	
+    	//pack out $grades
+    	foreach($submissions as $k => $v) {
+    		
+    		$gradeitem = $grades[$v->group->id] or new stdClass;
+    		$gradeitem->groupid = $v->group->id;
+    		$gradeitem->name = $v->group->name;
+    		$gradeitem->submissiontitle = $v->title;
+    		$gradeitem->submissiongrade = $this->real_grade($v->grade);
+    		$gradeitem->submissionid = $v->id;
+    		$gradeitem->submissiongradeover = $this->real_grade($v->gradeover);
+    		$gradeitem->submissiongradeoverby = $v->gradeoverby;
+    		$gradeitem->submissionpublished = $v->published;
+    		
+    		$grades[$v->group->id] = $gradeitem;
+    	}
+    	
+    	// do sorting and paging now
+    	foreach($grades as $k => $v) {
+    		$sortfield[$k] = $v->$sortby;
+    	}
+    	array_multisort($sortfield, $sorthow_const, $grades);
+    	
+    	//ok now paging
+    	$grades = array_slice($grades, $page * $perpage, $perpage);
+    		
+    	//now put our indices back the way they were
+    	foreach($grades as $k => $v) {
+    		$grades2[$v->groupid] = $v;
+    	}
+    	$grades = $grades2;
+    	
+    	//yep yep now we good let's get some reviewers
+    	$findusers = array(); // we'll use this later to look up our userinfo
+    	foreach($grades as $k => $v) {
+    		if(!empty($v->submissionid)) { //if this group has a submission
+    			$vals = $DB->get_records("workshop_assessments", array("submissionid" => $v->submissionid), 'weight DESC', 'reviewerid AS userid, id AS assessmentid, submissionid, grade, gradinggrade, gradinggradeover, weight');
+    			$v->reviewedby = $vals;
+    			foreach($vals as $k => $v) {
+    				$findusers[] = $v->userid;
+    			}
+    		} else {
+    			$v->reviewedby = array();
+    		}
+    	}
+    	
+    	$userinfo = $DB->get_records_list("user","id",$findusers,'','id,firstname,lastname,picture,imagealt,email');
+    	
+    	$usergradinggrades = $DB->get_records_list("workshop_aggregations","userid",$findusers,'','userid,gradinggrade');
+    	
+    	foreach($userinfo as $k => $v) {
+    		if(!empty($usergradinggrades[$k]))
+    			$v->gradinggrade = $this->real_grading_grade($usergradinggrades[$k]->gradinggrade);
+    	}
+    	
+        $data = new stdclass();
+        $data->grades = $grades;
+        $data->userinfo = $userinfo;
+        $data->totalcount = count($submissions);
+        $data->maxgrade = $this->real_grade(100);
+        $data->maxgradinggrade = $this->real_grading_grade(100);
+    	
+        return $data;
+    }
+    
 
     /**
      * Calculates the real value of a grade
@@ -2306,6 +2571,10 @@ class workshop {
         list($esql, $params) = get_enrolled_sql($this->context, $capability, $groupid, true);
 
         $userfields = user_picture::fields('u');
+        
+        //there is no reason not to include this, stops another DB roundtrip / join
+        if ($musthavesubmission)
+            $userfields .= ",ws.id as submissionid";
 
         $sql = "SELECT $userfields
                   FROM {user} u
@@ -2412,6 +2681,24 @@ class workshop_user_plan implements renderable {
 
         $this->workshop = $workshop;
         $this->userid   = $userid;
+        
+        //get all the groups in this module. better than doing it repeatedly, just store it in memory.
+        if ($workshop->cm->groupingid) {
+            $groups = groups_get_all_groups($workshop->course->id,0,$worksop->cm->groupingid);
+        } else {
+            $groups = groups_get_all_groups($workshop->course->id);
+        }
+        
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($groups));
+        $groupmembers = $DB->get_records_select('groups_members','groupid '.$sql,$params,'','userid,groupid');
+        
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($groupmembers)); //all students
+        $studentdata = $DB->get_records_select('user','id '.$sql,$params,'',user_picture::fields());
+        
+        foreach($groupmembers as $k => $v) {
+            $gid = $v->groupid;
+            $groups[$gid]->members[$k] = $studentdata[$k];
+        }
 
         //---------------------------------------------------------
         // * SETUP | submission | assessment | evaluation | closed
@@ -2510,6 +2797,8 @@ class workshop_user_plan implements renderable {
             $task->link = $workshop->submission_url();
             if ($DB->record_exists('workshop_submissions', array('workshopid'=>$workshop->id, 'example'=>0, 'authorid'=>$userid))) {
                 $task->completed = true;
+            } elseif ($workshop->teammode && count($workshop->get_submission_by_author($userid,'s.id')) > 0) {
+              	$task->completed = true;
             } elseif ($workshop->phase >= workshop::PHASE_ASSESSMENT) {
                 $task->completed = false;
             } else {
@@ -2538,13 +2827,30 @@ class workshop_user_plan implements renderable {
             $task->title = get_string('allocate', 'workshop');
             $task->link = $workshop->allocation_url();
             $numofauthors = $workshop->count_potential_authors(false);
-            $numofsubmissions = $DB->count_records('workshop_submissions', array('workshopid'=>$workshop->id, 'example'=>0));
-            $sql = 'SELECT COUNT(s.id) AS nonallocated
-                      FROM {workshop_submissions} s
+            
+            //these two counting methods need different code for teammode and normal mode
+            if ($workshop->teammode) {
+                $submissions_grouped = $workshop->get_submissions_grouped();
+                $numofsubmissions = count($submissions_grouped);
+            } else {
+                $numofsubmissions = $DB->count_records('workshop_submissions', array('workshopid'=>$workshop->id, 'example'=>0));
+            }
+            
+            //common sql to teammode and non-teammode count
+            if ($workshop->teammode) {
+               list($inorequal, $params) = $DB->get_in_or_equal(array_keys($submissions_grouped));
+               $sql = "SELECT COUNT(DISTINCT submissionid) FROM {workshop_assessments} WHERE submissionid $inorequal";
+               $numnonallocated = $numofsubmissions - $DB->count_records_sql($sql,$params);
+            } else {
+                $sql = 'SELECT COUNT(s.id) FROM {workshop_submissions} s
                  LEFT JOIN {workshop_assessments} a ON (a.submissionid=s.id)
                      WHERE s.workshopid = :workshopid AND s.example=0 AND a.submissionid IS NULL';
-            $params['workshopid'] = $workshop->id;
-            $numnonallocated = $DB->count_records_sql($sql, $params);
+                $params['workshopid'] = $workshop->id;
+                $numnonallocated = $DB->count_records_sql($sql, $params);
+            }
+            
+            
+            
             if ($numofsubmissions == 0) {
                 $task->completed = null;
             } elseif ($numnonallocated == 0) {
@@ -2901,6 +3207,44 @@ class workshop_submission_summary extends workshop_submission_base implements re
     public $authoremail;
     /** @var moodle_url to display submission */
     public $url;
+
+    /**
+     * @var array of columns from workshop_submissions that are assigned as properties
+     * of instances of this class
+     */
+    protected $fields = array(
+        'id', 'title', 'timecreated', 'timemodified',
+        'authorid', 'authorfirstname', 'authorlastname', 'authorpicture',
+        'authorimagealt', 'authoremail');
+}
+
+class workshop_group_submission_summary extends workshop_submission_base implements renderable {
+
+    /** @var int */
+    public $id;
+    /** @var string */
+    public $title;
+    /** @var string graded|notgraded */
+    public $status;
+    /** @var int */
+    public $timecreated;
+    /** @var int */
+    public $timemodified;
+    /** @var int */
+    public $authorid;
+    /** @var string */
+    public $authorfirstname;
+    /** @var string */
+    public $authorlastname;
+    /** @var int */
+    public $authorpicture;
+    /** @var string */
+    public $authorimagealt;
+    /** @var string */
+    public $authoremail;
+    /** @var moodle_url to display submission */
+    public $url;
+    public $group;
 
     /**
      * @var array of columns from workshop_submissions that are assigned as properties
@@ -3308,6 +3652,34 @@ class workshop_grading_report implements renderable {
         return $this->options;
     }
 }
+
+//clone of above
+
+class workshop_grouped_grading_report implements renderable {
+
+    protected $data;
+    protected $options;
+
+    /**
+     * Grades in $data must be already rounded to the set number of decimals or must be null
+     * (in which later case, the [mod_workshop,nullgrade] string shall be displayed)
+     *
+     * @param stdClass $data prepared by {@link workshop::prepare_grading_report_data_grouped()}
+     * @param stdClass $options display options (showauthornames, showreviewernames, sortby, sorthow, showsubmissiongrade, showgradinggrade)
+     */
+    public function __construct(stdClass $data, stdClass $options) {
+        $this->data     = $data;
+        $this->options  = $options;
+    }
+    
+    public function get_data() {
+        return $this->data;
+    }
+    public function get_options() {
+        return $this->options;
+    }
+}
+
 
 
 /**
