@@ -305,3 +305,12 @@ $string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode
 	<br/>
 These users are currently not in a group: {$a}';
 $string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';
+
+//Additions: Calibration
+$string['examplescompare'] = 'Example comparison';
+$string['examplescompare_desc'] = 'Allow comparison of example submissions with reference assessments';
+$string['examplescompare_warn'] = '<strong>If both of these are checked, the Calibrated grading method will not work.</strong>';
+$string['examplesreassess'] = 'Example reassessment';
+$string['examplesreassess_desc'] = 'Allow students to reassess example submissions';
+$string['examplesrequired'] = '<strong>This is required for the Calibrated grading method</strong>';
+$string['examplesmoderequired'] = '<strong>Examples cannot be voluntary for the Calibrated grading method</strong>';

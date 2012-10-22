@@ -352,6 +352,26 @@
     margin: 0px 0px 0px 5px;
 }
 
+.path-mod-workshop .assessment-full .header .userdate.created {
+    padding-right: 10px;
+}
+
+.path-mod-workshop .assessment-full .header .userdate.modified {
+    padding-left: 10px;
+    margin-left: 0px;
+    border-left: 1px solid #000;
+}
+
+.path-mod-workshop .assessment-full .header .userdate {
+    font-size: x-small;
+    color: #333;
+    display: inline;
+}
+
+.path-mod-workshop .assessment-full .header .userdate span {
+    font-style: italic;
+}
+
 .path-mod-workshop .assessment-full .header .reviewer .picture {
     position: absolute;
     top: 3px;

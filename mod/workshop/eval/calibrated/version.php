@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the version of workshop
+ * Defines the version of the subplugin
  *
- * @package    mod_workshop
+ * @package    workshopeval
+ * @subpackage best
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$module->version   = 2012061703;        // the current module version (YYYYMMDDXX)
-$module->requires  = 2012061700;        // requires this Moodle version
-$module->component = 'mod_workshop';    // full name of the plugin (used for diagnostics)
-$module->cron      = 60;                // give as a chance every minute
+$plugin->version  = 2012040400;
+$plugin->requires = 2010090501;  // Requires this Moodle version
+$plugin->component = 'workshopeval_calibrated';

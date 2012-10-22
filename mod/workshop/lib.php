@@ -81,6 +81,8 @@ function workshop_add_instance(stdclass $workshop) {
     $workshop->latesubmissions       = (int)!empty($workshop->latesubmissions);
     $workshop->phaseswitchassessment = (int)!empty($workshop->phaseswitchassessment);
     $workshop->teammode              = (int)!empty($workshop->teammode);
+    $workshop->examplescompare       = (int)!empty($workshop->examplescompare);
+    $workshop->examplesreassess      = (int)!empty($workshop->examplesreassess);
     $workshop->evaluation            = 'best';
 
     // insert the new record so we get the id
@@ -137,6 +139,8 @@ function workshop_update_instance(stdclass $workshop) {
     $workshop->latesubmissions       = (int)!empty($workshop->latesubmissions);
     $workshop->phaseswitchassessment = (int)!empty($workshop->phaseswitchassessment);
     $workshop->teammode              = (int)!empty($workshop->teammode);
+    $workshop->examplescompare       = (int)!empty($workshop->examplescompare);
+    $workshop->examplesreassess      = (int)!empty($workshop->examplesreassess);
     $workshop->evaluation            = 'best';
 
     // todo - if the grading strategy is being changed, we must replace all aggregated peer grades with nulls

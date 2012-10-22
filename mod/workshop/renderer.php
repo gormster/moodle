@@ -821,6 +821,14 @@ class mod_workshop_renderer extends plugin_renderer_base {
                 );
             }
         }
+        
+        $created = get_string('userdatecreated', 'workshop', userdate($assessment->timecreated));
+        $o .= $this->output->container($created, 'userdate created');
+        
+        if ($assessment->timemodified > $assessment->timecreated) {
+            $modified = get_string('userdatemodified', 'workshop', userdate($assessment->timemodified));
+            $o .= $this->output->container($modified, 'userdate modified');
+        }
 
         $o .= $this->output->container_start('actions');
         foreach ($assessment->actions as $action) {
