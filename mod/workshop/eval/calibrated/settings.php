@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,16 +16,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the version of workshop
+ * The configuration variables for "Best" grading evaluation
  *
- * @package    mod_workshop
+ * The values defined here are used as defaults for all module instances.
+ *
+ * @package    workshopeval
+ * @subpackage best
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$module->version   = 2012061703;        // the current module version (YYYYMMDDXX)
-$module->requires  = 2012061700;        // requires this Moodle version
-$module->component = 'mod_workshop';    // full name of the plugin (used for diagnostics)
-$module->cron      = 60;                // give as a chance every minute
+$options = array();
+for ($i = 9; $i >= 1; $i--) {
+    $options[$i] = get_string('comparisonlevel' . $i, 'workshopeval_calibrated');
+}
+
+$settings->add(new admin_setting_configselect('workshopeval_calibrated/comparison', get_string('comparison', 'workshopeval_calibrated'),
+                    get_string('configcomparison', 'workshopeval_calibrated'), 5, $options));
+$settings->add(new admin_setting_configselect('workshopeval_calibrated/consistency', get_string('consistency', 'workshopeval_calibrated'),
+                    get_string('configconsistency', 'workshopeval_calibrated'), 5, $options));
+

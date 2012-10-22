@@ -85,10 +85,22 @@ function xmldb_workshop_upgrade($oldversion) {
         }
         $rs->close();
         upgrade_mod_savepoint(true, 2012041701, 'workshop');
-    }
+    }  
 
     // Moodle v2.3.0 release upgrade line
     // Put any upgrade step following this
+
+    if ($oldversion < 2012041703) {
+     	$table = new xmldb_table('workshop');
+     	$field = new xmldb_field('examplescompare', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+         if (!$dbman->field_exists($table, $field)) {
+             $dbman->add_field($table, $field);
+         }
+         $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+         if (!$dbman->field_exists($table, $field)) {
+             $dbman->add_field($table, $field);
+         }
+     }
 
 
     return true;

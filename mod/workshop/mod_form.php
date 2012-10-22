@@ -81,6 +81,9 @@ class mod_workshop_mod_form extends moodleform_mod {
         // Workshop features ----------------------------------------------------------
         $mform->addElement('header', 'workshopfeatures', get_string('workshopfeatures', 'workshop'));
 
+        $text = get_string('examplesrequired', 'workshop');
+        $mform->addElement('static', 'useexamplesrequired', '', $text);
+
         $label = get_string('useexamples', 'workshop');
         $text = get_string('useexamples_desc', 'workshop');
         $mform->addElement('checkbox', 'useexamples', $label, $text);
@@ -164,13 +167,30 @@ class mod_workshop_mod_form extends moodleform_mod {
         $label = get_string('instructreviewers', 'workshop');
         $mform->addElement('editor', 'instructreviewerseditor', $label, null,
                             workshop::instruction_editors_options($this->context));
+                            
+        $text = get_string('examplesmoderequired', 'workshop');
+        $mform->addElement('static', 'examplesmoderequired', '', $text);
 
         $label = get_string('examplesmode', 'workshop');
         $options = workshop::available_example_modes_list();
         $mform->addElement('select', 'examplesmode', $label, $options);
         $mform->setDefault('examplesmode', $workshopconfig->examplesmode);
         $mform->disabledIf('examplesmode', 'useexamples');
-        $mform->setAdvanced('examplesmode');
+
+        $text = get_string('examplescompare_warn', 'workshop');
+        $mform->addElement('static', 'examplescomparelabel', '', $text);
+
+        $label = get_string('examplescompare', 'workshop');
+        $text = get_string('examplescompare_desc', 'workshop');
+        $mform->addElement('checkbox', 'examplescompare', $label, $text);
+        $mform->disabledIf('examplescompare', 'useexamples');
+        $mform->setDefault('examplescompare', true);
+
+        $label = get_string('examplesreassess', 'workshop');
+        $text = get_string('examplesreassess_desc', 'workshop');
+        $mform->addElement('checkbox', 'examplesreassess', $label, $text);
+        $mform->disabledIf('examplesreassess', 'useexamples');
+        $mform->setDefault('examplesreassess', true);
 
         // Access control -------------------------------------------------------------
         $mform->addElement('header', 'accesscontrol', get_string('accesscontrol', 'workshop'));

@@ -28,32 +28,37 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/formslib.php');
 
-class workshop_best_evaluation_settings_form extends moodleform {
+class workshop_calibrated_evaluation_settings_form extends moodleform {
 
     function definition() {
         $mform = $this->_form;
 
-        $plugindefaults = get_config('workshopeval_best');
+        $plugindefaults = get_config('workshopeval_calibrated');
         $current        = $this->_customdata['current'];
         $workshop       = $this->_customdata['workshop'];
 
-        $mform->addElement('header', 'general', get_string('settings', 'workshopeval_best'));
+        $mform->addElement('header', 'general', get_string('settings', 'workshopeval_calibrated'));
         
         $options = $workshop->available_evaluation_methods_list();
 
-        //TODO: this is a weird way of doing this. maybe we should AJAX in the forms when switching methods?
         $label = get_string('evaluationmethod', 'workshop');
-        $mform->addElement('select', 'methodname', $label, $options);
+        $el = $mform->addElement('select', 'methodname', $label, $options);
+		$el->setValue('calibrated');
         $mform->addHelpButton('methodname', 'evaluationmethod', 'workshop');
 
         $options = array();
-        for ($i = 9; $i >= 1; $i = $i-2) {
-            $options[$i] = get_string('comparisonlevel' . $i, 'workshopeval_best');
+        for ($i = 9; $i >= 1; $i--) {
+            $options[$i] = get_string('comparisonlevel' . $i, 'workshopeval_calibrated');
         }
-        $label = get_string('comparison', 'workshopeval_best');
+        $label = get_string('comparison', 'workshopeval_calibrated');
         $mform->addElement('select', 'comparison', $label, $options);
-        $mform->addHelpButton('comparison', 'comparison', 'workshopeval_best');
+        $mform->addHelpButton('comparison', 'comparison', 'workshopeval_calibrated');
         $mform->setDefault('comparison', $plugindefaults->comparison);
+
+        $label = get_string('consistency', 'workshopeval_calibrated');
+        $mform->addElement('select', 'consistency', $label, $options);
+        $mform->addHelpButton('consistency', 'consistency', 'workshopeval_calibrated');
+        $mform->setDefault('consistency', $plugindefaults->consistency);
 
         $mform->addElement('submit', 'submit', get_string('aggregategrades', 'workshop'));
 

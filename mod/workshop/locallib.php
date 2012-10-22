@@ -148,6 +148,12 @@ class workshop {
 
     /** @var bool automatically switch to the assessment phase after the submissions deadline */
     public $phaseswitchassessment;
+    
+    /** @var bool allows users to view and compare their assessment against the reference assessment for examples submissions */
+    public $examplescompare;
+    
+    /** @var bool allows users to re-assess example submissions */
+    public $examplesreassess;
 
     /**
      * @var workshop_strategy grading strategy instance
@@ -156,10 +162,10 @@ class workshop {
     protected $strategyinstance = null;
 
     /**
-     * @var workshop_evaluation grading evaluation instance
+     * @var workshop_evaluation grading evaluation instances [type => instance]
      * Do not use directly, get the instance using {@link workshop::grading_evaluation_instance()}
      */
-    protected $evaluationinstance = null;
+    protected $evaluationinstance = array();
 
     /**
      * Initializes the workshop API instance using the data from DB
@@ -185,7 +191,6 @@ class workshop {
         } else {
             $this->context = $context;
         }
-        $this->evaluation   = 'best';   // todo make this configurable although we have no alternatives yet
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +217,27 @@ class workshop {
             $forms = array_merge($m, $forms);
         }
         return $forms;
+    }
+    
+    /**
+     * Returns the list of available grading evaluation methods
+     *
+     * @return array ['string' => 'string']
+     */
+    public function available_evaluation_methods_list() {
+       $installed = get_plugin_list('workshopeval');
+       $forms = array();
+       foreach ($installed as $method => $methodpath) {
+           if (file_exists($methodpath . '/lib.php')) {
+    		   //put exceptions here
+    		   if ($method == "calibrated") {
+    			   if (($this->useexamples == false) || ($this->examplesmode == workshop::EXAMPLES_VOLUNTARY) || (count($this->get_examples_for_manager()) == 0))
+    				   continue; 
+    		   }
+               $forms[$method] = get_string('pluginname', 'workshopeval_' . $method);
+           }
+       }
+       return $forms;
     }
 
     /**
@@ -1230,20 +1256,22 @@ class workshop {
     public function grading_evaluation_instance() {
         global $CFG;    // because we require other libs here
 
-        if (is_null($this->evaluationinstance)) {
-            $evaluationlib = dirname(__FILE__) . '/eval/' . $this->evaluation . '/lib.php';
+        $type = $this->evaluation;
+        
+        if (empty($this->evaluationinstance[$type])) {
+            $evaluationlib = dirname(__FILE__) . '/eval/' . $type . '/lib.php';
             if (is_readable($evaluationlib)) {
                 require_once($evaluationlib);
             } else {
                 throw new coding_exception('the grading evaluation subplugin must contain library ' . $evaluationlib);
             }
-            $classname = 'workshop_' . $this->evaluation . '_evaluation';
-            $this->evaluationinstance = new $classname($this);
-            if (!in_array('workshop_evaluation', class_implements($this->evaluationinstance))) {
+            $classname = 'workshop_' . $type . '_evaluation';
+            $this->evaluationinstance[$type] = new $classname($this);
+            if (!in_array('workshop_evaluation', class_implements($this->evaluationinstance[$type]))) {
                 throw new coding_exception($classname . ' does not implement workshop_evaluation interface');
             }
         }
-        return $this->evaluationinstance;
+        return $this->evaluationinstance[$type];
     }
 
     /**

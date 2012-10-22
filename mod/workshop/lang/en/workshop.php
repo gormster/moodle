@@ -296,3 +296,13 @@ $string['workshop:viewpublishedsubmissions'] = 'View published submissions';
 $string['workshop:viewreviewernames'] = 'View reviewer names';
 $string['yourassessment'] = 'Your assessment';
 $string['yoursubmission'] = 'Your submission';
+
+
+//Additions: Calibration
+$string['examplescompare'] = 'Example comparison';
+$string['examplescompare_desc'] = 'Allow comparison of example submissions with reference assessments';
+$string['examplescompare_warn'] = '<strong>If both of these are checked, the Calibrated grading method will not work.</strong>';
+$string['examplesreassess'] = 'Example reassessment';
+$string['examplesreassess_desc'] = 'Allow students to reassess example submissions';
+$string['examplesrequired'] = '<strong>This is required for the Calibrated grading method</strong>';
+$string['examplesmoderequired'] = '<strong>Examples cannot be voluntary for the Calibrated grading method</strong>';

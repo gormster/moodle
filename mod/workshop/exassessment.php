@@ -62,6 +62,13 @@ if (($canmanage and $assessment->weight == 1) or ($isreviewer and $workshop->ass
     $assessmenteditable = false;
 }
 
+// CALIBRATION
+// this stops users from re-assessing example submissions if they're not allowed to
+if (!empty($assessment->grade) && !$workshop->examplesreassess)
+{
+    $assessmenteditable = false;
+}
+
 // load the grading strategy logic
 $strategy = $workshop->grading_strategy_instance();
 
