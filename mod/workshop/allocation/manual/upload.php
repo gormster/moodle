@@ -1,0 +1,75 @@
+<?php
+
+require_once("upload_form.php");
+require_once("../../locallib.php");
+
+global $PAGE, $DB;
+
+$cm  = required_param('cm', PARAM_INT);
+$cm = get_coursemodule_from_id('workshop',$cm);
+require_login($cm->course);
+$context = $PAGE->context;
+require_capability('mod/workshop:allocate', $context);
+
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
+$workshop = new workshop($workshop, $cm, $course);
+
+$form = new workshop_allocation_manual_upload_form();
+
+if($form->exportValue('clear'))
+{
+
+	$vals = $DB->get_records('workshop_submissions',array('workshopid' => $workshop->id), '', 'id');
+	$DB->delete_records_list('workshop_assessments','submissionid',array_keys($vals));
+
+} else {
+
+	$csv = array_map('str_getcsv',explode("\n",$form->get_file_content('file')));
+
+	$usernames = array();
+	foreach($csv as $a) {
+		$usernames = array_merge($usernames,$a);
+	}
+
+	$users = $DB->get_records_list('user','username',$usernames,'','username,id,firstname,lastname');
+
+	$failures = array(); // username => reason
+
+	foreach($csv as $a) {
+		if(!empty($a)) {
+			$reviewee = trim($a[0]);
+			$reviewers = array_slice($a,1);
+			
+			if (empty($reviewee)) continue;
+			if (empty($reviewers)) continue;
+			
+			$submission = $workshop->get_submission_by_author($users[$reviewee]->id);
+			
+			if (empty($users[$reviewee])) {
+				$failures[$reviewee] = "error::No user for username $reviewee";
+				continue;
+			}
+			
+			if ($submission === false) {
+				$failures[$reviewee] = "error::No submission for {$users[$reviewee]->firstname} {$users[$reviewee]->lastname} ($reviewee)";
+				continue;
+			}
+			
+			foreach($reviewers as $i) {
+				if (empty($i)) continue;
+				if (!empty($users[$i])) {
+					$res = $workshop->add_allocation($submission, $users[$i]->id);
+				} else {
+					$failures[$i] = "error::No user for username $i";
+				}
+			}
+		}
+	}
+
+	global $SESSION;
+	$SESSION->workshop_upload_messages = $failures;
+}
+
+$url = new moodle_url('/mod/workshop/allocation.php', array('cmid' => $cm->id, 'method' => 'manual'));
+redirect($url);

@@ -473,6 +473,10 @@
     white-space: nowrap;
 }
 
+.path-mod-workshop .grading-report.grouped .gradinggrade.cell {
+	font-size:150%;
+}
+
 .path-mod-workshop .grading-report .givengrade.null .user,
 .path-mod-workshop .grading-report .receivedgrade.null .user {
     color: #ee0000;

@@ -149,14 +149,16 @@ class workshop {
     /** @var bool automatically switch to the assessment phase after the submissions deadline */
     public $phaseswitchassessment;
     
-    /** @var bool allows users to submit work as a group */
-    public $teammode;
-    
+<<<<<<< HEAD
     /** @var bool allows users to view and compare their assessment against the reference assessment for examples submissions */
     public $examplescompare;
     
     /** @var bool allows users to re-assess example submissions */
     public $examplesreassess;
+=======
+    /** @var bool allows users to submit work as a group */
+    public $teammode;
+>>>>>>> workshop_teammode
 
     /**
      * @var workshop_strategy grading strategy instance

@@ -216,6 +216,56 @@ class mod_workshop_renderer extends plugin_renderer_base {
         $o .= $this->output->container_end(); // end of the main wrapper
         return $o;
     }
+    
+    protected function render_workshop_group_submission_summary(workshop_group_submission_summary $summary) {
+        $o  = '';    // output HTML code
+        $anonymous = $summary->is_anonymous();
+        $classes = 'submission-summary group-submission-summary';
+    
+        if ($anonymous) {
+            $classes .= ' anonymous';
+        }
+    
+        $gradestatus = '';
+    
+        if ($summary->status == 'notgraded') {
+            $classes    .= ' notgraded';
+            $gradestatus = $this->output->container(get_string('nogradeyet', 'workshop'), 'grade-status');
+    
+        } else if ($summary->status == 'graded') {
+            $classes    .= ' graded';
+            $gradestatus = $this->output->container(get_string('alreadygraded', 'workshop'), 'grade-status');
+        }
+    
+        $o .= $this->output->container_start($classes);  // main wrapper
+        $o .= html_writer::link($summary->url, format_string($summary->title), array('class' => 'title'));
+    
+        if (!$anonymous) {
+            $a                  = new stdClass();
+    		$url				= new moodle_url('/group/overview.php',
+                                            array('id' => $this->page->course->id, 'group' => $summary->group->id));
+            $a->name            = $summary->group->name;
+    		$a->url				= $url->out();
+    										
+            $byfullname         = get_string('byfullname', 'workshop', $a);
+    
+            $oo = $this->output->container($byfullname, 'fullname');
+            $o  .= $this->output->container($oo, 'author');
+        }
+    
+        $created = get_string('userdatecreated', 'workshop', userdate($summary->timecreated));
+        $o .= $this->output->container($created, 'userdate created');
+    
+        if ($summary->timemodified > $summary->timecreated) {
+            $modified = get_string('userdatemodified', 'workshop', userdate($summary->timemodified));
+            $o .= $this->output->container($modified, 'userdate modified');
+        }
+    
+        $o .= $gradestatus;
+        $o .= $this->output->container_end(); // end of the main wrapper
+        return $o;
+    
+    }
 
     /**
      * Renders full workshop example submission
@@ -547,6 +597,128 @@ class mod_workshop_renderer extends plugin_renderer_base {
 
         return html_writer::table($table);
     }
+    
+    
+    /**
+    * Renders the workshop grading report for visible groups mode
+    *
+    * @param workshop_grouped_grading_report $gradingreport
+    * @return string HTML
+    */
+    
+    protected function render_workshop_grouped_grading_report(workshop_grouped_grading_report $gradingreport) {
+        //todo
+        $data       = $gradingreport->get_data();
+        $options    = $gradingreport->get_options();
+        $grades     = $data->grades;
+        $userinfo   = $data->userinfo;
+    
+        if (empty($grades)) {
+            return '';
+        }
+    
+        $table = new html_table();
+        $table->attributes['class'] = 'grading-report grouped';
+    
+        $table->head = array();
+    	$table->head[] = $this->helper_sortable_heading(get_string('groupname','group'), 'name', $options->sortby, $options->sorthow);
+        $table->head[] = $this->helper_sortable_heading(get_string('submission', 'workshop'), 'submissiontitle',
+                $options->sortby, $options->sorthow);
+        $table->head[] = $this->helper_sortable_heading(get_string('receivedgrades', 'workshop'));
+        if ($options->showgradinggrade) {
+            $table->head[] = $this->helper_sortable_heading(get_string('gradinggradeof', 'workshop', $data->maxgradinggrade),
+                    'gradinggrade', $options->sortby, $options->sorthow);
+        }
+        if ($options->showsubmissiongrade) {
+            $table->head[] = $this->helper_sortable_heading(get_string('submissiongradeof', 'workshop', $data->maxgrade),
+                    'submissiongrade', $options->sortby, $options->sorthow);
+        }
+    
+        $table->rowclasses  = array();
+        $table->colclasses  = array();
+        $table->data        = array();
+    
+        foreach ($grades as $participant) {
+            $numofreceived  = count($participant->reviewedby);
+            $published      = $participant->submissionpublished;
+    
+            // compute the number of <tr> table rows needed to display this participant
+            if ($numofreceived > 0) {
+                $numoftrs       = $numofreceived;
+                $spanreceived   = $numoftrs / $numofreceived;
+            } else {
+                $numoftrs       = 1;
+                $spanreceived   = 1;
+            }
+    
+            for ($tr = 0; $tr < $numoftrs; $tr++) {
+                $row = new html_table_row();
+                if ($published) {
+                    $row->attributes['class'] = 'published';
+                }
+                // column #1 - participant - spans over all rows
+                if ($tr == 0) {
+                    $cell = new html_table_cell();
+                    $cell->text = $participant->name;
+                    $cell->rowspan = $numoftrs;
+                    $cell->attributes['class'] = 'participant';
+                    $row->cells[] = $cell;
+                }
+                // column #2 - submission - spans over all rows
+                if ($tr == 0) {
+                    $cell = new html_table_cell();
+                    $cell->text = $this->helper_grading_report_submission($participant);
+                    $cell->rowspan = $numoftrs;
+                    $cell->attributes['class'] = 'submission';
+                    $row->cells[] = $cell;
+                }
+                // column #3 - received grades
+                if ($tr % $spanreceived == 0) {
+                    $idx = intval($tr / $spanreceived);
+                    $assessment = self::array_nth($participant->reviewedby, $idx);
+                    $cell = new html_table_cell();
+                    $cell->text = $this->helper_grading_report_assessment($assessment, $options->showreviewernames, $userinfo,
+                            get_string('gradereceivedfrom', 'workshop'));
+                    $cell->rowspan = $spanreceived;
+                    $cell->attributes['class'] = 'receivedgrade';
+                    if (is_null($assessment) or is_null($assessment->grade)) {
+                        $cell->attributes['class'] .= ' null';
+                    } else {
+                        $cell->attributes['class'] .= ' notnull';
+                    }
+                    $row->cells[] = $cell;
+                }
+                // column #6 - total grade for assessment for markers
+                if ($options->showgradinggrade and $tr % $spanreceived == 0) {
+    				$idx = intval($tr / $spanreceived);
+    				$assessment = self::array_nth($participant->reviewedby, $idx);
+                    $cell = new html_table_cell();
+    				
+    				if($assessment) {
+    					$gradinggrade =	empty($userinfo[$assessment->userid]->gradinggrade) ? null : $userinfo[$assessment->userid]->gradinggrade;
+    				
+                       $cell->text = $this->helper_grading_report_grade($gradinggrade);
+                       $cell->rowspan = $spanreceived;
+                       $cell->attributes['class'] = 'gradinggrade';
+    				}
+                    $row->cells[] = $cell;
+                }
+                // column #4 - total grade for submission
+                if ($options->showsubmissiongrade and $tr == 0) {
+                    $cell = new html_table_cell();
+                    $cell->text = $this->helper_grading_report_grade($participant->submissiongrade, $participant->submissiongradeover);
+                    $cell->rowspan = $numoftrs;
+                    $cell->attributes['class'] = 'submissiongrade';
+                    $row->cells[] = $cell;
+                }
+    
+                $table->data[] = $row;
+            }
+        }
+    
+        return html_writer::table($table);
+    }
+    
 
     /**
      * Renders the feedback for the author of the submission
