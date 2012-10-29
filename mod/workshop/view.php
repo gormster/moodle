@@ -540,9 +540,9 @@ case workshop::PHASE_CLOSED:
         $groupid = groups_get_activity_group($workshop->cm, true);
         $groupmode = groups_get_activity_groupmode($workshop->cm);
         if ($workshop->teammode) {
-        	$data = $workshop->prepare_grading_report_data_grouped($USER->id, $groups, $page, $perpage, $sortby, $sorthow);
+        	$data = $workshop->prepare_grading_report_data_grouped($USER->id, $groupid, $page, $perpage, $sortby, $sorthow);
         } else {
-         	$data = $workshop->prepare_grading_report_data($USER->id, $groups, $page, $perpage, $sortby, $sorthow);
+         	$data = $workshop->prepare_grading_report_data($USER->id, $groupid, $page, $perpage, $sortby, $sorthow);
         }
         if ($data) {
             $showauthornames    = has_capability('mod/workshop:viewauthornames', $workshop->context);
