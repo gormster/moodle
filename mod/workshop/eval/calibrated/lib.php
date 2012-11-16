@@ -44,7 +44,6 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 	
 	private $examples;
 	
-	private $deviation_factors = array(9 => 0.2, 8 => 0.28, 7 => 0.35, 6=> 0.5, 5 => 0.75, 4 => 1.0, 3 => 1.3, 2 => 1.75, 1 => 2.0);
 	private $grading_curves = array(9 => 4.0, 8 => 3.0, 7 => 2.0, 6 => 1.5, 5 => 1.0, 4 => 0.666, 3 => 0.5, 2 => 0.333, 1 => 0.25, 0 => 0);
 	
     public function __construct(workshop $workshop) {
@@ -65,7 +64,6 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
             $record->comparison = $settings->comparison;
 			$record->consistency = $settings->consistency;
             $DB->insert_record('workshopeval_calibrated', $record);
-            $this->settings = $record;
         } elseif (($this->settings->comparison != $settings->comparison) || ($this->settings->consistency != $settings->consistency)) {
             $DB->set_field('workshopeval_calibrated', 'comparison', $settings->comparison,
                     array('workshopid' => $this->workshop->id));
@@ -75,33 +73,55 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         }
 		
         $grader = $this->workshop->grading_strategy_instance();
+        
+        $this->settings->comparison = $settings->comparison;
+        $this->settings->consistency = $settings->consistency;
 
         // get the information about the assessment dimensions
         $diminfo = $grader->get_dimensions_info();
-		
+
 		// cache the reference assessments
 		$references = $this->workshop->get_examples_for_manager();
 		$calibration_scores = array();
+        
+        //fetch grader recordset for examples
+        $userkeys = array();
+        foreach($references as $r)
+            $userkeys[$r->authorid] = $r->authorid;
+
+        $exemplars = $grader->get_assessments_recordset($userkeys,true);
+        foreach($exemplars as $r) {
+            if (array_key_exists($r->submissionid,$references)) {
+                $grade = $this->normalize_grade($diminfo[$r->dimensionid],$r->grade);
+                $references[$r->submissionid]->diminfo[$r->dimensionid] = $grade;
+            }
+        }
 
         // fetch a recordset with all assessments to process
-        $rs = $grader->get_assessments_recordset($restrict);
-		$rrs = array();
+        $rs = $grader->get_assessments_recordset($restrict,true);
+		$rrs = array(); //to go over the recordset again later...
+        $users = array();
+        
+        $reference_assessments = array();
+        foreach($references as $r) $reference_assessments[] = $r->assessmentid;
+        
         foreach ($rs as $r) {
-			if(empty($calibration_scores[$r->reviewerid])) {
-				$calibration_scores[$r->reviewerid] = $this->calculate_calibration_score($r->reviewerid, $references);
-			}
+            //skip the exemplar assessments
+            if (in_array($r->assessmentid,$reference_assessments))
+                continue;
+            
+            if (array_key_exists($r->submissionid,$references)) {
+                $users[$r->reviewerid][$r->submissionid][$r->dimensionid] = $r->grade;
+            }
 			$rrs[] = $r;
         }
         $rs->close();
-		
-		$biggest_cal = max($calibration_scores);
-		foreach ($calibration_scores as $k => $cal) {
-			$calibration_scores[$k] = $cal / $biggest_cal * 100;
-		}
         
-        //now recalibrate the actual scores...
-        foreach($rrs as $r) {
-            
+        global $SESSION;
+        $SESSION->workshop_calibration_no_competent_reviewers = array();
+
+        foreach($users as $u => $assessments) {
+            $calibration_scores[$u] = $this->calculate_calibration_score($assessments,$references,$diminfo) * 100;
         }
 		
 		foreach($rrs as $r) {
@@ -117,9 +137,9 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
     
 	
 		global $DB;
-		error_log("in");
+
 		//fetch all the assessments for all the submissions in this 
-		$sql = "SELECT a.id, a.submissionid, a.weight, a.grade, a.gradinggrade, a.gradinggradeover
+		$sql = "SELECT a.id, a.submissionid, a.weight, a.grade, a.gradinggrade, a.gradinggradeover, s.title
 				FROM {workshop_submissions} s, {workshop_assessments} a
 				WHERE s.workshopid = {$this->workshop->id}
 					AND s.example = 0
@@ -130,21 +150,21 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 		
 		$weighted_grades = array();
 		$total_weight = 0;
-		$current_submissionid = 0;
+		$current_submission = null;
 		foreach($records as $v) {
 			
 			//this is actually "last": if the submissionid has changed, then we're on to a new submission.
 			//it's kind of a stupid way of doing it but unfortunately there's no seeking in moodle recordsets, so
 			//we can't get the submissionid of the next record to check if this is the last one
-			if ($v->submissionid != $current_submissionid) {
+			if (($current_submission == null) or ($v->submissionid != $current_submission->submissionid)) {
 
-				if ($current_submissionid > 0)
-					$this->update_submission_grade($current_submissionid, $weighted_grades, $total_weight);
+				if ($current_submission != null)
+					$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
 				
 				//reset our vital statistics
 				$weighted_grades = array();
 				$total_weight = 0;
-				$current_submissionid = $v->submissionid;
+				$current_submission = $v;
 				
 			}
 			
@@ -156,21 +176,25 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 		}
 		
 		//do it for the last one
-		$this->update_submission_grade($current_submissionid, $weighted_grades, $total_weight);
-		
+		$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
+        
 		$records->close();
-		error_log("end");
     }
 	
-	private function update_submission_grade($submissionid, $weighted_grades, $total_weight) {
+	private function update_submission_grade($submission, $weighted_grades, $total_weight) {
 		
-		global $DB;
+		global $DB, $SESSION;
 		
 		//perform weighted average
-		$weighted_avg = array_sum($weighted_grades) / $total_weight;
-		error_log("submission: $submissionid; weighted average: {$weighted_avg}");
+        $gradesum = array_sum($weighted_grades);
+        if ($gradesum > 0) {
+    		$weighted_avg = array_sum($weighted_grades) / $total_weight;
+        } else {
+            $weighted_avg = null;
+            $SESSION->workshop_calibration_no_competent_reviewers[$submission->submissionid] = $submission->title;
+        }
 			
-		$DB->set_field('workshop_submissions','grade',$weighted_avg,array("id" => $submissionid));
+		$DB->set_field('workshop_submissions','grade',$weighted_avg,array("id" => $submission->submissionid));
 		
 	}
 	
@@ -187,62 +211,145 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         return new workshop_calibrated_evaluation_settings_form($actionurl, $customdata, 'post', '', $attributes);
 	}
 	
-    public static function delete_instance($workshopid) {
-		echo 3;
-	}
+
+    
+    public function has_messages() {
+        global $SESSION;
+        if (isset($SESSION->workshop_calibration_no_competent_reviewers) && count($SESSION->workshop_calibration_no_competent_reviewers)) {
+            return true;
+        }
+        return false;
+    }
+    
+    public function display_messages() {
+        //is this a hilariously incorrect way to do this?
+        global $output, $PAGE, $SESSION;
+        echo $output->box_start('no-competent-reviewers');
+
+        echo get_string('nocompetentreviewers','workshopeval_calibrated');
+
+        echo html_writer::start_tag('ul');
+        foreach ($SESSION->workshop_calibration_no_competent_reviewers as $k => $v) {
+            echo html_writer::start_tag('li');
+            $url = new moodle_url('/mod/workshop/submission.php',
+                                  array('cmid' => $PAGE->context->instanceid, 'id' => $k));
+            echo html_writer::link($url, $v, array('class'=>'title'));
+            echo html_writer::end_tag('li');
+        }
+        echo html_writer::end_tag('ul');
+        
+        echo $output->box_end();
+    }
 	
+    public static function delete_instance($workshopid) {
+		//TODO
+	}
 	
 	//Private functions
-	
-	private function calculate_calibration_score($user, $references) {
-		$examples = $this->workshop->get_examples_for_reviewer($user);
-		
-		$calibration_scores = array();
+    
+    /*
+    Thinking through this calculation:
+    
+    T is the set of all absdev of student's scores v exemplar scores
+    
+    x is the sum of T
 
-		foreach($references as $id => $ref) {
-			$cal = $examples[$id];
-			$diff = abs($cal->grade - $ref->grade); //order here doesn't matter
-			$maxwrongness = max($ref->grade, 100 - $ref->grade); //how wrong can they possibly be
-			
-			$calibration_scores[] = 1 - ($diff / $maxwrongness);
-		}
-		
-		//absdev
-		$mean = array_sum($calibration_scores) / count($calibration_scores);
-		foreach($calibration_scores as $key => $num) $devs[$key] = abs($num - $mean);
-		$absdev = array_sum($devs) / count($devs);
-		
-		if ($absdev < 0.01) $absdev = 0;
-		
-		
-		$deviation_factor = $this->deviation_factors[$this->settings->consistency]; //this measures how consistent the marks must be. higher numbers enforce stronger consistency.
-		
-		$adjusted_score = $mean * (1 - $absdev);
-		
-		//slope. the higher your accuracy, the more strictly we assess your consistency.
-		$b = pow(2, $this->grading_curves[$this->settings->consistency - 1]);
-		$deviation_factor *= $b * $mean - $b + 1;
-		
-		if ($deviation_factor < 0) $deviation_factor = 0;
-		
-		$calibrated_score = $adjusted_score * $deviation_factor + $mean * (1 - $deviation_factor);
-		
-		//restrict to 0..1
-		$calibrated_score = min(max($calibrated_score, 0), 1);
-		
-		//now recalibrated based on the strictness curve
-		
-		$grading_curve = $this->grading_curves[$this->settings->comparison];
-		
-		if ($grading_curve >= 1) {
-			$calibrated_score = 1 - pow(1-$calibrated_score, $grading_curve);
-		} else {
-			$calibrated_score = pow($calibrated_score, 1 / $grading_curve);
-		}
-		
-		return $calibrated_score;
+    you're aiming for LOWER x. Exemplar's x is 0. If x < 0.02, round to 0.
+    
+    Invert this and normalise it to 0..1. Exemplar's x is now 1. The worst possible x is 0.
+    
+    Scale this according to the accuracy curves.
+    
+    y is the mean absolute deviation of T. Once again you want small y. y falls in the range 0..50
+    
+    We invert and normalise y to 0..1. Exemplar's y is now 1. The worst possible y is 0.
+    
+    Plug y into the consistency curves. Multiply x by the result and you have your calibration score!
+    
+    */
+	
+	private function calculate_calibration_score($assessments, $references, $diminfo) {
+        
+        //before we even get started, make sure the user has completed enough assessments to be calibrated
+        $required_number_of_assessments = count($references);
+        if ( count($assessments) < $required_number_of_assessments ) {
+            return 0;
+        }
+        
+        //now that we've made sure of that, we need to get our set of deviations
+        
+        $absolute_deviations = array(); // the set of all absdev of student's scores v exemplar scores (T)
+        
+        foreach($assessments as $k => $a) {
+            $my_a = $references[$k]; // the exemplar assessment
+            
+            foreach($a as $dimid => $dimval) {
+                $mydimval = $my_a->diminfo[$dimid]; //already normalised
+                $dim = $diminfo[$dimid];
+                
+                $diff = abs( $mydimval - $this->normalize_grade($dim,$dimval) ); 
+                $absolute_deviations[] = $diff;
+                
+            }
+            
+        }
+        
+        $worst_possible_absdev = count($assessments) * count($diminfo) * 100;
+        $x = array_sum($absolute_deviations);
+        
+        $x /= $worst_possible_absdev;
+        if ($x < 0.01) $x = 0; //round 99% up to 100%
+        $x = 1 - $x; //invert $x. 1 is now the best possible score.
+        
+        $grading_curve = $this->grading_curves[$this->settings->comparison];
+        
+        if ($grading_curve >= 1) {
+            $x = 1 - pow(1-$x, $grading_curve);
+        } else {
+            $x = pow($x, 1 / $grading_curve);
+        }
+        
+        //now let's adjust for consistency
+        
+        //let's get the mean absolute deviation of T
+        
+        $mean = array_sum($absolute_deviations) / count($absolute_deviations);
+        $numerator = 0; //top half of the MAD fraction
+        foreach($absolute_deviations as $z) {
+            $numerator += abs($z - $mean);
+        }
+        $y = $numerator / count($absolute_deviations);
+        
+        $y /= 50;
+        if ($y < 0.01) $y = 0;
+        if ($y > 1) $y = 1; //this *shouldn't* happen, but I'm not ruling it out
+        $y = 1 - $y; //invert y. 1 is now the best possible score.
+        
+        $consistency_curve = $this->grading_curves[9 - $this->settings->consistency]; //the consistency curves are actually around the other way - 0 means no consistency check while 8 is strictest. so we subtract the consistency setting from nine.
+        
+        //y = ax - a + 1
+        $consistency_multiplier = $consistency_curve * $y - $consistency_curve + 1;
+        
+        $x *= $consistency_multiplier;
+        
+        // restrict $x to 0..1
+        if ($x < 0) $x = 0;
+        if ($x > 1) $x = 1;
+        
+        return $x;
 		
 	}
+    
+    private function normalize_grade($dim,$grade) {
+        //todo: weight? is weight a factor here? probably should be...
+        $dimmin = $dim->min;
+        $dimmax = $dim->max;
+        if ($dimmin == $dimmax) {
+            return grade_floatval($dimmax);
+        } else {
+            return grade_floatval(($grade - $dimmin) / ($dimmax - $dimmin) * 100);
+        }
+    }
 	
 	private function get_example_assessments() {
 		

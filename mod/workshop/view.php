@@ -435,6 +435,10 @@ case workshop::PHASE_EVALUATION:
                         compact('sortby', 'sorthow', 'page')));
                 $form->display();
             }
+            
+            if ($evaluator->has_messages()) {
+                $evaluator->display_messages();
+            }
 
             // prepare paging bar
             $baseurl = new moodle_url($PAGE->url, array('sortby' => $sortby, 'sorthow' => $sorthow));

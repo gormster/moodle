@@ -544,3 +544,12 @@
 .path-mod-workshop div.buttonwithhelp div {
     display: inline;
 }
+
+.path-mod-workshop .no-competent-reviewers {
+    border: 1px solid #FD0;
+    background-color: #FCFCF0;
+    margin:10px 0px;
+    padding:10px;
+    font-size:1.1em;
+    font-weight: bold;
+}
