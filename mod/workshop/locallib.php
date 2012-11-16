@@ -935,7 +935,7 @@ class workshop {
     public function get_examples_for_manager() {
         global $DB;
 
-        $sql = 'SELECT s.id, s.title,
+        $sql = 'SELECT s.id, s.title, s.authorid,
                        a.id AS assessmentid, a.grade, a.gradinggrade
                   FROM {workshop_submissions} s
              LEFT JOIN {workshop_assessments} a ON (a.submissionid = s.id AND a.weight = 1)

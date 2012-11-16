@@ -36,21 +36,12 @@ $string['consistency'] = 'Consistency of assessment accuracy';
 $string['consistency_help'] = <<<MDOWN
 This setting specifies how consistent the assesssor must be. A stricter consistency means markers must be more accurate with all of their example assessments. Accuracy in this case means how close the assessor got to the provided reference assessments.
 
-This is calculated as the absolute deviation of comparisons from **each other**. In other words, if an assessor has a consistent 80% accuracy, they are deemed to be more consistent than one who was 100% accurate on one assessment but only 50% accurate on another.
+This is calculated as the mean absolute deviation of comparisons from **each other**. In other words, if an assessor has a consistent 80% accuracy, they are deemed to be more consistent than one who was 100% accurate on one assessment but only 50% accurate on another.
 
-This is calculated as follows: S' = (S &times; (1 - AD)) &times; C + S &times; (1 - C)
+An assessor's accuracy score can be reduced by their inconsistency according to this setting. At its most relaxed setting, assessors are not penalized for inconsistency. At its strictest setting, anyone with a mean deviation of more than 33% will get zero and be considered an incompetent marker.
 
-where:
+In this graph, the x axis is the mean absolute deviation of the assessor's marks, and the y axis is the value their score will be multiplied by.
 
-* S' is the resultant score
-* S is the raw accuracy
-* AD is the absolute deviation
-* C is the consistency factor
-	
-The consistency factor is a product of the value specified here and the mean accuracy of the assessor. The more accurate the assessor, the more harshly they are judged for consistency. For example, at the default value (5) consistency is only a factor for assessors of greater than 50% accuracy.
-	
-The following graph epresents the consistency curves for <span style="color:green">relaxed (9)</span> to <span style="color:#FFCC00">normal (5)</span> to <span style="color:red">strict (1)</span>. The x-axis is the mean accuracy of assessments, the y-axis is the resultant consistency factor. The actual consistency factor may then be scaled according to an internal scale depending on the value selected here.
-	
 <img src="{$CFG->wwwroot}/mod/workshop/eval/calibrated/lang/en/lines.png" />
 MDOWN;
 $string['comparisonlevel1'] = '1 (strictest)';
@@ -66,3 +57,5 @@ $string['configcomparison'] = 'Default value of the factor that influence the gr
 $string['configconsistency'] = 'Default value of the factor that influence the grading evaluation consistency.';
 $string['pluginname'] = 'Calibrated against example assessments';
 $string['settings'] = 'Grading evaluation settings';
+
+$string['nocompetentreviewers'] = 'According to your settings, the following submissions have no competent reviewers and have not been given a mark:';
