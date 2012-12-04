@@ -185,6 +185,12 @@ class mod_workshop_mod_form extends moodleform_mod {
         $text = get_string('examplescompare_warn', 'workshop');
         $mform->addElement('static', 'examplescomparelabel', '', $text);
 
+        $label = get_string('numexamples', 'workshop');
+        $mform->addElement('select', 'numexamples', $label, array('All',1,2,3,4,5,6,7,8,9,10,11,12,13,14,15));
+        $mform->disabledIf('numexamples', 'useexamples');
+        $mform->setDefault('numexamples', 0);
+        $mform->addHelpButton('numexamples','numexamples','workshop');
+
         $label = get_string('examplescompare', 'workshop');
         $text = get_string('examplescompare_desc', 'workshop');
         $mform->addElement('checkbox', 'examplescompare', $label, $text);

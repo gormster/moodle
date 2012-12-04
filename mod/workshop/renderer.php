@@ -729,7 +729,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
     protected function render_workshop_feedback_reviewer(workshop_feedback_reviewer $feedback) {
         return $this->helper_render_feedback($feedback);
     }
-
+    
     /**
      * Helper method to rendering feedback
      *
@@ -1123,6 +1123,40 @@ class mod_workshop_renderer extends plugin_renderer_base {
         }
         return $text;
     }
+    
+    protected function render_workshop_random_examples_helper(workshop_random_examples_helper $helper) {
+        $precision = ini_set('precision',4);
+        $o = '';
+        $infos = array();
+        $problems = array();
+        $titles = workshop_random_examples_helper::$descriptors[count($helper->slices)];
+        
+        $helptext = $this->output->heading_with_help("What does this mean?","randomexampleshelp",'workshop');
+        
+        foreach($helper->slices as $i => $s) {
+            $o .= "<div class='slice' style='background-color: #$s->colour; width: $s->width; left: $s->min%'></div>";
+            $o .= "<div class='mean' style='background-color: #$s->meancolour; left: $s->mean%'></div>";
+            $count = count($s->submissions);
+            $infos[] = "<div class='info'><h3 style='color:#$s->meancolour'>$titles[$i]</h3>Range $s->min% to $s->max% | Average $s->mean%</div>";
+            if (isset($s->warnings))
+                $problems = array_merge($problems, $s->warnings);
+            foreach($s->submissions as $a) {
+                $o .= "<div class='submission' style='background-color: #$s->subcolour; left:$a->grade%'></div>";
+            }
+        }
+        $problemstr = "";
+        if (count($problems)) {
+            $problemstr = print_collapsible_region_start('random-examples-problems','random_examples_problems','Warnings','',true,true);
+            $problemstr .= "<ul>";
+            foreach($problems as $p)
+                $problemstr .= "<li>$p</li>";
+            $problemstr .= print_collapsible_region_end(true);
+            $problemstr .= "</ul>";
+        }
+        ini_set('precision',$precision);
+        return "$helptext<div class='random-examples-helper'>$o</div> <div class='random-examples-info'>" . implode($infos) . "</div>$problemstr";
+    }
+    
 
     ////////////////////////////////////////////////////////////////////////////
     // Static helpers
