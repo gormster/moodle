@@ -315,3 +315,28 @@ $string['examplesreassess'] = 'Example reassessment';
 $string['examplesreassess_desc'] = 'Allow students to reassess example submissions';
 $string['examplesrequired'] = '<strong>This is required for the Calibrated grading method</strong>';
 $string['examplesmoderequired'] = '<strong>Examples cannot be voluntary for the Calibrated grading method</strong>';
+
+//Additions: Random Examples
+$string['numexamples'] = 'Number of examples';
+$string['numexamples_help'] = <<<MDOWN
+This allows you to provide more example submissions than are presented to your students.
+
+If you set this, the students are presented examples pseudo-randomly; they will be shown a roughly even spread of poor to good submissions. This is useful to prevent cheating when using the Calibrated evaluation method.<br/>
+
+If you leave this at zero, all of your example submissions will be shown to your students.    
+MDOWN;
+
+$string['randomexamplesoverlapwarning'] = 'The {$a->prev} and {$a->next} brackets overlap. There might be little or no differentiation between these brackets.';
+$string['randomexampleshelp'] = 'Random Examples: What does this mean?';
+$string['randomexampleshelp_help'] = <<<MDOWN
+
+When you choose to show your students more than one example assessment (and not all of them), Workshop attempts to give them a good spread of examples, choosing poor, average and good assessments evenly. It also picks assessments semi-randomly, to prevent students cheating off each other. This is especially useful for the Calibration evaluation method.
+
+In order to help you create better examples, we've got this handy tool. It gives you a quick and easy visual representation of your example assessments.
+
+When Workshop is picking example assessments for a student, it divides all the assessments into n even brackets, where n is the number of example assessments you chose for each student to do. You can see these brackets here, represented by the coloured bars. These represent the range of the lowest to the highest mark in that bracket.
+
+The small bars are the individual example assessments, while the tall, thick bars are the average mark for that bracket.
+
+You can use this tool to help you create an even spread of example assessments.
+MDOWN;

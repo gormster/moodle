@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/workshop/db" VERSION="20120331" COMMENT="XMLDB file for Moodle mod/workshop"
+<XMLDB PATH="mod/workshop/db" VERSION="20121119" COMMENT="XMLDB file for Moodle mod/workshop"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -34,9 +34,10 @@
         <FIELD NAME="assessmentstart" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be started manually, greater than 0 the timestamp of the start of the assessment phase" PREVIOUS="submissionend" NEXT="assessmentend"/>
         <FIELD NAME="assessmentend" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be closed manually, greater than 0 the timestamp of the end of the assessment phase" PREVIOUS="assessmentstart" NEXT="phaseswitchassessment"/>
         <FIELD NAME="phaseswitchassessment" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Automatically switch to the assessment phase after the submissions deadline" PREVIOUS="assessmentend" NEXT="examplescompare"/>
-        <FIELD NAME="examplescompare" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="assessmentend" NEXT="examplesreassess" />
-        <FIELD NAME="examplesreassess" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="examplescompare" NEXT="teammode" />
-        <FIELD NAME="teammode" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="examplesreassess" />
+        <FIELD NAME="examplescompare" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Allow students to compare their assessment to the example assessments." PREVIOUS="phaseswitchassessment" NEXT="examplesreassess"/>
+        <FIELD NAME="examplesreassess" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Allow students to re-assess example submissions" PREVIOUS="examplescompare" NEXT="numexamples"/>
+        <FIELD NAME="numexamples" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Number of example submissions to show. 0 means all." PREVIOUS="examplesreassess" NEXT="teammode"/>
+        <FIELD NAME="teammode" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="numexamples"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="course_fk"/>
@@ -291,7 +292,7 @@
         <KEY NAME="workshopid" TYPE="foreign" FIELDS="workshopid" REFTABLE="workshop" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="workshop_comments_old" COMMENT="Legacy workshop_comments table to be dropped later in Moodle 2.x" PREVIOUS="workshop_stockcomments_old">
+    <TABLE NAME="workshop_comments_old" COMMENT="Legacy workshop_comments table to be dropped later in Moodle 2.x" PREVIOUS="workshop_stockcomments_old" NEXT="workshop_user_examples">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="workshopid"/>
         <FIELD NAME="workshopid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="assessmentid"/>
@@ -312,6 +313,16 @@
         <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" NEXT="mailed"/>
         <INDEX NAME="mailed" UNIQUE="false" FIELDS="mailed" PREVIOUS="userid"/>
       </INDEXES>
+    </TABLE>
+    <TABLE NAME="workshop_user_examples" COMMENT="When using randomised examples, stores the example submissions a user will be assessing." PREVIOUS="workshop_comments_old">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="submissionid"/>
+        <FIELD NAME="submissionid" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" PREVIOUS="userid"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
     </TABLE>
   </TABLES>
 </XMLDB>

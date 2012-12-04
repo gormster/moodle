@@ -553,3 +553,61 @@
     font-size:1.1em;
     font-weight: bold;
 }
+
+.path-mod-workshop .random-examples-helper {
+  height: 70px;
+  width:80%;
+  margin:auto;
+  border:1px solid black;
+  position: relative;
+  background-color:#888;
+  background-image:url([[pix:mod_workshop|stripe]]);
+  overflow:hidden;
+}
+
+.path-mod-workshop .random-examples-helper .slice {
+  position:absolute;
+  height: 100%;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box;
+  overflow:hidden;
+  box-shadow:0 0 5px #333;
+}
+
+.path-mod-workshop .random-examples-helper .submission
+{
+  position: absolute;
+  top:50%;
+  height:50%;
+  width: 0.5%;
+  margin-left:-0.25%;
+}
+
+.path-mod-workshop .random-examples-helper .mean
+{
+  position: absolute;
+  top:0;
+  height:100%;
+  width: 1%;
+  margin-left:-0.5%;
+  border-left:1px solid #777;
+  border-right:1px solid #777;
+}
+
+.path-mod-workshop .random-examples-info
+{
+  margin:auto;
+  text-align:center;
+}
+
+.path-mod-workshop .random-examples-info .info
+{
+  display:inline-block;
+  margin:10px;
+}
+
+.path-mod-workshop .random-examples-info h3
+{
+  text-shadow:0px 1px #333;
+}

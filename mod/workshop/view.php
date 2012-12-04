@@ -105,8 +105,13 @@ case workshop::PHASE_SETUP:
         print_collapsible_region_start('', 'workshop-viewlet-allexamples', get_string('examplesubmissions', 'workshop'));
         echo $output->box_start('generalbox examples');
         if ($workshop->grading_strategy_instance()->form_ready()) {
-            if (! $examples = $workshop->get_examples_for_manager()) {
+            $orderby = $workshop->numexamples > 1 ? 'a.grade, s.title, s.id' : 's.title';
+            if (! $examples = $workshop->get_examples_for_manager($orderby)) {
                 echo $output->container(get_string('noexamples', 'workshop'), 'noexamples');
+            }
+            if ($workshop->numexamples > 1) {
+                $helper = new workshop_random_examples_helper($examples,$workshop->numexamples);
+                echo $output->render($helper);
             }
             foreach ($examples as $example) {
                 $summary = $workshop->prepare_example_summary($example);
