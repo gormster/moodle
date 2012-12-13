@@ -109,7 +109,7 @@ case workshop::PHASE_SETUP:
             if (! $examples = $workshop->get_examples_for_manager($orderby)) {
                 echo $output->container(get_string('noexamples', 'workshop'), 'noexamples');
             }
-            if ($workshop->numexamples > 1) {
+            if (($workshop->numexamples > 1) && ($workshop->numexamples < count($examples))) {
                 $helper = new workshop_random_examples_helper($examples,$workshop->numexamples);
                 echo $output->render($helper);
             }
