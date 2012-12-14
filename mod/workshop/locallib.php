@@ -3051,7 +3051,7 @@ class workshop_user_plan implements renderable {
             $task->link = $workshop->submission_url();
             if ($DB->record_exists('workshop_submissions', array('workshopid'=>$workshop->id, 'example'=>0, 'authorid'=>$userid))) {
                 $task->completed = true;
-            } elseif ($workshop->teammode && count($workshop->get_submission_by_author($userid,'s.id')) > 0) {
+            } elseif ($workshop->teammode && $workshop->get_submission_by_author($userid,'s.id') !== false) {
               	$task->completed = true;
             } elseif ($workshop->phase >= workshop::PHASE_ASSESSMENT) {
                 $task->completed = false;
