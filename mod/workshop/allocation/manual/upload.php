@@ -15,7 +15,7 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 $workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
 $workshop = new workshop($workshop, $cm, $course);
 
-$form = new workshop_allocation_manual_upload_form();
+$form = $workshop->teammode ? new workshop_allocation_teammode_manual_upload_form() : new workshop_allocation_manual_upload_form();
 
 if($form->exportValue('clear'))
 {

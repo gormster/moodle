@@ -284,7 +284,7 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
 		} else {
 
 	        global $CFG;            
-	        $form = new workshop_allocation_teammode_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual_groups/upload.php');
+	        $form = new workshop_allocation_teammode_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual/upload.php');
 			$formhtml = $form->toHtml();
 		}
 
