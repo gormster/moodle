@@ -451,7 +451,7 @@ class workshop_random_allocator implements workshop_allocator {
         } else {
             throw new moodle_exception('unknownusertypepassed', 'workshop');
         }
-        print_r($allsquares);
+
         // get the users that are not in any group. in visible groups mode, these users are exluded
         // from allocation by this method
         // $nogroupcircles is array (int)$userid => undefined
@@ -707,7 +707,6 @@ class workshop_random_allocator implements workshop_allocator {
     }
     
     protected function get_authors() {
-        print_r($this->workshop->get_grouped($this->workshop->get_potential_authors()));
         return $this->workshop->get_grouped($this->workshop->get_potential_authors());
     }
 
