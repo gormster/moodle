@@ -2938,7 +2938,7 @@ class workshop_user_plan implements renderable {
         
         //get all the groups in this module. better than doing it repeatedly, just store it in memory.
         if ($workshop->cm->groupingid) {
-            $groups = groups_get_all_groups($workshop->course->id,0,$worksop->cm->groupingid);
+            $groups = groups_get_all_groups($workshop->course->id,0,$workshop->cm->groupingid);
         } else {
             $groups = groups_get_all_groups($workshop->course->id);
         }
