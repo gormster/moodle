@@ -6,7 +6,7 @@
 class workshop_teammode_manual_allocator extends workshop_manual_allocator {
     
     public function init() {
-        global $PAGE;
+        global $PAGE, $SESSION;;
 
         $mode = optional_param('mode', 'display', PARAM_ALPHA);
         
@@ -77,7 +77,7 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
             break;
         }
 
-        global $SESSION;
+        
 
         if(!empty($SESSION->workshop_upload_messages)) {
             $messages = $SESSION->workshop_upload_messages;
@@ -164,16 +164,16 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
 		// this introduces a new variable, $gradeitems, that replaces $participants in some cases
 		// basically in team mode you get a list of *groups* not people
 		
-		$useridstr = implode(array_keys($participants),",");
+        list($insql, $params) = $DB->get_in_or_equal($participants);
 		$sql = <<<SQL
 SELECT g.id, g.name
 FROM {groups} g
 JOIN {groups_members} m ON m.groupid = g.id
-WHERE g.courseid = {$this->workshop->cm->course} AND m.userid IN ($useridstr)
+WHERE g.courseid = {$this->workshop->cm->course} AND m.userid $insql
 GROUP BY g.id, g.name
 ORDER BY g.name
 SQL;
-		$rslt = $DB->get_records_sql($sql);
+		$rslt = $DB->get_records_sql($sql, $params);
 			
 		$gradeitems = $rslt;
 
@@ -192,8 +192,6 @@ SQL;
 
         // this will hold the information needed to display user names and pictures
         $userinfo = $DB->get_records_list('user', 'id', array_keys($participants), '', user_picture::fields());
-
-	    $groupinfo = $DB->get_records_list('groups', 'id', array_keys($gradeitems));
 
         // load the participants' submissions
 	    $submissions = $this->workshop->get_submissions_grouped();

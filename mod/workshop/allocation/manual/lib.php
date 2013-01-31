@@ -58,7 +58,7 @@ class workshop_manual_allocator implements workshop_allocator {
      * @return workshop_allocation_result
      */
     public function init() {
-        global $PAGE;
+        global $PAGE, $SESSION;
 
         $mode = optional_param('mode', 'display', PARAM_ALPHA);
         $perpage = optional_param('perpage', null, PARAM_INT);
@@ -135,8 +135,6 @@ class workshop_manual_allocator implements workshop_allocator {
             }
             break;
         }
-        
-        global $SESSION;
         
         if(!empty($SESSION->workshop_upload_messages)) {
             $messages = $SESSION->workshop_upload_messages;

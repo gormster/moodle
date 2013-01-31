@@ -47,6 +47,7 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
      * @return string html code
      */
     protected function render_workshopallocation_manual_allocations(workshopallocation_manual_allocations $data) {
+        global $PAGE, $CFG;
 
         $this->workshop     = $data->workshop;
 
@@ -62,7 +63,7 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
             return '';
         }
         
-        global $PAGE;
+        
         $PAGE->requires->js('/mod/workshop/allocation/manual/rules.js');
 
         // convert user collections into drop down menus
@@ -93,7 +94,6 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
             $table->data[] = $row;
         }
         
-        global $CFG;
         $form = new workshop_allocation_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual/upload.php');
 
         return $this->output->container(html_writer::table($table) . $form->toHtml(), 'manual-allocator');
@@ -229,6 +229,8 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
      * @return string html code
      */
     protected function render_workshopallocation_teammode_manual_allocations(workshopallocation_teammode_manual_allocations $data) {
+        global $CFG;
+        
         $allocations        = $data->allocations;       // array prepared array of all allocations data
 		$gradeitems			= $data->gradeitems;
 
@@ -243,8 +245,7 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
             return '';
         }
 
-        global $PAGE;
-        $PAGE->requires->js('/mod/workshop/allocation/manual/rules.js');
+        $this->page->requires->js('/mod/workshop/allocation/manual/rules.js');
 
         // convert user collections into drop down menus
         $authors    = array_map('fullname', $authors);
@@ -280,10 +281,8 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
 		
 		if (!empty($data->groupduplicates)) {
 			$dupnames = implode( "," , array_values($data->groupduplicates) );
-			$formhtml = "You have some groups with the same name, so you can't upload data. You need to change their names or allocate manually. (Duplicate names: $dupnames)";
-		} else {
-
-	        global $CFG;            
+			$formhtml = get_string("teammode_duplicategroupnameswarning",'workshop',$dupnames);
+		} else {            
 	        $form = new workshop_allocation_teammode_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual/upload.php');
 			$formhtml = $form->toHtml();
 		}

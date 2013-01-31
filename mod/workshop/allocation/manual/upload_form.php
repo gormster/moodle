@@ -8,6 +8,8 @@ class workshop_allocation_manual_upload_form extends moodleform {
 	//todo: i18n
 
 	function definition() {
+        global $workshop;
+        
 		$mform = $this->_form;
 		
 		$helptext = <<<HTML
@@ -22,8 +24,6 @@ Use this form to <strong>upload</strong> allocations. The file format is CSV. Th
 
 In this example, Aaron is reviewed by Beryl, Carlos and Dorothy; Beryl is reviewed by Aaron and Dorothy, and Dorothy is reviewed by Carlos, Beryl and Aaron.
 HTML;
-		
-		global $workshop;
 		
 		$mform->addElement('static', 'helptext', '', $helptext);
 		$mform->addElement('filepicker','file','CSV file',null,array('accepted_types' => '.csv'));
@@ -50,6 +50,8 @@ class workshop_allocation_teammode_manual_upload_form extends moodleform {
 	//todo: i18n
 
 	function definition() {
+        global $workshop;
+        
 		$mform = $this->_form;
 		
 		$helptext = <<<HTML
@@ -64,8 +66,6 @@ Use this form to <strong>upload</strong> allocations. The file format is CSV. Th
 
 In this example, Team A is reviewed by Beryl, Carlos and Dorothy; Team B is reviewed by Aaron and Dorothy, and Team C is reviewed by Carlos, Beryl and Aaron.
 HTML;
-		
-		global $workshop;
 		
 		$mform->addElement('static', 'helptext', '', $helptext);
 		$mform->addElement('filepicker','file','CSV file',null,array('accepted_types' => '.csv'));

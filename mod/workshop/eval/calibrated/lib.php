@@ -55,7 +55,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 
     public function update_grading_grades(stdclass $settings, $restrict=null) {
 		
-		global $DB;
+		global $DB, $SESSION;
 		
         // remember the recently used settings for this workshop
         if (empty($this->settings)) {
@@ -117,7 +117,6 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         }
         $rs->close();
         
-        global $SESSION;
         $SESSION->workshop_calibration_no_competent_reviewers = array();
 
         foreach($users as $u => $assessments) {
