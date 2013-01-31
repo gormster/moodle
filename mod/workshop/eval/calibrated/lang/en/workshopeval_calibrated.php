@@ -30,7 +30,7 @@ This setting specifies how strict the comparison should be. The stricter the com
 	
 The following graph represents the grading curves for <span style="color:green">relaxed (9)</span> to <span style="color:#FFCC00">normal (5)</span> to <span style="color:red">strict (1)</span>. The x-axis is the correlation, where 1 is an assessment completely identical to the reference assessment, and 0 is the opposite i.e. completely wrong, and the y-axis is the resultant scaled grade for assessment. This curve is applied after accuracy is assessed.
 
-<img src="{$CFG->wwwroot}/mod/workshop/eval/calibrated/lang/en/curves.png" />
+<img src="{$CFG->wwwroot}/mod/workshop/eval/calibrated/pix/curves.png" />
 MDOWN;
 $string['consistency'] = 'Consistency of assessment accuracy';
 $string['consistency_help'] = <<<MDOWN
@@ -42,7 +42,7 @@ An assessor's accuracy score can be reduced by their inconsistency according to 
 
 In this graph, the x axis is the mean absolute deviation of the assessor's marks, and the y axis is the value their score will be multiplied by.
 
-<img src="{$CFG->wwwroot}/mod/workshop/eval/calibrated/lang/en/lines.png" />
+<img src="{$CFG->wwwroot}/mod/workshop/eval/calibrated/pix/lines.png" />
 MDOWN;
 $string['comparisonlevel1'] = '1 (strictest)';
 $string['comparisonlevel2'] = '2';

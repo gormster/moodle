@@ -378,7 +378,7 @@ class workshop {
         } else if ( count($rslt) > 1 ) {
             print_error("You have users in multiple groups ({$userid}). Please select a grouping with unique groups.");
         }
-        return NULL;
+        return null;
     }
     
 
@@ -450,7 +450,7 @@ class workshop {
         $users = $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
         
         if($this->teammode) {
-        	return array_slice($this->get_grouped($users),1,NULL,true);
+        	return array_slice($this->get_grouped($users),1,null,true);
         }
         
         return $users;
@@ -1646,7 +1646,7 @@ class workshop {
         $classname = 'workshop_' . $method . '_allocator';
         if ($this->teammode) {
             $teammode_class = $classname::teammode_class(); //teammode class
-            if (!is_null($teammode_class)) { //if not NULL or void
+            if (!is_null($teammode_class)) { //if not null or void
                 return new $teammode_class($this);
             }
         }

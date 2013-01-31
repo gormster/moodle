@@ -3,12 +3,10 @@
 require_once("upload_form.php");
 require_once("../../locallib.php");
 
-global $PAGE, $DB, $SESSION;
-
 $cm  = required_param('cm', PARAM_INT);
 $cm = get_coursemodule_from_id('workshop',$cm);
 require_login($cm->course);
-$context = $PAGE->context;
+$context = context_module::instance($cm->id);
 require_capability('mod/workshop:allocate', $context);
 
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);

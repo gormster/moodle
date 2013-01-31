@@ -27,8 +27,6 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-global $DB;
-
 $cmid       = required_param('cmid', PARAM_INT);            // course module
 $confirm    = optional_param('confirm', false, PARAM_BOOL); // confirmation
 

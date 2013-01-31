@@ -1,9 +1,8 @@
 <?php
 
+require_once(dirname(dirname(dirname(dirname(dirname(__FILE__)))))."/config.php");
 require_once("upload_form.php");
 require_once("../../locallib.php");
-
-global $PAGE, $DB, $SESSION;
 
 $cm  = required_param('cm', PARAM_INT);
 $cm = get_coursemodule_from_id('workshop',$cm);

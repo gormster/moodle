@@ -309,7 +309,7 @@ SQL;
     }
     
     public static function teammode_class() {
-        return NULL;
+        return null;
     }
     
 }

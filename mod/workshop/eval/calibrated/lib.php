@@ -86,8 +86,9 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         
         //fetch grader recordset for examples
         $userkeys = array();
-        foreach($references as $r)
+        foreach($references as $r) {
             $userkeys[$r->authorid] = $r->authorid;
+        }
 
         $exemplars = $grader->get_assessments_recordset($userkeys,true);
         foreach($exemplars as $r) {
@@ -103,7 +104,9 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         $users = array();
         
         $reference_assessments = array();
-        foreach($references as $r) $reference_assessments[] = $r->assessmentid;
+        foreach($references as $r) { 
+            $reference_assessments[] = $r->assessmentid;
+        }
         
         foreach ($rs as $r) {
             //skip the exemplar assessments
