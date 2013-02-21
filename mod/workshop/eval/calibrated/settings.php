@@ -28,14 +28,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$options = array();
-for ($i = 9; $i >= 1; $i--) {
-    $options[$i] = get_string('comparisonlevel' . $i, 'workshopeval_calibrated');
-}
-
 if ($ADMIN->fulltree) {
+    $options = array();
+    for ($i = 9; $i >= 1; $i--) {
+        $options[$i] = new lang_string('comparisonlevel' . $i, 'workshopeval_calibrated');
+    }
+    
     $settings->add(new admin_setting_configselect('workshopeval_calibrated/comparison', get_string('comparison', 'workshopeval_calibrated'),
-                        get_string('configcomparison', 'workshopeval_calibrated'), 5, $options));
+                        new lang_string('configcomparison', 'workshopeval_calibrated'), 5, $options));
     $settings->add(new admin_setting_configselect('workshopeval_calibrated/consistency', get_string('consistency', 'workshopeval_calibrated'),
-                        get_string('configconsistency', 'workshopeval_calibrated'), 5, $options));
+                        new lang_string('configconsistency', 'workshopeval_calibrated'), 5, $options));
 }
