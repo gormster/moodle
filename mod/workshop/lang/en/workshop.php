@@ -305,7 +305,7 @@ $string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode
 	<br/>
 These users are currently not in a group: {$a}';
 $string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';
-$string['teammode_duplicategroupnameswarning'] = "You have some groups with the same name, so you can't upload data. You need to change their names or allocate manually. (Duplicate names: $a)";
+$string['teammode_duplicategroupnameswarning'] = 'You have some groups with the same name, so you can\'t upload data. You need to change their names or allocate manually. (Duplicate names: {$a})';
 
 //Additions: Calibration
 $string['examplescompare'] = 'Example comparison';
@@ -321,7 +321,7 @@ $string['numexamples'] = 'Number of examples';
 $string['numexamples_help'] = <<<MDOWN
 This allows you to provide more example submissions than are presented to your students.
 
-If you set this, the students are presented examples pseudo-randomly; they will be shown a roughly even spread of poor to good submissions. This is useful to prevent cheating when using the Calibrated evaluation method.<br/>
+If you set this, the students are presented examples pseudo-randomly; they will be shown a roughly even spread of poor to good submissions. This is useful to prevent cheating when using the Calibrated evaluation method.
 
 If you leave this at zero, all of your example submissions will be shown to your students.    
 MDOWN;
