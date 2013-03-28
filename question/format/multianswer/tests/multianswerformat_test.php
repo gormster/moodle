@@ -47,9 +47,7 @@ class qformat_multianswer_test extends question_testcase {
         $qs = $importer->readquestions($lines);
 
         $expectedq = (object) array(
-            'name' => 'Match the following cities with the correct state:
-* San Francisco: {#1}
-* ...',
+            'name' => 'Match the following cities with the ...',
             'questiontext' => 'Match the following cities with the correct state:
 * San Francisco: {#1}
 * Tucson: {#2}

@@ -49,6 +49,8 @@ $PAGE->set_heading($title);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($title);
-echo $OUTPUT->box($controller->get_formatted_description(), 'gradingform_guide-description');
+if (!empty($options['showdescriptionstudent'])) {
+    echo $OUTPUT->box($controller->get_formatted_description(), 'gradingform_guide-description');
+}
 echo $controller->render_preview($PAGE);
 echo $OUTPUT->footer();

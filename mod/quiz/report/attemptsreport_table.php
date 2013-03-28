@@ -518,7 +518,7 @@ abstract class quiz_attempts_report_table extends table_sql {
             return;
         }
 
-        $url = $this->options->get_url();
+        $url = new moodle_url($this->reporturl, $this->displayoptions);
         $url->param('sesskey', sesskey());
 
         echo '<div id="tablecontainer">';

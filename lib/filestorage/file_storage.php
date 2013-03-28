@@ -1821,7 +1821,7 @@ class file_storage {
      * @param stored_file $storedfile
      */
     public function update_references_to_storedfile(stored_file $storedfile) {
-        global $CFG, $DB;
+        global $CFG;
         $params = array();
         $params['contextid'] = $storedfile->get_contextid();
         $params['component'] = $storedfile->get_component();

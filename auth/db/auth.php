@@ -65,7 +65,7 @@ class auth_plugin_db extends auth_plugin_base {
                 $authdb->Close();
                 // user exists externally
                 // check username/password internally
-                if ($user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id, 'auth'=>$this->authtype))) {
+                if ($user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id))) {
                     return validate_internal_user_password($user, $password);
                 }
             } else {
@@ -191,16 +191,8 @@ class auth_plugin_db extends auth_plugin_base {
      * @return bool                  True on success
      */
     function user_update_password($user, $newpassword) {
-        global $DB;
-
         if ($this->is_internal()) {
-            $puser = $DB->get_record('user', array('id'=>$user->id), '*', MUST_EXIST);
-            if (update_internal_user_password($puser, $newpassword)) {
-                $user->password = $puser->password;
-                return true;
-            } else {
-                return false;
-            }
+            return update_internal_user_password($user, $newpassword);
         } else {
             // we should have never been called!
             return false;
@@ -354,7 +346,7 @@ class auth_plugin_db extends auth_plugin_base {
             if ($verbose) {
                 mtrace(get_string('auth_dbuserstoadd','auth_db',count($add_users)));
             }
-            // Do not use transactions around this foreach, we want to skip problematic users, not revert everything.
+            $transaction = $DB->start_delegated_transaction();
             foreach($add_users as $user) {
                 $username = $user;
                 $user = $this->get_userinfo_asobj($user);
@@ -380,16 +372,9 @@ class auth_plugin_db extends auth_plugin_base {
                 } else {
                     $user->timecreated = time();
                     $user->timemodified = $user->timecreated;
-                    try {
-                        $id = $DB->insert_record('user', $user); // it is truly a new user
-                        if ($verbose) {
-                            mtrace("\t".get_string('auth_dbinsertuser', 'auth_db', array('name'=>$user->username, 'id'=>$id)));
-                        }
-                    } catch (moodle_exception $e) {
-                        if ($verbose) {
-                            mtrace("\t".get_string('auth_dbinsertusererror', 'auth_db', $user->username));
-                        }
-                        continue;
+                    $id = $DB->insert_record ('user', $user); // it is truly a new user
+                    if ($verbose) {
+                        mtrace("\t".get_string('auth_dbinsertuser', 'auth_db', array('name'=>$user->username, 'id'=>$id)));
                     }
                     // if relevant, tag for password generation
                     if ($this->is_internal()) {
@@ -398,6 +383,7 @@ class auth_plugin_db extends auth_plugin_base {
                     }
                 }
             }
+            $transaction->allow_commit();
             unset($add_users); // free mem
         }
         return 0;
