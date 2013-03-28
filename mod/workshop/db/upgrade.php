@@ -92,23 +92,25 @@ function xmldb_workshop_upgrade($oldversion) {
 
 	// Teammode & Calibration
 		
-    if ($oldversion < 2012041703) {
+    if ($oldversion < 2012061703) {
         
+        $table = new xmldb_table('workshop');
 		if (! $dbman->field_exists('workshop','teammode')) {
-			$table = new xmldb_table('workshop');
 			$field = new xmldb_field('teammode', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
 			$dbman->add_field($table, $field);
 		}
-        
-     	$table = new xmldb_table('workshop');
-     	$field = new xmldb_field('examplescompare', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
-         if (!$dbman->field_exists($table, $field)) {
-             $dbman->add_field($table, $field);
-         }
-         $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
-         if (!$dbman->field_exists($table, $field)) {
-             $dbman->add_field($table, $field);
+
+        if (!$dbman->field_exists('workshop', 'examplescompare')) {
+            $field = new xmldb_field('examplescompare', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+            $dbman->add_field($table, $field);
         }
+
+        if (!$dbman->field_exists('workshop', 'examplesreassess')) {
+            $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+            $dbman->add_field($table, $field);
+        }
+        
+        upgrade_mod_savepoint(true, 2012061703, 'workshop');
     }
 
     if ($oldversion < 2012061712) {
