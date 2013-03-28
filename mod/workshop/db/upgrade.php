@@ -101,12 +101,12 @@ function xmldb_workshop_upgrade($oldversion) {
 		}
 
         if (!$dbman->field_exists('workshop', 'examplescompare')) {
-            $field = new xmldb_field('examplescompare', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+            $field = new xmldb_field('examplescompare', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '1');
             $dbman->add_field($table, $field);
         }
 
         if (!$dbman->field_exists('workshop', 'examplesreassess')) {
-            $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
+            $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '1');
             $dbman->add_field($table, $field);
         }
         

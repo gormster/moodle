@@ -34,8 +34,8 @@
         <FIELD NAME="assessmentstart" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be started manually, greater than 0 the timestamp of the start of the assessment phase" PREVIOUS="submissionend" NEXT="assessmentend"/>
         <FIELD NAME="assessmentend" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="0 = will be closed manually, greater than 0 the timestamp of the end of the assessment phase" PREVIOUS="assessmentstart" NEXT="phaseswitchassessment"/>
         <FIELD NAME="phaseswitchassessment" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Automatically switch to the assessment phase after the submissions deadline" PREVIOUS="assessmentend" NEXT="examplescompare"/>
-        <FIELD NAME="examplescompare" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Allow students to compare their assessment to the example assessments." PREVIOUS="phaseswitchassessment" NEXT="examplesreassess"/>
-        <FIELD NAME="examplesreassess" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Allow students to re-assess example submissions" PREVIOUS="examplescompare" NEXT="numexamples"/>
+        <FIELD NAME="examplescompare" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="Allow students to compare their assessment to the example assessments." PREVIOUS="phaseswitchassessment" NEXT="examplesreassess"/>
+        <FIELD NAME="examplesreassess" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="Allow students to re-assess example submissions" PREVIOUS="examplescompare" NEXT="numexamples"/>
         <FIELD NAME="numexamples" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Number of example submissions to show. 0 means all." PREVIOUS="examplesreassess" NEXT="teammode"/>
         <FIELD NAME="teammode" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="One submission per group" PREVIOUS="numexamples"/>
       </FIELDS>
