@@ -2947,12 +2947,14 @@ class workshop_user_plan implements renderable {
             list($sql, $params) = $DB->get_in_or_equal(array_keys($groups));
             $groupmembers = $DB->get_records_select('groups_members','groupid '.$sql,$params,'','userid,groupid');
         
-            list($sql, $params) = $DB->get_in_or_equal(array_keys($groupmembers)); //all students
-            $studentdata = $DB->get_records_select('user','id '.$sql,$params,'',user_picture::fields());
+            if (count($groupmembers)) {
+                list($sql, $params) = $DB->get_in_or_equal(array_keys($groupmembers)); //all students
+                $studentdata = $DB->get_records_select('user','id '.$sql,$params,'',user_picture::fields());
         
-            foreach($groupmembers as $k => $v) {
-                $gid = $v->groupid;
-                $groups[$gid]->members[$k] = $studentdata[$k];
+                foreach($groupmembers as $k => $v) {
+                    $gid = $v->groupid;
+                    $groups[$gid]->members[$k] = $studentdata[$k];
+                }
             }
         }
 
