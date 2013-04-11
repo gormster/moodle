@@ -68,6 +68,10 @@ if ($id) { // submission is specified
 }
 
 $ownsubmission  = $submission->authorid == $USER->id;
+if ($workshop->teammode && !$ownsubmission) {
+    $group = $workshop->user_group($submission->authorid);
+    $ownsubmission = groups_is_member($group->id,$USER->id);
+}
 $canviewall     = has_capability('mod/workshop:viewallsubmissions', $workshop->context);
 $cansubmit      = has_capability('mod/workshop:submit', $workshop->context);
 $canallocate    = has_capability('mod/workshop:allocate', $workshop->context);
