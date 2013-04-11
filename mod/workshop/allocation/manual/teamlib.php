@@ -164,7 +164,7 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
 		// this introduces a new variable, $gradeitems, that replaces $participants in some cases
 		// basically in team mode you get a list of *groups* not people
 		
-        list($insql, $params) = $DB->get_in_or_equal($participants);
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($participants));
 		$sql = <<<SQL
 SELECT g.id, g.name
 FROM {groups} g

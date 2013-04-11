@@ -44,4 +44,34 @@ class workshop_teammode_random_allocator extends workshop_random_allocator {
         return $ret;
     }
     
+    protected function self_allocation($authors=array(), $reviewers=array(), $assessments=array()) {
+        if (!isset($authors[0]) || !isset($reviewers[0])) {
+            // no authors or no reviewers
+            return array();
+        }
+        $alreadyallocated = array();
+        foreach ($assessments as $assessment) {
+            if ($assessment->authorid == $assessment->reviewerid) {
+                $alreadyallocated[$assessment->authorid] = 1;
+            }
+        }
+        $add = array(); // list of new allocations to be created
+        foreach (array_slice($authors,1,null,true) as $groupid => $a) {
+            // for all authors in all groups
+            $authorid = key($a);
+            
+            $groupmembers = groups_get_members($groupid,'u.id');
+            foreach($groupmembers as $memberid => $member) {
+                if (isset($reviewers[0][$memberid])) {
+                    // if the author can be reviewer
+                    if (!isset($alreadyallocated[$memberid])) {
+                        // and the allocation does not exist yet, then
+                        $add[] = array($memberid => $authorid);
+                    }
+                }
+            }
+        }
+        return $add;
+    }
+    
 }

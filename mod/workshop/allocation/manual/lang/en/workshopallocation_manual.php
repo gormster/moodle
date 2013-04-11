@@ -46,7 +46,7 @@ Use this form to <strong>upload</strong> allocations. The file format is CSV. Th
 In this example, Aaron is reviewed by Beryl, Carlos and Dorothy; Beryl is reviewed by Aaron and Dorothy, and Dorothy is reviewed by Carlos, Beryl and Aaron.
 HTML;
 
-$string['uploadform_temmode_helptext'] = <<<HTML
+$string['uploadform_teammode_helptext'] = <<<HTML
 Use this form to <strong>upload</strong> allocations. The file format is CSV. The first field should be the group name (case-sensitive) and all other fields on the same row are the usernames of the reviewers of that participant. For example:
 
 <table class="upload-form-example">
