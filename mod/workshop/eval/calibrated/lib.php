@@ -91,6 +91,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         }
 
         $exemplars = $grader->get_assessments_recordset($userkeys,true);
+        
         foreach($exemplars as $r) {
             if (array_key_exists($r->submissionid,$references)) {
                 $grade = $this->normalize_grade($diminfo[$r->dimensionid],$r->grade);
@@ -188,8 +189,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 		global $DB, $SESSION;
 		
 		//perform weighted average
-        $gradesum = array_sum($weighted_grades);
-        if ($gradesum > 0) {
+        if ($total_weight > 0) {
     		$weighted_avg = array_sum($weighted_grades) / $total_weight;
         } else {
             $weighted_avg = null;
@@ -273,7 +273,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 	private function calculate_calibration_score($assessments, $references, $diminfo) {
         
         //before we even get started, make sure the user has completed enough assessments to be calibrated
-        $required_number_of_assessments = count($references);
+        $required_number_of_assessments = $this->workshop->numexamples or count($references);
         if ( count($assessments) < $required_number_of_assessments ) {
             return 0;
         }
