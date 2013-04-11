@@ -997,7 +997,7 @@ class workshop {
         global $DB;
         
         //we sort by id ASC because we want a consistent ordering, which is the order the examples were added
-        $rslt = $DB->get_records('workshop_user_examples',array('userid' => $reviewer),'id ASC');
+        $rslt = $DB->get_records('workshop_user_examples',array('userid' => $reviewer, 'workshopid' => $this->id),'id ASC');
         
         if (count($rslt) == $n) {
             //the ideal result: just got the examples we wanted
@@ -1144,6 +1144,7 @@ class workshop {
                 $record = new stdClass;
                 $record->userid = $reviewer;
                 $record->submissionid = $e;
+                $record->workshopid = $this->id;
                 $DB->insert_record('workshop_user_examples',$record);
             }
             
