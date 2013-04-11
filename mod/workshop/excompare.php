@@ -108,7 +108,7 @@ if ($isreviewer) {
         );
     }
     echo $output->render($assessment);
-
+    echo $output->continue_button(new moodle_url($workshop->view_url()));
 } elseif ($canmanage) {
     $options = array(
         'showreviewer'  => true,
