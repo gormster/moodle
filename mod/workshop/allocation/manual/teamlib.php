@@ -165,15 +165,24 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
 		// basically in team mode you get a list of *groups* not people
 		
         list($insql, $params) = $DB->get_in_or_equal(array_keys($participants));
+        
+        
+        if($this->workshop->cm->groupingid) {
+            $groupinggroups = groups_get_all_groups($this->workshop->cm->course, $u->id, $this->workshop->cm->groupingid, 'g.id');
+            list($groupingsql, $params2) = $DB->get_in_or_equal(array_keys($groupinggroups));
+            $groupingsql = " AND g.id $groupingsql";
+        }
+        
 		$sql = <<<SQL
 SELECT g.id, g.name
 FROM {groups} g
 JOIN {groups_members} m ON m.groupid = g.id
-WHERE g.courseid = {$this->workshop->cm->course} AND m.userid $insql
+WHERE g.courseid = {$this->workshop->cm->course} AND m.userid $insql $groupingsql
 GROUP BY g.id, g.name
 ORDER BY g.name
 SQL;
-		$rslt = $DB->get_records_sql($sql, $params);
+
+		$rslt = $DB->get_records_sql($sql, array_merge($params, $params2));
 			
 		$gradeitems = $rslt;
 
