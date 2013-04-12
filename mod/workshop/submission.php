@@ -384,4 +384,6 @@ if (!$edit and $canoverride) {
     $feedbackform->display();
 }
 
+echo $output->continue_button(new moodle_url($workshop->view_url()));
+
 echo $output->footer();
