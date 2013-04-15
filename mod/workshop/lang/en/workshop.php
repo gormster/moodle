@@ -300,7 +300,14 @@ $string['yoursubmission'] = 'Your submission';
 //Additions: Team Mode
 $string['teammode'] = 'Team mode';
 $string['teammode_desc'] = 'Allow students to submit work as a team.';
-$string['teammode_help'] = 'Team mode help here'; //todo
+$string['teammode_help'] = <<<MDOWN
+Allows students to submit work as a team.
+
+Enabling team mode means that work is treated as being submitted by a whole group. When one student submits work, that submission counts for everyone in that student's team, and everyone in their team can edit that submission as if it were their own. Teams are the same as groups; when you make a workshop in Team Mode, you must ensure that every student belongs to exactly one group. The teams are scoped by the grouping you select for the workshop at the bottom of this page, so if your students belong to more than one group, make a grouping with groups such that they only belong to one.
+
+If self-assessment is disabled, students are prevented from marking their own team's work.
+MDOWN;
+
 $string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode, then users MUST be part of at least one group to submit work.<br/>
 	<br/>
 These users are currently not in a group: {$a}';
