@@ -313,6 +313,7 @@ $string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode
 These users are currently not in a group: {$a}';
 $string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';
 $string['teammode_duplicategroupnameswarning'] = 'You have some groups with the same name, so you can\'t upload data. You need to change their names or allocate manually. (Duplicate names: {$a})';
+$string['teammode_multiplegroupswarning'] = 'You have users in multiple groups ({$a}). Please select a grouping with unique groups.';
 
 //Additions: Calibration
 $string['examplescompare'] = 'Example comparison';

@@ -370,13 +370,17 @@ class workshop {
     }
     
     public function user_group($userid) {
+        global $DB, $COURSE;
+        
         //todo: cache this result
         $rslt = groups_get_all_groups($this->cm->course, $userid, $this->cm->groupingid);
         if ( count($rslt) == 1 ) {
             $ret = current($rslt);
             return $ret;
         } else if ( count($rslt) > 1 ) {
-            print_error("You have users in multiple groups ({$userid}). Please select a grouping with unique groups.");
+            $user = $DB->get_record('user', array('id' => $userid));
+            $fullname = fullname($user);
+            print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/index.php',array('id' => $COURSE->id)),$fullname);
         }
         return null;
     }
