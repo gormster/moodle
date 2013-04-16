@@ -682,7 +682,7 @@ class workshop {
         if (empty($users)) {
             return $grouped;
         }
-        if (!empty($CFG->enablegroupmembersonly) and $this->cm->groupmembersonly) {
+        if ((!empty($CFG->enablegroupmembersonly) and $this->cm->groupmembersonly) or ($this->teammode and $this->cm->groupingid)) {
             // Available for group members only - the workshop is available only
             // to users assigned to groups within the selected grouping, or to
             // any group if no grouping is selected.
@@ -696,6 +696,7 @@ class workshop {
             // all users
             $grouped[0] = $users;
         }
+
         $gmemberships = groups_get_all_groups($this->cm->course, array_keys($users), $groupingid,
                             'gm.id,gm.groupid,gm.userid');
         foreach ($gmemberships as $gmembership) {
