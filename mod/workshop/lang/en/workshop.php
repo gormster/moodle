@@ -100,7 +100,12 @@ $string['err_removegrademappings'] = 'Unable to remove the unused grade mappings
 $string['evaluategradeswait'] = 'Please wait until the assessments are evaluated and the grades are calculated';
 $string['evaluation'] = 'Grading evaluation';
 $string['evaluationmethod'] = 'Grading evaluation method';
-$string['evaluationmethod_help'] = 'The grading evaluation method determines how the grade for assessment is calculated. There is currently just one option - comparison with the best assessment.';
+$string['evaluationmethod_help'] = <<<MDOWN
+The grading evaluation method determines how the grade for assessment is calculated. There are two options:
+
+* Comparison with best assessment, where the best assessment is determined by the average of marks
+* Calibration, where you provide example assessments your students must complete, and their assessments are then compared with yours.
+MDOWN;
 $string['example'] = 'Example submission';
 $string['exampleadd'] = 'Add example submission';
 $string['exampleassess'] = 'Assess example submission';
