@@ -56,7 +56,7 @@ class mod_workshop_mod_form extends moodleform_mod {
      * @return void
      */
     public function definition() {
-        global $CFG;
+        global $CFG, $DB;
 
         $workshopconfig = get_config('workshop');
         $mform = $this->_form;
@@ -99,9 +99,17 @@ class mod_workshop_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'useselfassessment', $label, $text);
         $mform->addHelpButton('useselfassessment', 'useselfassessment', 'workshop');
 
+        $numgroups = $DB->count_records('groups',array('courseid' => $this->course->id));
+        $disabled = (bool)($numgroups == 0);
+        
         $label = get_string('teammode', 'workshop');
-        $text = get_string('teammode_desc', 'workshop');
-        $mform->addElement('checkbox','teammode',$label,$text);
+        if ($disabled) {
+            $text = get_string('teammode_disabled','workshop');
+        } else {
+            $text = get_string('teammode_desc', 'workshop');
+        }
+        $params = $disabled ? array('disabled' => 'disabled') : array();
+        $mform->addElement('checkbox','teammode',$label,$text,$params);
         $mform->addHelpButton('teammode','teammode','workshop');
 
         // Grading settings -----------------------------------------------------------

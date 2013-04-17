@@ -312,13 +312,14 @@ Enabling team mode means that work is treated as being submitted by a whole grou
 
 If self-assessment is disabled, students are prevented from marking their own team's work.
 MDOWN;
-
+$string['teammode_disabled'] = 'Team mode is disabled because you have no groups in your course.';
 $string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode, then users MUST be part of at least one group to submit work.<br/>
 	<br/>
 These users are currently not in a group: {$a}';
 $string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';
 $string['teammode_duplicategroupnameswarning'] = 'You have some groups with the same name, so you can\'t upload data. You need to change their names or allocate manually. (Duplicate names: {$a})';
 $string['teammode_multiplegroupswarning'] = 'You have users in multiple groups ({$a}). Please select a grouping with unique groups.';
+$string['teammode_nogroupswarning'] = 'There are no groups in your course, or in the selected grouping. <strong>Team mode has been disabled</strong>. If you wish to continue in team mode, create some groups, then edit the settings this workshop and re-enabled team mode.';
 
 //Additions: Calibration
 $string['examplescompare'] = 'Example comparison';

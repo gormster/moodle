@@ -2986,6 +2986,12 @@ class workshop_user_plan implements renderable {
                 }
                 print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/groupings.php',array('id' => $workshop->course->id)),implode($users,', '));
             }
+            
+            if (count($groups) == 0) {
+                $workshop->teammode = false;
+                $DB->set_field('workshop','teammode',0,array('id' => $workshop->id));
+                print_error('teammode_nogroupswarning','workshop',new moodle_url('/mod/workshop/view.php',array('id' => $workshop->cm->id)));
+            }
         }
         
         if (count($groups)) {
