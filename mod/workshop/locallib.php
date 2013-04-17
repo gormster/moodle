@@ -4123,10 +4123,7 @@ class workshop_random_examples_helper implements renderable {
             $slice = new stdClass;
             
             $slice->min = (float)(reset($s)->grade);
-            if ($i < count($slices) - 1)
-                $slice->max = (float)(end($s)->grade);
-            else
-                $slice->max = 100;
+            $slice->max = (float)(end($s)->grade);
             
             $slice->colour = $this->get_colour($i,$n,1);
             $slice->title = workshop_random_examples_helper::$descriptors[count($slices)][$i];
