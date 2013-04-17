@@ -370,7 +370,7 @@ class workshop {
     }
     
     public function user_group($userid) {
-        global $DB, $COURSE;
+        global $DB;
         
         //todo: cache this result
         $rslt = groups_get_all_groups($this->cm->course, $userid, $this->cm->groupingid);
@@ -380,11 +380,37 @@ class workshop {
         } else if ( count($rslt) > 1 ) {
             $user = $DB->get_record('user', array('id' => $userid));
             $fullname = fullname($user);
-            print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/index.php',array('id' => $COURSE->id)),$fullname);
+            print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/groupings.php',array('id' => $this->course->id)),$fullname);
         }
         return null;
     }
     
+    public function users_in_more_than_one_group() {
+        global $DB;
+        
+        $groupingid = $this->cm->groupingid;
+        if ($groupingid) {
+            $groupingsql = 'AND g.id in (select groupid from mdl_groupings_groups where groupingid = ?)';
+            $params = array($this->course->id, $this->cm->groupingid);
+        } else {
+            $groupingsql = '';
+            $params = array($this->course->id);
+        }
+        
+        $sql = <<<SQL
+SELECT u.id, u.firstname, u.lastname, u.username from
+mdl_user u, mdl_groups g, mdl_groups_members gm
+WHERE g.courseid = ? $groupingsql
+AND gm.groupid = g.id
+AND u.id = gm.userid
+GROUP BY u.id
+HAVING count(u.id) > 1
+ORDER BY u.lastname
+SQL;
+
+        return $DB->get_records_sql($sql,$params);
+
+    }
 
     /**
      * Returns an object suitable for strings containing dates/times
@@ -2947,6 +2973,19 @@ class workshop_user_plan implements renderable {
             $groups = groups_get_all_groups($workshop->course->id,0,$workshop->cm->groupingid);
         } else {
             $groups = groups_get_all_groups($workshop->course->id);
+        }
+        
+        //before we get started, check if we have any users in more than one group
+        if ($workshop->teammode) {
+            $rslt = $workshop->users_in_more_than_one_group();
+
+            if(count($rslt)) {
+                $users = array();
+                foreach($rslt as $u) {
+                    $users[] = fullname($u);
+                }
+                print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/groupings.php',array('id' => $workshop->course->id)),implode($users,', '));
+            }
         }
         
         if (count($groups)) {
