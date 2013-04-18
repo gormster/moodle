@@ -403,7 +403,7 @@ SELECT u.id, u.firstname, u.lastname, u.username from
 WHERE g.courseid = ? $groupingsql
 AND gm.groupid = g.id
 AND u.id = gm.userid
-GROUP BY u.id
+GROUP BY u.id, u.firstname, u.lastname, u.username
 HAVING count(u.id) > 1
 ORDER BY u.lastname
 SQL;
