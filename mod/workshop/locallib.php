@@ -390,7 +390,7 @@ class workshop {
         
         $groupingid = $this->cm->groupingid;
         if ($groupingid) {
-            $groupingsql = 'AND g.id in (select groupid from mdl_groupings_groups where groupingid = ?)';
+            $groupingsql = 'AND g.id in (select groupid from {groupings_groups} where groupingid = ?)';
             $params = array($this->course->id, $this->cm->groupingid);
         } else {
             $groupingsql = '';
@@ -399,7 +399,7 @@ class workshop {
         
         $sql = <<<SQL
 SELECT u.id, u.firstname, u.lastname, u.username from
-mdl_user u, mdl_groups g, mdl_groups_members gm
+{user} u, {groups} g, {groups_members} gm
 WHERE g.courseid = ? $groupingsql
 AND gm.groupid = g.id
 AND u.id = gm.userid
