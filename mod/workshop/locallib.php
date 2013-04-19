@@ -2343,6 +2343,12 @@ SQL;
     	foreach($grades as $k => $v) {
     		if(!empty($v->submissionid)) { //if this group has a submission
     			$vals = $DB->get_records("workshop_assessments", array("submissionid" => $v->submissionid), 'weight DESC', 'reviewerid AS userid, id AS assessmentid, submissionid, grade, gradinggrade, gradinggradeover, weight');
+                foreach($vals as $userid => $val) {
+                    $val->grade = $this->real_grade($val->grade);
+                    $val->gradinggrade = $this->real_grading_grade($val->gradinggrade);
+                    $val->gradinggradeover = $this->real_grading_grade($val->gradinggradeover);
+                }
+                
     			$v->reviewedby = $vals;
     			foreach($vals as $k => $v) {
     				$findusers[] = $v->userid;
