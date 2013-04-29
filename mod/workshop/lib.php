@@ -1088,10 +1088,16 @@ function workshop_update_grades(stdclass $workshop, $userid=0) {
         $course     = $DB->get_record('course', array('id' => $workshop->course), '*', MUST_EXIST);
         $cm         = get_coursemodule_from_instance('workshop', $workshop->id, $course->id, false, MUST_EXIST);
         $whereuser  = '';
+        $whereuserparams = array();
         if ($userid) {
             $groups = groups_get_all_groups($cm->course, $userid, $cm->groupingid);
-            if(count($groups) ==  1) $group = $groups[0];
-            $whereuser = $DB->get_in_or_equal(array_keys(groups_get_members($group,'u.id','')));
+            if(count($groups) > 1) {
+                print_error('teammode_multiplegroupswarning','workshop',new moodle_url('/group/groupings.php',array('id' => $workshop->course->id)),implode($users,', '));
+            } else if (count($groups) == 1) {
+                $group = key($groups);
+                list($whereuser, $whereuserparams) = $DB->get_in_or_equal(array_keys(groups_get_members($group,'u.id','')),SQL_PARAMS_NAMED);
+            }
+            //if a user isn't in a team for team mode, they can't have submitted anything
         } else {
             $allgroups = groups_get_all_groups($cm->course, 0, $cm->groupingid);
             //todo: on duplicate key error out
@@ -1103,10 +1109,10 @@ function workshop_update_grades(stdclass $workshop, $userid=0) {
             }
         }
         
-        $params = array('workshopid' => $workshop->id, 'userid' => $userid);
+        $params = array('workshopid' => $workshop->id, 'userid' => $userid) + $whereuserparams;
         $sql = 'SELECT authorid, grade, gradeover, gradeoverby, feedbackauthor, feedbackauthorformat, timemodified, timegraded
                   FROM {workshop_submissions}
-                 WHERE workshopid = :workshopid AND example=0' . $whereuser . ' ORDER BY timemodified DESC';
+                 WHERE workshopid = :workshopid AND example=0 ' . $whereuser . ' ORDER BY timemodified DESC';
 
         $records = $DB->get_records_sql($sql, $params);
         $submissions = array();
