@@ -1,5 +1,6 @@
 <?php
 
+require_once(dirname(dirname(dirname(dirname(dirname(__FILE__)))))."/config.php");
 require_once("upload_form.php");
 require_once("../../locallib.php");
 
@@ -13,7 +14,7 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 $workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
 $workshop = new workshop($workshop, $cm, $course);
 
-$form = new workshop_allocation_manual_groups_upload_form();
+$form = new workshop_allocation_teammode_manual_upload_form();
 $csv = array_map('str_getcsv',preg_split("/[\r\n]+/",$form->get_file_content('file')));
 
 if($form->exportValue('clear'))

@@ -31,7 +31,6 @@ class workshop_allocation_manual_upload_form extends moodleform {
 
 }	
 
-
 //team mode
 class workshop_allocation_teammode_manual_upload_form extends moodleform {
 

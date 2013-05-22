@@ -283,7 +283,7 @@ class workshopallocation_manual_renderer extends mod_workshop_renderer  {
 			$dupnames = implode( "," , array_values($data->groupduplicates) );
 			$formhtml = get_string("teammode_duplicategroupnameswarning",'workshop',$dupnames);
 		} else {            
-	        $form = new workshop_allocation_teammode_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual/upload.php');
+	        $form = new workshop_allocation_teammode_manual_upload_form($CFG->httpswwwroot.'/mod/workshop/allocation/manual/teamupload.php');
 			$formhtml = $form->toHtml();
 		}
 

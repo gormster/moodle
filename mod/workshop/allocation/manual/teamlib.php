@@ -6,7 +6,7 @@
 class workshop_teammode_manual_allocator extends workshop_manual_allocator {
     
     public function init() {
-        global $PAGE, $SESSION;;
+        global $PAGE, $SESSION;
 
         $mode = optional_param('mode', 'display', PARAM_ALPHA);
         
@@ -82,10 +82,15 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
         if(!empty($SESSION->workshop_upload_messages)) {
             $messages = $SESSION->workshop_upload_messages;
             unset($SESSION->workshop_upload_messages);
-            return $messages;
+            foreach($messages as $m) {
+                list($level, $message) = explode("::",$m);
+                $result->log($message, $level);
+            }
+            $result->set_status(workshop_allocation_result::STATUS_FAILED);
+        } else {
+            $result->set_status(workshop_allocation_result::STATUS_VOID);
         }
         
-        $result->set_status(workshop_allocation_result::STATUS_VOID);
         return $result;
     }
 
@@ -168,7 +173,7 @@ class workshop_teammode_manual_allocator extends workshop_manual_allocator {
         
         
         if($this->workshop->cm->groupingid) {
-            $groupinggroups = groups_get_all_groups($this->workshop->cm->course, $u->id, $this->workshop->cm->groupingid, 'g.id');
+            $groupinggroups = groups_get_all_groups($this->workshop->cm->course, 0, $this->workshop->cm->groupingid, 'g.id');
             list($groupingsql, $params2) = $DB->get_in_or_equal(array_keys($groupinggroups));
             $groupingsql = " AND g.id $groupingsql";
         }
