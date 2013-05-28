@@ -34,7 +34,7 @@ if($form->exportValue('clear'))
 	$users = $DB->get_records_list('user','username',$usernames,'','username,id,firstname,lastname');
 
 	$failures = array(); // username => reason
-
+    
 	foreach($csv as $a) {
 		if(!empty($a)) {
 			$reviewee = trim($a[0]);
@@ -44,8 +44,9 @@ if($form->exportValue('clear'))
 			if (empty($reviewers)) continue;
 			
 			$submission = $workshop->get_submission_by_author($users[$reviewee]->id);
-			
+            
 			if (empty($users[$reviewee])) {
+                
 				$failures[$reviewee] = "error::No user for username $reviewee";
 				continue;
 			}
@@ -57,10 +58,12 @@ if($form->exportValue('clear'))
 			
 			foreach($reviewers as $i) {
 				if (empty($i)) continue;
-				if (!empty($users[$i])) {
-					$res = $workshop->add_allocation($submission, $users[$i]->id);
+				if (empty($users[$i])) {
+                    $failures[$i] = "error::No user for username $i";
+                } else if ($reviewee == $i) {
+                    $failures[$i] = "info::Self-assessment is disabled for this workshop. {$users[$reviewee]->firstname} {$users[$reviewee]->lastname} ($i) was not allocated to assess their own submission.";
 				} else {
-					$failures[$i] = "error::No user for username $i";
+					$res = $workshop->add_allocation($submission, $users[$i]->id);
 				}
 			}
 		}

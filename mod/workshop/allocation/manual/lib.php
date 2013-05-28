@@ -139,10 +139,22 @@ class workshop_manual_allocator implements workshop_allocator {
         if(!empty($SESSION->workshop_upload_messages)) {
             $messages = $SESSION->workshop_upload_messages;
             unset($SESSION->workshop_upload_messages);
-            return $messages;
+            $failed = false;
+            foreach($messages as $m) {
+                list($level, $message) = explode("::",$m);
+                if ($level == "error") $failed = true;
+                $result->log($message, $level);
+            }
+            if ($failed) {
+                $result->set_status(workshop_allocation_result::STATUS_FAILED);
+            } else {
+                $result->set_status(workshop_allocation_result::STATUS_EXECUTED);
+            }
+            
+        } else {
+            $result->set_status(workshop_allocation_result::STATUS_VOID);
         }
-
-        $result->set_status(workshop_allocation_result::STATUS_VOID);
+        
         return $result;
     }
 
