@@ -90,7 +90,7 @@ if($form->exportValue('clear'))
 				if (empty($i)) continue;
 				if (empty($users[$i])) {
                     $failures[$i] = "error::No user for username $i";
-				} else if (in_array($users[$i]->id,$group->members)) {
+				} else if (!$workshop->useselfassessment && in_array($users[$i]->id,$group->members)) {
 				    $failures[$i] = "info::Self-assessment is disabled for this workshop. {$users[$i]->firstname} {$users[$i]->lastname} ($i) was not allocated to assess their own submission.";
 				} else {
 					$res = $workshop->add_allocation($submission, $users[$i]->id);
