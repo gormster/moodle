@@ -1290,7 +1290,11 @@ SQL;
             $summary->assesslabel = get_string('assess', 'workshop');
         } else {
             $summary->status = 'graded';
-            $summary->assesslabel = get_string('reassess', 'workshop');
+            if ($this->examplesreassess) {
+                $summary->assesslabel = get_string('reassess', 'workshop');
+            } else {
+                $summary->assesslabel = get_string('review', 'workshop');
+            }
         }
 
         $summary->gradeinfo           = new stdclass();

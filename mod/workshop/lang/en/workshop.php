@@ -202,6 +202,7 @@ $string['publishedsubmissions'] = 'Published submissions';
 $string['publishsubmission'] = 'Publish submission';
 $string['publishsubmission_help'] = 'Published submissions are available to the others when the workshop is closed.';
 $string['reassess'] = 'Re-assess';
+$string['review'] = 'Review';
 $string['receivedgrades'] = 'Grades received';
 $string['recentassessments'] = 'Workshop assessments:';
 $string['recentsubmissions'] = 'Workshop submissions:';
