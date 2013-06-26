@@ -24,7 +24,9 @@ if($form->exportValue('clear'))
 
 } else {
 
-	$csv = array_map('str_getcsv',explode("\n",$form->get_file_content('file')));
+    $content = $form->get_file_content('file');
+    $content = preg_replace('!\r\n?!', "\n", $content);
+    $csv = array_map('str_getcsv',explode("\n",$content));
 
 	$usernames = array();
 	foreach($csv as $a) {
@@ -43,13 +45,13 @@ if($form->exportValue('clear'))
 			if (empty($reviewee)) continue;
 			if (empty($reviewers)) continue;
 			
-			$submission = $workshop->get_submission_by_author($users[$reviewee]->id);
-            
 			if (empty($users[$reviewee])) {
                 
 				$failures[$reviewee] = "error::No user for username $reviewee";
 				continue;
 			}
+            
+			$submission = $workshop->get_submission_by_author($users[$reviewee]->id);
 			
 			if ($submission === false) {
 				$failures[$reviewee] = "error::No submission for {$users[$reviewee]->firstname} {$users[$reviewee]->lastname} ($reviewee)";
