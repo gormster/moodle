@@ -133,6 +133,8 @@ $string['formatpeergrade'] = '<span class="grade">{$a->grade}</span> <span class
 $string['formatpeergradeover'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">(<del>{$a->gradinggrade}</del> / <ins>{$a->gradinggradeover}</ins>)</span>';
 $string['formatpeergradeoverweighted'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">(<del>{$a->gradinggrade}</del> / <ins>{$a->gradinggradeover}</ins>)</span> @ <span class="weight">{$a->weight}</span>';
 $string['formatpeergradeweighted'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">({$a->gradinggrade})</span> @ <span class="weight">{$a->weight}</span>';
+$string['formatpeergradenograding'] = '<span class="grade">{$a->grade}</span>';
+$string['formatpeergradeweightednograding'] = '<span class="grade">{$a->grade}</span> @ <span class="weight">{$a->weight}</span>';
 $string['givengrades'] = 'Grades given';
 $string['gradecalculated'] = 'Calculated grade for submission';
 $string['gradedecimals'] = 'Decimal places in grades';
@@ -338,7 +340,7 @@ This allows you to provide more example submissions than are presented to your s
 
 If you set this, the students are presented examples pseudo-randomly; they will be shown a roughly even spread of poor to good submissions. This is useful to prevent cheating when using the Calibrated evaluation method.
 
-If you leave this at zero, all of your example submissions will be shown to your students.    
+If you leave this at zero, all of your example submissions will be shown to your students.
 MDOWN;
 
 $string['randomexamplesoverlapwarning'] = 'The {$a->prev} and {$a->next} brackets overlap. There might be little or no differentiation between these brackets.';

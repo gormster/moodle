@@ -562,7 +562,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
                     $assessment = self::array_nth($participant->reviewerof, $idx);
                     $cell = new html_table_cell();
                     $cell->text = $this->helper_grading_report_assessment($assessment, $options->showauthornames, $userinfo,
-                            get_string('gradegivento', 'workshop'));
+                            get_string('gradegivento', 'workshop'), true);
                     $cell->rowspan = $spangiven;
                     $cell->attributes['class'] = 'givengrade';
                     if (is_null($assessment) or is_null($assessment->grade)) {
@@ -1068,7 +1068,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
      * @param string $separator between the grade and the reviewer/author
      * @return string
      */
-    protected function helper_grading_report_assessment($assessment, $shownames, array $userinfo, $separator) {
+    protected function helper_grading_report_assessment($assessment, $shownames, array $userinfo, $separator, $suppressgradinggrade = false) {
         global $CFG;
 
         if (is_null($assessment)) {
@@ -1080,10 +1080,18 @@ class mod_workshop_renderer extends plugin_renderer_base {
         $a->weight = $assessment->weight;
         // grrr the following logic should really be handled by a future language pack feature
         if (is_null($assessment->gradinggradeover)) {
-            if ($a->weight == 1) {
-                $grade = get_string('formatpeergrade', 'workshop', $a);
+            if ($suppressgradinggrade == true) {
+                if ($a->weight == 1) {
+                    $grade = get_string('formatpeergradenograding', 'workshop', $a);
+                } else {
+                    $grade = get_string('formatpeergradeweightednograding', 'workshop', $a);
+                }
             } else {
-                $grade = get_string('formatpeergradeweighted', 'workshop', $a);
+                if ($a->weight == 1) {
+                    $grade = get_string('formatpeergrade', 'workshop', $a);
+                } else {
+                    $grade = get_string('formatpeergradeweighted', 'workshop', $a);
+                }
             }
         } else {
             $a->gradinggradeover = $assessment->gradinggradeover;
