@@ -42,8 +42,9 @@ Use this form to <strong>upload</strong> allocations. The file format is CSV. Th
 	<tr><td>dorothy</td><td>carlos</td><td>beryl</td><td>aaron</td></tr>
 </table>
 
-
 In this example, Aaron is reviewed by Beryl, Carlos and Dorothy; Beryl is reviewed by Aaron and Dorothy, and Dorothy is reviewed by Carlos, Beryl and Aaron.
+<br/><br/>
+<strong>CSV uploads do not clear your current allocations.</strong>
 HTML;
 
 $string['uploadform_teammode_helptext'] = <<<HTML
@@ -57,5 +58,7 @@ Use this form to <strong>upload</strong> allocations. The file format is CSV. Th
 
 
 In this example, Team A is reviewed by Beryl, Carlos and Dorothy; Team B is reviewed by Aaron and Dorothy, and Team C is reviewed by Carlos, Beryl and Aaron.
+<br/><br/>
+<strong>CSV uploads do not clear your current allocations.</strong>
 HTML;
 
