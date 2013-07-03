@@ -46,8 +46,7 @@ class workshop_allocation_teammode_manual_upload_form extends moodleform {
 		$mform->addElement('filepicker','file','CSV file',null,array('accepted_types' => '.csv'));
 		$mform->addElement('hidden','cm',$workshop->cm->id);
 		$mform->addElement('submit','submit','Submit');
-		$mform->addElement('submit','clear','Clear All Allocations');
-		$mform->addRule('clear','','callback','areYouSure','client');
+		$mform->addElement('submit','clear','Clear All Allocations', array('onclick' => 'return areYouSure();'));
 	}
 	
 	function toHtml() {
