@@ -346,6 +346,7 @@ class workshop_accumulative_strategy implements workshop_strategy {
             $diminfo[$dimid] = new stdclass();
             $diminfo[$dimid]->id = $dimid;
             $diminfo[$dimid]->weight = $dimrecord->weight;
+            $diminfo[$dimid]->title = $dimrecord->title;
             if ($dimrecord->grade < 0) {
                 // the dimension uses a scale
                 $diminfo[$dimid]->min = 1;
