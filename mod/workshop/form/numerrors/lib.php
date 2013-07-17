@@ -374,7 +374,7 @@ class workshop_numerrors_strategy implements workshop_strategy {
         global $DB;
 
         $params = array('workshopid' => $this->workshop->id);
-        $dimrecords = $DB->get_records('workshopform_numerrors', array('workshopid' => $this->workshop->id), 'sort', 'id,weight');
+        $dimrecords = $DB->get_records('workshopform_numerrors', array('workshopid' => $this->workshop->id), 'sort', 'id,weight,description AS title');
         foreach ($dimrecords as $dimid => $dimrecord) {
             $dimrecords[$dimid]->min = 0;
             $dimrecords[$dimid]->max = 1;

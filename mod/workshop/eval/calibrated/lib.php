@@ -44,7 +44,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 	
 	private $examples;
 	
-	private $grading_curves = array(9 => 4.0, 8 => 3.0, 7 => 2.0, 6 => 1.5, 5 => 1.0, 4 => 0.666, 3 => 0.5, 2 => 0.333, 1 => 0.25, 0 => 0);
+	public static $grading_curves = array(9 => 4.0, 8 => 3.0, 7 => 2.0, 6 => 1.5, 5 => 1.0, 4 => 0.666, 3 => 0.5, 2 => 0.333, 1 => 0.25, 0 => 0);
 	
     public function __construct(workshop $workshop) {
         global $DB;
@@ -59,6 +59,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 		
         // remember the recently used settings for this workshop
         if (empty($this->settings)) {
+            $this->settings = new stdclass();
             $record = new stdclass();
             $record->workshopid = $this->workshop->id;
             $record->comparison = $settings->comparison;
@@ -80,24 +81,8 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         // get the information about the assessment dimensions
         $diminfo = $grader->get_dimensions_info();
 
-		// cache the reference assessments
-		$references = $this->workshop->get_examples_for_manager();
-		$calibration_scores = array();
-        
-        //fetch grader recordset for examples
-        $userkeys = array();
-        foreach($references as $r) {
-            $userkeys[$r->authorid] = $r->authorid;
-        }
-
-        $exemplars = $grader->get_assessments_recordset($userkeys,true);
-        
-        foreach($exemplars as $r) {
-            if (array_key_exists($r->submissionid,$references)) {
-                $grade = $this->normalize_grade($diminfo[$r->dimensionid],$r->grade);
-                $references[$r->submissionid]->diminfo[$r->dimensionid] = $grade;
-            }
-        }
+		// fetch the reference assessments
+		$references = $this->get_reference_assessments();
 
         // fetch a recordset with all assessments to process
         $rs = $grader->get_assessments_recordset($restrict,true);
@@ -122,7 +107,7 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         $rs->close();
         
         $SESSION->workshop_calibration_no_competent_reviewers = array();
-
+        
         foreach($users as $u => $assessments) {
             $calibration_scores[$u] = $this->calculate_calibration_score($assessments,$references,$diminfo) * 100;
         }
@@ -135,6 +120,31 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 		}
 		
 	}
+    
+    private function get_reference_assessments() {
+        $grader = $this->workshop->grading_strategy_instance();
+        $diminfo = $grader->get_dimensions_info();
+        
+		// cache the reference assessments
+		$references = $this->workshop->get_examples_for_manager();
+		$calibration_scores = array();
+        
+        //fetch grader recordset for examples
+        $userkeys = array();
+        foreach($references as $r) {
+            $userkeys[$r->authorid] = $r->authorid;
+        }
+
+        $exemplars = $grader->get_assessments_recordset($userkeys,true);
+        
+        foreach($exemplars as $r) {
+            if (array_key_exists($r->submissionid,$references)) {
+                $references[$r->submissionid]->diminfo[$r->dimensionid] = $r->grade;
+            }
+        }
+        
+        return $references;
+    }
     
     public function update_submission_grades(stdclass $settings) {
     
@@ -282,28 +292,26 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         
         $absolute_deviations = array(); // the set of all absdev of student's scores v exemplar scores (T)
         
-        foreach($assessments as $k => $a) {
-            $my_a = $references[$k]; // the exemplar assessment
-            
-            foreach($a as $dimid => $dimval) {
-                $mydimval = $my_a->diminfo[$dimid]; //already normalised
-                $dim = $diminfo[$dimid];
-                
-                $diff = abs( $mydimval - $this->normalize_grade($dim,$dimval) ); 
-                $absolute_deviations[] = $diff;
-                
+        foreach($references as $k => $a) {
+
+            foreach($a->diminfo as $dimid => $mydimval) {
+                if (!empty($assessments[$k])) {
+                    $theirdimval = $assessments[$k][$dimid];
+                    $dim = $diminfo[$dimid];
+
+                    $diff = abs( $mydimval - $theirdimval ); 
+                    $absolute_deviations[] = $this->normalize_grade($dim, $diff);
+                }
             }
-            
         }
         
-        $worst_possible_absdev = count($assessments) * count($diminfo) * 100;
-        $x = array_sum($absolute_deviations);
+        $x = array_sum($absolute_deviations) / count($absolute_deviations);
         
-        $x /= $worst_possible_absdev;
+        $x /= 100;
         if ($x < 0.01) $x = 0; //round 99% up to 100%
         $x = 1 - $x; //invert $x. 1 is now the best possible score.
         
-        $grading_curve = $this->grading_curves[$this->settings->comparison];
+        $grading_curve = $this::$grading_curves[$this->settings->comparison];
         
         if ($grading_curve >= 1) {
             $x = 1 - pow(1-$x, $grading_curve);
@@ -322,12 +330,12 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
         }
         $y = $numerator / count($absolute_deviations);
         
-        $y /= 50;
+        $y /= 100;
         if ($y < 0.01) $y = 0;
         if ($y > 1) $y = 1; //this *shouldn't* happen, but I'm not ruling it out
         $y = 1 - $y; //invert y. 1 is now the best possible score.
         
-        $consistency_curve = $this->grading_curves[9 - $this->settings->consistency]; //the consistency curves are actually around the other way - 0 means no consistency check while 8 is strictest. so we subtract the consistency setting from nine.
+        $consistency_curve = $this::$grading_curves[9 - $this->settings->consistency]; //the consistency curves are actually around the other way - 0 means no consistency check while 8 is strictest. so we subtract the consistency setting from nine.
         
         //y = ax - a + 1
         $consistency_multiplier = $consistency_curve * $y - $consistency_curve + 1;
@@ -356,4 +364,121 @@ class workshop_calibrated_evaluation implements workshop_evaluation {
 	private function get_example_assessments() {
 		
 	}
+    
+    public function prepare_explanation_for_assessor($userid) {
+        $grader = $this->workshop->grading_strategy_instance();
+        $diminfo = $grader->get_dimensions_info();
+        $exxx = $grader->get_assessments_recordset(array($userid),true);
+        $references = $this->get_reference_assessments();
+        $options = array(
+            'gradedecimals' => $this->workshop->gradedecimals,
+            'accuracy' => $this->settings->comparison,
+            'consistency' => $this->settings->consistency,
+            'finalscoreoutof' => $this->workshop->gradinggrade
+        );
+        
+        return new workshop_calibrated_evaluation_explanation($userid, $exxx, $references, $diminfo, $options);
+    }
+}
+
+class workshop_calibrated_evaluation_explanation implements renderable {
+    
+    public function __construct($user, $examples, $references, $diminfo, $options = array()) {
+        $this->user = $user;
+        $this->examples = array();
+        foreach($examples as $k => $v) {
+            $this->examples[$v->submissionid][$v->dimensionid] = $v;
+        }
+        $this->references = array();
+        foreach($references as $k => $v) {
+            $this->references[$k] = $v;
+        }
+        $this->diminfo = $diminfo;
+        foreach(array('gradedecimals' => 0, 'accuracy' => 5, 'consistency' => 5, 'finalscoreoutof' => null) as $k => $default) {
+            $this->$k = empty($options[$k]) ? $default : $options[$k];
+        }
+        
+        //make the table
+        
+        $reference_values = array();
+        
+        foreach($this->references as $k => $a) {
+            
+            foreach($a->diminfo as $dimid => $mydimval) {
+                if (!empty($this->examples[$k])) {
+                    $theirdimval = $this->examples[$k][$dimid];
+                    $dim = $diminfo[$dimid];
+                
+                    $diff = abs( $mydimval - $theirdimval->grade ); 
+                    $reference_values[$k][$dimid] = array($diminfo[$dimid], $theirdimval->grade, $mydimval, $diff);
+                }
+            }
+        }
+        
+        $this->reference_values = $reference_values;
+        
+        //calculate the needed values
+        
+        $abs_devs = array();
+        foreach($this->reference_values as $k => $v) {
+            foreach($v as $i => $a) {
+                $dim = $a[0];
+                $diff = $a[3];
+                $abs_devs[] = $this->normalize_grade($dim,$diff);
+            }
+        }
+        
+        $this->raw_average = array_sum($abs_devs) / count($abs_devs);
+        $x = 100 - $this->raw_average;
+        
+        $grading_curve = workshop_calibrated_evaluation::$grading_curves[$this->accuracy];
+        
+        
+        $x /= 100;
+        if ($grading_curve >= 1) {
+            $scaled_average = 1 - pow(1-$x, $grading_curve);
+        } else {
+            $scaled_average = pow($x, 1 / $grading_curve);
+        }
+        $scaled_average *= 100;
+        
+        $this->scaled_average = $scaled_average;
+        
+        $mean = array_sum($abs_devs) / count($abs_devs);
+        $numerator = 0; //top half of the MAD fraction
+        foreach($abs_devs as $z) {
+            $numerator += abs($z - $mean);
+        }
+        $mad = $numerator / count($abs_devs);
+        
+        // $mad /= 50;
+        // if ($mad < 0.01) $mad = 0;
+        // if ($mad > 1) $mad = 1;
+        // $mad = 1 - $mad;
+        
+        $this->mad = $mad;
+        
+        $consistency_curve = workshop_calibrated_evaluation::$grading_curves[9 - $this->consistency];
+        
+        $consistency_multiplier = $consistency_curve * (1 - ($mad / 100)) - $consistency_curve + 1;
+        
+        $this->consistency_multiplier = $consistency_multiplier;
+        
+        $this->final_score = $consistency_multiplier * $this->scaled_average;
+        
+        if ($this->final_score > 100) $this->final_score = 100;
+        if ($this->final_score < 0) $this->final_score = 0;
+    }
+    
+    public function normalize_grade($dim,$grade) {
+        //todo: weight? is weight a factor here? probably should be...
+        $dimmin = $dim->min;
+        $dimmax = $dim->max;
+        if ($dimmin == $dimmax) {
+            return grade_floatval($dimmax);
+        } else {
+            return grade_floatval(($grade - $dimmin) / ($dimmax - $dimmin) * 100);
+        }
+    }
+    
 }

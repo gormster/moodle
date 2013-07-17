@@ -130,11 +130,17 @@ $string['feedbackreviewer'] = 'Feedback for the reviewer';
 $string['formataggregatedgrade'] = '{$a->grade}';
 $string['formataggregatedgradeover'] = '<del>{$a->grade}</del><br /><ins>{$a->over}</ins>';
 $string['formatpeergrade'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">({$a->gradinggrade})</span>';
+$string['formatpeergradehovertext'] = 'Grade Given (Grade for Assessment)';
 $string['formatpeergradeover'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">(<del>{$a->gradinggrade}</del> / <ins>{$a->gradinggradeover}</ins>)</span>';
+$string['formatpeergradeoverhovertext'] = 'Grade Given (~~Grade for Assessment~~ / Overridden Grade for Assessment)';
 $string['formatpeergradeoverweighted'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">(<del>{$a->gradinggrade}</del> / <ins>{$a->gradinggradeover}</ins>)</span> @ <span class="weight">{$a->weight}</span>';
+$string['formatpeergradeoverweightedhovertext'] = 'Grade Given (~~Grade for Assessment~~ / Overridden Grade for Assessment) @ Assessment Weight';
 $string['formatpeergradeweighted'] = '<span class="grade">{$a->grade}</span> <span class="gradinggrade">({$a->gradinggrade})</span> @ <span class="weight">{$a->weight}</span>';
+$string['formatpeergradeweightedhovertext'] = 'Grade Given (Grade for Assessment) @ Assessment Weight';
 $string['formatpeergradenograding'] = '<span class="grade">{$a->grade}</span>';
+$string['formatpeergradenogradinghovertext'] = 'Grade Given';
 $string['formatpeergradeweightednograding'] = '<span class="grade">{$a->grade}</span> @ <span class="weight">{$a->weight}</span>';
+$string['formatpeergradeweightednogradinghovertext'] = 'Grade Given @ Assessment Weight';
 $string['givengrades'] = 'Grades given';
 $string['gradecalculated'] = 'Calculated grade for submission';
 $string['gradedecimals'] = 'Decimal places in grades';
@@ -332,6 +338,10 @@ $string['examplesreassess'] = 'Example reassessment';
 $string['examplesreassess_desc'] = 'Allow students to reassess example submissions';
 $string['examplesrequired'] = '<strong>This is required for the Calibrated grading method</strong>';
 $string['examplesmoderequired'] = '<strong>Examples cannot be voluntary for the Calibrated grading method</strong>';
+$string['exampleassessmentsname'] = '{$a}\'s example assessments';
+$string['explanation'] = 'Assessment grade breakdown for {$a}';
+$string['showexamples'] = 'Show {$a}\'s examples assessments';
+$string['showsubmission'] = 'Show Submission';
 
 //Additions: Random Examples
 $string['numexamples'] = 'Number of examples';
@@ -357,3 +367,5 @@ The small bars are the individual example assessments, while the tall, thick bar
 
 You can use this tool to help you create an even spread of example assessments.
 MDOWN;
+
+

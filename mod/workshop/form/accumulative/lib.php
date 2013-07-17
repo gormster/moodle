@@ -335,7 +335,7 @@ class workshop_accumulative_strategy implements workshop_strategy {
     public function get_dimensions_info() {
         global $DB;
 
-        $sql = 'SELECT d.id, d.grade, d.weight, s.scale
+        $sql = 'SELECT d.id, d.grade, d.weight, d.description AS title, s.scale
                   FROM {workshopform_accumulative} d
              LEFT JOIN {scale} s ON (d.grade < 0 AND -d.grade = s.id)
                  WHERE d.workshopid = :workshopid';

@@ -994,7 +994,7 @@ SQL;
         if (empty($reviewerid)) {
             return false;
         }
-        
+
         $where = ''; $params = array();
         
         if ($this->numexamples > 0) {
@@ -1009,8 +1009,12 @@ SQL;
              LEFT JOIN {workshop_assessments} a ON (a.submissionid = s.id AND a.reviewerid = :reviewerid AND a.weight = 0)
                  WHERE s.example = 1 AND s.workshopid = :workshopid $where
               ORDER BY s.title";
-                       
-        return $DB->get_records_sql($sql, array('workshopid' => $this->id, 'reviewerid' => $reviewerid) + $params);
+        $params['workshopid'] = $this->id;
+        $params['reviewerid'] = $reviewerid;
+
+        $retval = $DB->get_records_sql($sql, $params);
+
+        return $retval;
     }
     
     protected function get_n_examples_for_reviewer($n,$reviewer) {
@@ -1731,6 +1735,17 @@ SQL;
         global $CFG;
         $assessmentid = clean_param($assessmentid, PARAM_INT);
         return new moodle_url('/mod/workshop/exassessment.php', array('asid' => $assessmentid));
+    }
+    
+    /**
+     * @param int $assessmentid The ID of assessment record
+     * @return moodle_url of the example assessment page
+     */
+    public function all_exassess_url($userid) {
+        global $CFG;
+        $userid = clean_param($userid, PARAM_INT);
+        $id = clean_param($this->id, PARAM_INT);
+        return new moodle_url('/mod/workshop/exassessments.php', array('id' => $id, 'uid' => $userid));
     }
 
     /**
@@ -3005,16 +3020,19 @@ class workshop_user_plan implements renderable {
         }
         
         if (count($groups)) {
-            list($sql, $params) = $DB->get_in_or_equal(array_keys($groups));
-            $groupmembers = $DB->get_records_select('groups_members','groupid '.$sql,$params,'','userid,groupid');
+            list($sql, $params) = $DB->get_in_or_equal(array_keys($groups), SQL_PARAMS_NAMED);
+            $groupmembers = $DB->get_records_select('groups_members','groupid '.$sql,$params,'','id,userid,groupid');
         
             if (count($groupmembers)) {
-                list($sql, $params) = $DB->get_in_or_equal(array_keys($groupmembers)); //all students
+                $userids = array();
+                foreach($groupmembers as $v) {
+                    $userids[] = $v->userid;
+                }
+                list($sql, $params) = $DB->get_in_or_equal($userids); //all students
                 $studentdata = $DB->get_records_select('user','id '.$sql,$params,'',user_picture::fields());
         
-                foreach($groupmembers as $k => $v) {
-                    $gid = $v->groupid;
-                    $groups[$gid]->members[$k] = $studentdata[$k];
+                foreach($groupmembers as $v) {
+                    $groups[$v->groupid]->members[$v->userid] = $studentdata[$v->userid];
                 }
             }
         }
@@ -3806,6 +3824,9 @@ class workshop_assessment extends workshop_assessment_base implements renderable
  * Represents a renderable training assessment of an example submission
  */
 class workshop_example_assessment extends workshop_assessment implements renderable {
+
+    /** @var stdClass if set, the assessment will also show the reference assessment for comparison */
+    public $reference_form;
 
     /**
      * @see parent::validate_raw_record()

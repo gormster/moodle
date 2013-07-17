@@ -841,7 +841,23 @@ class mod_workshop_renderer extends plugin_renderer_base {
         if (!is_null($assessment->form)) {
             $o .= print_collapsible_region_start('assessment-form-wrapper', uniqid('workshop-assessment'),
                     get_string('assessmentform', 'workshop'), '', false, true);
-            $o .= $this->output->container(self::moodleform($assessment->form), 'assessment-form');
+            if (isset($assessment->reference_form)) {
+                $o .= $this->output->container_start('center');
+                
+                $o .= $this->output->container_start('inline-block');
+                $o .= $this->output->heading(get_string('assessmentreference','workshop'));
+                $o .= $this->output->container(self::moodleform($assessment->reference_form));
+                $o .= $this->output->container_end();
+                
+                $o .= $this->output->container_start('inline-block');
+                $o .= $this->output->heading(get_string('assessmentbyfullname','workshop', fullname($assessment->reviewer)));
+                $o .= $this->output->container(self::moodleform($assessment->form));
+                $o .= $this->output->container_end();
+                
+                $o .= $this->output->container_end();
+            } else {
+                $o .= $this->output->container(self::moodleform($assessment->form), 'assessment-form');
+            }
             $o .= print_collapsible_region_end(true);
         }
 
@@ -1083,27 +1099,33 @@ class mod_workshop_renderer extends plugin_renderer_base {
             if ($suppressgradinggrade == true) {
                 if ($a->weight == 1) {
                     $grade = get_string('formatpeergradenograding', 'workshop', $a);
+                    $gradehelp = get_string('formatpeergradenogradinghovertext', 'workshop');
                 } else {
                     $grade = get_string('formatpeergradeweightednograding', 'workshop', $a);
+                    $gradehelp = get_string('formatpeergradeweightednogradinghovertext', 'workshop');
                 }
             } else {
                 if ($a->weight == 1) {
                     $grade = get_string('formatpeergrade', 'workshop', $a);
+                    $gradehelp = get_string('formatpeergradehovertext', 'workshop');
                 } else {
                     $grade = get_string('formatpeergradeweighted', 'workshop', $a);
+                    $gradehelp = get_string('formatpeergradeweightedhovertext', 'workshop');
                 }
             }
         } else {
             $a->gradinggradeover = $assessment->gradinggradeover;
             if ($a->weight == 1) {
                 $grade = get_string('formatpeergradeover', 'workshop', $a);
+                $gradehelp = get_string('formatpeergradeoverhovertext', 'workshop');
             } else {
                 $grade = get_string('formatpeergradeoverweighted', 'workshop', $a);
+                $gradehelp = get_string('formatpeergradeoverweightedhovertext', 'workshop');
             }
         }
         $url = new moodle_url('/mod/workshop/assessment.php',
                               array('asid' => $assessment->assessmentid));
-        $grade = html_writer::link($url, $grade, array('class'=>'grade'));
+        $grade = html_writer::link($url, $grade, array('class'=>'grade', 'title'=>$gradehelp));
 
         if ($shownames) {
             $userid = $assessment->userid;

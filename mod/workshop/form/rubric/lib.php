@@ -383,7 +383,7 @@ class workshop_rubric_strategy implements workshop_strategy {
     public function get_dimensions_info() {
         global $DB;
 
-        $sql = 'SELECT d.id AS id, MIN(l.grade) AS min, MAX(l.grade) AS max, 1 AS weight
+        $sql = 'SELECT d.id AS id, d.description AS title, MIN(l.grade) AS min, MAX(l.grade) AS max, 1 AS weight
                   FROM {workshopform_rubric} d
             INNER JOIN {workshopform_rubric_levels} l ON (d.id = l.dimensionid)
                  WHERE d.workshopid = :workshopid

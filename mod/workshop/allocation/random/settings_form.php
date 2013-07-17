@@ -85,7 +85,12 @@ class workshop_random_allocator_form extends moodleform {
         $mform->addElement('checkbox', 'removecurrent', get_string('removecurrentallocations', 'workshopallocation_random'));
         $mform->setDefault('removecurrent', 0);
 
-        $mform->addElement('checkbox', 'assesswosubmission', get_string('assesswosubmission', 'workshopallocation_random'));
+        $options = array(); $label = '';
+        if ($workshop->examplesmode == workshop::EXAMPLES_BEFORE_ASSESSMENT) {
+            $options['disabled'] = 'disabled';
+            $label = ' <em>Workshop settings require submission before assessment</em>';
+        }
+        $mform->addElement('checkbox', 'assesswosubmission', get_string('assesswosubmission', 'workshopallocation_random'), $label, $options);
         $mform->setDefault('assesswosubmission', 0);
 
         if (empty($workshop->useselfassessment)) {
