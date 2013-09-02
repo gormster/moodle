@@ -333,11 +333,11 @@ $string['teammode_nogroupswarning'] = 'There are no groups in your course, or in
 //Additions: Calibration
 $string['examplescompare'] = 'Example comparison';
 $string['examplescompare_desc'] = 'Allow comparison of example submissions with reference assessments';
-$string['examplescompare_warn'] = '<strong>If both of these are checked, the Calibrated grading method will not work.</strong>';
+$string['examplescompare_warn'] = 'Do not check both of these if you are using <strong>Calibrated</strong> grading.';
 $string['examplesreassess'] = 'Example reassessment';
 $string['examplesreassess_desc'] = 'Allow students to reassess example submissions';
-$string['examplesrequired'] = '<strong>This is required for the Calibrated grading method</strong>';
-$string['examplesmoderequired'] = '<strong>Examples cannot be voluntary for the Calibrated grading method</strong>';
+$string['examplesrequired'] = 'You must select <strong>Use examples</strong> to set up <strong>Calibrated</strong> grading.';
+$string['examplesmoderequired'] = 'Do not use <strong>voluntary</strong> example assessment when using <strong>Calibrated</strong> grading.';
 $string['exampleassessmentsname'] = '{$a}\'s example assessments';
 $string['explanation'] = 'Assessment grade breakdown for {$a}';
 $string['showexamples'] = 'Show {$a}\'s examples assessments';
