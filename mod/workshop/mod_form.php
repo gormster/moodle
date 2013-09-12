@@ -196,6 +196,9 @@ class mod_workshop_mod_form extends moodleform_mod {
         $mform->setDefault('numexamples', 0);
         $mform->addHelpButton('numexamples','numexamples','workshop');
         
+        $text = get_string('examplescompare_warn', 'workshop');
+        $mform->addElement('static', 'examplescomparelabel', '', $text);
+        
         $label = get_string('examplescompare', 'workshop');
         $text = get_string('examplescompare_desc', 'workshop');
         $mform->addElement('checkbox', 'examplescompare', $label, $text);
@@ -207,9 +210,6 @@ class mod_workshop_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'examplesreassess', $label, $text);
         $mform->disabledIf('examplesreassess', 'useexamples');
         $mform->setDefault('examplesreassess', true);
-        
-        $text = get_string('examplescompare_warn', 'workshop');
-        $mform->addElement('static', 'examplescomparelabel', '', $text);
 
         // Access control -------------------------------------------------------------
         $mform->addElement('header', 'accesscontrol', get_string('accesscontrol', 'workshop'));
