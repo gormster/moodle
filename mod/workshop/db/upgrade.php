@@ -236,6 +236,17 @@ function xmldb_workshop_upgrade($oldversion) {
         
         upgrade_mod_savepoint(true, 2014063001, 'workshop');
     }
+	
+	if ($oldversion < 2014063002) {
+		$table = new xmldb_table('workshop');
+		
+		$field = new xmldb_field('submitterflagging', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, false, '1');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+		
+		upgrade_mod_savepoint(true, 2014063002, 'workshop');
+	}
 
 
     return true;

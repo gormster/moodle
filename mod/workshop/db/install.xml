@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/workshop/db" VERSION="20130325" COMMENT="XMLDB file for Moodle mod/workshop"
+<XMLDB PATH="mod/workshop/db" VERSION="20140702" COMMENT="XMLDB file for Moodle mod/workshop"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -99,6 +99,7 @@
         <FIELD NAME="feedbackauthorattachment" TYPE="int" LENGTH="3" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Are there some files attached to the feedbackauthor field? Sets to 1 by file_postupdate_standard_filemanager()."/>
         <FIELD NAME="feedbackreviewer" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The comment/feedback from the teacher for the reviewer. For example the reason why the grade for assessment was overridden"/>
         <FIELD NAME="feedbackreviewerformat" TYPE="int" LENGTH="3" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="submitterflagged" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Tri-state: 0 means the assessment has not been flagged; 1 means the assessment is pending review; -1 means the assessment has been reviewed by a manager."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

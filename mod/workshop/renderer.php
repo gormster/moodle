@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_workshop_renderer extends plugin_renderer_base {
-
+    
     ////////////////////////////////////////////////////////////////////////////
     // External API - methods to render workshop renderable components
     ////////////////////////////////////////////////////////////////////////////
@@ -137,6 +137,17 @@ class mod_workshop_renderer extends plugin_renderer_base {
 
         $o .= $this->output->container_end(); // end of header
 
+        $o .= $this->helper_submission_content($submission);
+
+        $o .= $this->output->container_end(); // end of submission-full
+
+        return $o;
+    }
+	
+	protected function helper_submission_content($submission) {
+		
+		$o = '';
+		
         $content = file_rewrite_pluginfile_urls($submission->content, 'pluginfile.php', $this->page->context->id,
                                                         'mod_workshop', 'submission_content', $submission->id);
         $content = format_text($content, $submission->contentformat, array('overflowdiv'=>true));
@@ -154,11 +165,9 @@ class mod_workshop_renderer extends plugin_renderer_base {
         $o .= $this->output->container($this->helper_submission_wordcount($content), 'wordcount');
 
         $o .= $this->helper_submission_attachments($submission->id, 'html');
-
-        $o .= $this->output->container_end(); // end of submission-full
-
-        return $o;
-    }
+		
+		return $o;
+	}
 
     /**
      * Renders short summary of the submission
@@ -899,6 +908,19 @@ class mod_workshop_renderer extends plugin_renderer_base {
             }
         }
 
+		// Handle the flagged assessment resolution options
+		
+		// This is raw HTML because it's intended for use within a larger form
+		// TODO: Localisation
+		if ($assessment->resolution) {
+			$o .= <<<HTML
+			<div class="resolution">
+	<input type="radio" name="assessment_{$assessment->id}" value="1">This assessment is fair</input><br/>
+	<input type="radio" name="assessment_{$assessment->id}" value="0">This assessment is unfair and should be discounted</input>
+</div>
+HTML;
+		}
+        
         $o .= $this->output->container_end(); // main wrapper
 
         return $o;

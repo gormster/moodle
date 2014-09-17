@@ -57,6 +57,8 @@ abstract class workshop_evaluation {
 
         return new workshop_evaluation_settings_form($actionurl, $customdata, 'post', '', $attributes);
     }
+    
+    abstract public function get_settings();
 
     /**
      * Delete all data related to a given workshop module instance
@@ -97,4 +99,5 @@ class workshop_evaluation_settings_form extends moodleform {
      */
     protected function definition_sub() {
     }
+    
 }

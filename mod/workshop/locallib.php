@@ -186,6 +186,9 @@ class workshop {
     /** @var string */
     public $calibrationmethod;
 	
+	/** @var bool allow submitters to flag assessments as unfair */
+	public $submitterflagging;
+    
     /**
      * @var workshop_strategy grading strategy instance
      * Do not use directly, get the instance using {@link workshop::grading_strategy_instance()}
@@ -1387,10 +1390,18 @@ SQL;
      * @return workshop_assessment
      */
     public function prepare_assessment(stdClass $record, $form, array $options = array()) {
+		return $this->prepare_assessment_with_submission($record, null, $form, $options);
+	}
+	
+	public function prepare_assessment_with_submission(stdClass $record, $submission, $form, array $options = array()) {
 
         $assessment             = new workshop_assessment($this, $record, $options);
         $assessment->url        = $this->assess_url($record->id);
         $assessment->maxgrade   = $this->real_grade(100);
+		
+		if (!is_null($submission)) {
+			$assessment->submission = $submission;
+		}
 
         if (!empty($options['showform']) and !($form instanceof workshop_assessment_form)) {
             debugging('Not a valid instance of workshop_assessment_form supplied', DEBUG_DEVELOPER);
@@ -1407,6 +1418,10 @@ SQL;
         if (!is_null($record->grade)) {
             $assessment->realgrade = $this->real_grade($record->grade);
         }
+		
+		if (!empty($options['showflaggingresolution'])) {
+			$assessment->resolution = true;
+		}
 
         return $assessment;
     }
@@ -1521,6 +1536,29 @@ SQL;
             INNER JOIN {user} author ON (s.authorid = author.id)
              LEFT JOIN {user} overby ON (a.gradinggradeoverby = overby.id)
                  WHERE s.workshopid = :workshopid AND s.example = 0
+              ORDER BY $sort";
+        $params['workshopid'] = $this->id;
+
+        return $DB->get_records_sql($sql, $params);
+    }
+	
+    public function get_flagged_assessments() {
+        global $DB;
+
+        $reviewerfields = user_picture::fields('reviewer', null, 'revieweridx', 'reviewer');
+        $authorfields   = user_picture::fields('author', null, 'authorid', 'author');
+        $overbyfields   = user_picture::fields('overby', null, 'gradinggradeoverbyx', 'overby');
+        list($sort, $params) = users_order_by_sql('reviewer');
+        $sql = "SELECT a.*,
+                       $reviewerfields, $authorfields, $overbyfields,
+                       s.title, s.content as submissioncontent, 
+					   s.contentformat as submissionformat, s.attachment as submissionattachment
+                  FROM {workshop_assessments} a
+            INNER JOIN {user} reviewer ON (a.reviewerid = reviewer.id)
+            INNER JOIN {workshop_submissions} s ON (a.submissionid = s.id)
+            INNER JOIN {user} author ON (s.authorid = author.id)
+             LEFT JOIN {user} overby ON (a.gradinggradeoverby = overby.id)
+                 WHERE s.workshopid = :workshopid AND s.example = 0 AND a.submitterflagged = 1
               ORDER BY $sort";
         $params['workshopid'] = $this->id;
 
@@ -1993,6 +2031,21 @@ SQL;
         global $CFG;
         return new moodle_url('/mod/workshop/toolbox.php', array('id' => $this->cm->id, 'tool' => $tool));
     }
+    
+    /**
+     * @param int $assessmentid The ID of assessment record
+     * @param moodle_url $redirect URL to redirect to after flagging
+     * @return moodle_url that will flag this assessment for review
+     */
+    public function flag_url($assessmentid, $redirect, $unflag = false) {
+        global $CFG;
+        $assessmentid = clean_param($assessmentid, PARAM_INT);
+        return new moodle_url('/mod/workshop/flag_assessment.php', array('asid' => $assessmentid, 'redirect' => $redirect->out(), 'unflag' => $unflag));
+    }
+	
+	public function flagged_assessments_url() {
+		return new moodle_url('/mod/workshop/flagged_assessments.php', array('id' => $this->cm->id));
+	}
 
     /**
      * Workshop wrapper around {@see add_to_log()}
@@ -2306,7 +2359,7 @@ SQL;
         if ($submissions) {
             list($submissionids, $params) = $DB->get_in_or_equal(array_keys($submissions), SQL_PARAMS_NAMED);
             list($sort, $sortparams) = users_order_by_sql('r');
-            $sql = "SELECT a.id AS assessmentid, a.submissionid, a.grade, a.gradinggrade, a.gradinggradeover, a.weight,
+            $sql = "SELECT a.id AS assessmentid, a.submissionid, a.grade, a.gradinggrade, a.gradinggradeover, a.weight, a.submitterflagged,
                            r.id AS reviewerid, r.lastname, r.firstname, r.picture, r.imagealt, r.email,
                            s.id AS submissionid, s.authorid
                       FROM {workshop_assessments} a
@@ -2315,6 +2368,48 @@ SQL;
                      WHERE a.submissionid $submissionids
                   ORDER BY a.weight DESC, $sort";
             $reviewers = $DB->get_records_sql($sql, array_merge($params, $sortparams));
+            
+            //Highlight discrepancies
+            $flags = array();
+            
+            //First get the submission scores
+            $reviewer_submissions = array();
+            foreach ($reviewers as $r) {
+                if ((!is_null($r->grade)) and ($r->weight > 0)) {
+                    $reviewer_submissions[$r->submissionid][$r->assessmentid] = $r->grade;
+                }
+            }
+            
+            foreach ($reviewer_submissions as $submissionid => $s) {
+                if (count($s) > 2) {
+                    //Calculate the standard deviation of the assessment grades for this submission
+                    $mean = array_sum($s) / count($s);
+                    $diffs = array();
+                    foreach ($s as $v) {
+                        $diffs[] = pow($v - $mean, 2);
+                    }
+                    
+                    $diffmean = array_sum($diffs) / count($diffs);
+                    $stddev = sqrt($diffmean);
+                    
+                    //Get the median of our marks
+                    
+                    $s2 = $s; // Don't muck up our original array
+                    
+                    sort($s2,SORT_NUMERIC); 
+                    $median = (count($s2) % 2) ? 
+                     $s2[floor(count($s2)/2)] : 
+                     ($s2[floor(count($s2)/2)] + $s2[floor(count($s2)/2) - 1]) / 2;
+                    
+                    //Now if there's any outside ±2 std dev flag them
+                    foreach ($s as $assessmentid => $grade) {
+                        if (($grade < $median - 2 * $stddev) or ($grade > $median + 2 * $stddev)) {
+                            $flags[$assessmentid] = true;
+                        }
+                    }
+                }
+            }
+            
             foreach ($reviewers as $reviewer) {
                 if (!isset($userinfo[$reviewer->reviewerid])) {
                     $userinfo[$reviewer->reviewerid]            = new stdclass();
@@ -2324,6 +2419,10 @@ SQL;
                     $userinfo[$reviewer->reviewerid]->picture   = $reviewer->picture;
                     $userinfo[$reviewer->reviewerid]->imagealt  = $reviewer->imagealt;
                     $userinfo[$reviewer->reviewerid]->email     = $reviewer->email;
+                }
+                
+                if (isset($flags[$reviewer->assessmentid])) {
+                    $reviewer->flagged = true;
                 }
             }
         }
@@ -2344,6 +2443,7 @@ SQL;
                      WHERE u.id $participantids AND s.workshopid = :workshopid
                   ORDER BY a.weight DESC, $sort";
             $reviewees = $DB->get_records_sql($sql, array_merge($params, $sortparams));
+            
             foreach ($reviewees as $reviewee) {
                 if (!isset($userinfo[$reviewee->authorid])) {
                     $userinfo[$reviewee->authorid]            = new stdclass();
@@ -2394,6 +2494,8 @@ SQL;
             $info->gradinggrade = $this->real_grading_grade($reviewer->gradinggrade);
             $info->gradinggradeover = $this->real_grading_grade($reviewer->gradinggradeover);
             $info->weight = $reviewer->weight;
+            $info->flagged = isset($reviewer->flagged);
+            $info->submitterflagged = $reviewer->submitterflagged;
             $grades[$reviewer->authorid]->reviewedby[$reviewer->reviewerid] = $info;
         }
         unset($reviewers);
@@ -2523,7 +2625,7 @@ SQL;
     	foreach($submissions as $k => $v) {
             if (empty($v)) continue;
             
-    		$gradeitem = $grades[$v->group->id] or new stdClass;
+    		$gradeitem = isset($grades[$v->group->id]) ? $grades[$v->group->id] : new stdClass;
     		$gradeitem->groupid = $v->group->id;
     		$gradeitem->name = $v->group->name;
     		$gradeitem->submissiontitle = $v->title;
@@ -4169,6 +4271,9 @@ class workshop_assessment extends workshop_assessment_base implements renderable
 
     /** @var int */
     public $submissionid;
+	
+	/** @var stdClass */
+	public $submission;
 
     /** @var int */
     public $weight;
@@ -4196,12 +4301,15 @@ class workshop_assessment extends workshop_assessment_base implements renderable
 
     /** @var int */
     public $feedbackauthorattachment;
+	
+	/** @var bool Show flagged item resolution options */
+	public $resolution;
 
     /** @var array */
     protected $fields = array('id', 'submissionid', 'weight', 'timecreated',
         'timemodified', 'grade', 'gradinggrade', 'gradinggradeover', 'feedbackauthor',
         'feedbackauthorformat', 'feedbackauthorattachment');
-
+	
     /**
      * Format the overall feedback text content
      *

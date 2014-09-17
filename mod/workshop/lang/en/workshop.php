@@ -404,6 +404,18 @@ $string['feedback'] = 'Feedback';
 $string['wordcount'] = 'Word count: {$a}';
 
 $string['downloadallocations'] = 'Download Allocations';
+
+$string['submitterflagging'] = 'Submitter Assessment Flagging';
+$string['flaggingon'] = 'Allow submitters to flag reviews as unfair';
+$string['flagassessment'] = 'Flag this assessment as unfair';
+$string['unflagassessment'] = 'Unflag this assessment';
+$string['flagassessment_help'] = 'If you feel this assessment was unfair, you can flag it for review.';
+$string['showflaggedassessments'] = 'Review assessments that users have flagged as unfair';
+$string['resolutiontitle'] = 'Flagged as unfair';
+$string['resolutionfair'] = 'This assessment is fair';
+$string['resolutionunfair'] = 'This assessment is unfair and should be discounted';
+$string['needsresolution'] = 'This assessment has been flagged by the submitter as unfair and needs review.';
+
 // Calibrationphase
 
 $string['calibration'] = 'Calibration';
@@ -426,3 +438,5 @@ $string['score'] = 'Calibration Score';
 $string['calculatescores'] = 'Calculate Calibration Scores';
 $string['yourcalibration'] = 'Your calibration results';
 $string['calibrationcompletion'] = '{$a->num} / {$a->den} users have completed example assessments.';
+
+

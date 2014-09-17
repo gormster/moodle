@@ -215,7 +215,8 @@ if ($canoverridegrades or $cansetassessmentweight) {
     $options = array(
         'editable' => true,
         'editableweight' => $cansetassessmentweight,
-        'overridablegradinggrade' => $canoverridegrades);
+        'overridablegradinggrade' => $canoverridegrades,
+		'showflaggingresolution' => $cansetassessmentweight and ($assessment->submitterflagged == 1));
     $feedbackform = $workshop->get_feedbackreviewer_form($PAGE->url, $assessment, $options);
     if ($data = $feedbackform->get_data()) {
         $data = file_postupdate_standard_editor($data, 'feedbackreviewer', array(), $workshop->context);
@@ -223,6 +224,12 @@ if ($canoverridegrades or $cansetassessmentweight) {
         $record->id = $assessment->id;
         if ($cansetassessmentweight) {
             $record->weight = $data->weight;
+			if (isset($data->resolution)) {
+				if ($data->resolution == 0) {
+					$record->weight = 0;
+				}
+				$record->submitterflagged = -1;
+			}
         }
         if ($canoverridegrades) {
             $record->gradinggradeover = $workshop->raw_grade_value($data->gradinggradeover, $workshop->gradinggrade);
@@ -292,8 +299,19 @@ if ($isreviewer) {
         'showform'      => $assessmenteditable or !is_null($assessment->grade),
         'showweight'    => true,
     );
-    $assessment = $workshop->prepare_assessment($assessment, $mform, $options);
-    echo $output->render($assessment);
+    $displayassessment = $workshop->prepare_assessment($assessment, $mform, $options);
+	
+    if ($isauthor and $workshop->submitterflagging) {
+        if ($assessment->submitterflagged == 1) {
+            //unflag
+            $displayassessment->add_action($workshop->flag_url($assessment->id, $PAGE->url, true), get_string('unflagassessment', 'workshop'));
+        } else if ($assessment->submitterflagged == 0) {
+            //flag for review
+            $displayassessment->add_action($workshop->flag_url($assessment->id, $PAGE->url), get_string('flagassessment', 'workshop'));
+        }
+    }
+	
+    echo $output->render($displayassessment);
 }
 
 if (!$assessmenteditable and $canoverridegrades) {

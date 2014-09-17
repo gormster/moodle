@@ -385,9 +385,19 @@ if (has_capability('mod/workshop:viewallassessments', $workshop->context) or ($o
             'showform'      => !is_null($assessment->grade),
             'showweight'    => true,
         );
+        
         $displayassessment = $workshop->prepare_assessment($assessment, $mform, $options);
         if ($canoverride) {
             $displayassessment->add_action($workshop->assess_url($assessment->id), get_string('assessmentsettings', 'workshop'));
+        }
+        if ($ownsubmission and $workshop->submitterflagging) {
+            if ($assessment->submitterflagged == 1) {
+                //unflag
+                $displayassessment->add_action($workshop->flag_url($assessment->id, $PAGE->url, true), get_string('unflagassessment', 'workshop'));
+            } else if ($assessment->submitterflagged == 0) {
+                //flag for review
+                $displayassessment->add_action($workshop->flag_url($assessment->id, $PAGE->url), get_string('flagassessment', 'workshop'));
+            }
         }
         echo $output->render($displayassessment);
 

@@ -499,6 +499,25 @@
     white-space: nowrap;
 }
 
+.path-mod-workshop .grading-report .receivedgrade.flagged {
+    background-color: #ffb6c4;
+}
+
+.path-mod-workshop .grading-report .receivedgrade.flagged.submitter {
+    background-color: #FEE1A7;
+}
+
+.path-mod-workshop .assessment-full .resolution {
+	margin:10px auto;
+	width:50%;
+	border:1px solid #FEDD1D;
+	padding: 10px;
+}
+
+.path-mod-workshop .assessment-full .submission-full {
+	border: none;
+}
+
 .path-mod-workshop .grading-report .receivedgrade span.grade,
 .path-mod-workshop .grading-report .givengrade span.gradinggrade {
     font-weight: bold;
@@ -736,4 +755,8 @@
 .path-mod-workshop h2.example-assessment
 {
   color: #DD6622;
+}
+
+.path-mod-workshop #workshop-viewlet-flagging .loading::before {
+	content: url([[pix:mod_workshop|loading]]);
 }

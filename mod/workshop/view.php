@@ -85,6 +85,7 @@ if (!is_null($editmode) && $PAGE->user_allowed_editing()) {
 $PAGE->set_url($workshop->view_url());
 $PAGE->set_title($workshop->name);
 $PAGE->set_heading($course->fullname);
+$PAGE->requires->js(new moodle_url('/mod/workshop/view.js'));
 
 if ($perpage and $perpage > 0 and $perpage <= 1000) {
     require_sesskey();
@@ -566,6 +567,7 @@ case workshop::PHASE_EVALUATION:
             $reportopts->sorthow                = $sorthow;
             $reportopts->showsubmissiongrade    = true;
             $reportopts->showgradinggrade       = true;
+            $reportopts->showdiscrepancy        = true;
 
             print_collapsible_region_start('', 'workshop-viewlet-gradereport', get_string('gradesreport', 'workshop'));
             echo $output->box_start('generalbox gradesreport');
@@ -709,6 +711,24 @@ case workshop::PHASE_CLOSED:
         print_collapsible_region_end();
     }
     if (has_capability('mod/workshop:viewallassessments', $PAGE->context)) {
+		
+		print_collapsible_region_start('', 'workshop-viewlet-flagging', get_string('submitterflagging', 'workshop'));
+		echo $output->box_start('generalbox center');
+        
+		echo html_writer::checkbox('flaggingon', '1', $workshop->submitterflagging, get_string('flaggingon', 'workshop'), array('onchange' => "set_flagging_on(this, {$cm->id});"));
+		
+		$url = new moodle_url('flagged_assessments.php', array('id' => $cm->id));
+        echo $output->single_button($url, get_string('showflaggedassessments', 'workshop', 1));
+
+		echo $output->box_end();
+		print_collapsible_region_end();
+		
+        $evaluator = $workshop->grading_evaluation_instance();
+		
+        if ($evaluator->has_messages()) {
+            $evaluator->display_messages();
+        }
+		
         $perpage = get_user_preferences('workshop_perpage', 10);
         $groupid = groups_get_activity_group($workshop->cm, true);
         $groupmode = groups_get_activity_groupmode($workshop->cm);

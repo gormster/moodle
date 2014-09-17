@@ -129,6 +129,10 @@ class workshop_best_evaluation extends workshop_evaluation {
     public function display_messages() {
         
     }
+	
+	public function get_settings() {
+		return $this->settings;
+	}
 
     /**
      * Delete all data related to a given workshop module instance

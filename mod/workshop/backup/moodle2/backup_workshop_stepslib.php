@@ -111,7 +111,7 @@ class backup_workshop_activity_structure_step extends backup_activity_structure_
             'reviewerid', 'weight', 'timecreated', 'timemodified', 'grade',
             'gradinggrade', 'gradinggradeover', 'gradinggradeoverby',
             'feedbackauthor', 'feedbackauthorformat', 'feedbackauthorattachment',
-            'feedbackreviewer', 'feedbackreviewerformat'));
+            'feedbackreviewer', 'feedbackreviewerformat', 'submitterflagged'));
 
         // dimension grades for the assessment (that is assessment forms are filled)
         $this->add_subplugin_structure('workshopform', $assessment, true);

@@ -50,7 +50,18 @@ require_capability('mod/workshop:overridegrades', $PAGE->context);
 $evaluator = $workshop->grading_evaluation_instance();
 $settingsform = $evaluator->get_settings_form($PAGE->url);
 
-if ($settingsdata = $settingsform->get_data()) {
+// this page is now also responsible for automatic aggregation
+// after a flagged assessment is discounted
+// so we need to load settings data from the database
+// if need be
+
+$settingsdata = $settingsform->get_data();
+    
+if (empty($settingsdata)) {
+    $settingsdata = $evaluator->get_settings();
+}
+
+if (!empty($settingsdata)) {
     $workshop->aggregate_submission_grades();           // updates 'grade' in {workshop_submissions}
     $evaluator->update_grading_grades($settingsdata);   // updates 'gradinggrade' in {workshop_assessments}
     $workshop->aggregate_grading_grades();              // updates 'gradinggrade' in {workshop_aggregations}
