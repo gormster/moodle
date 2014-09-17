@@ -28,22 +28,32 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/formslib.php');
 
-class workshop_calibrated_evaluation_settings_form extends moodleform {
+class workshop_examples_calibration_settings_form extends moodleform {
 
     function definition() {
         $mform = $this->_form;
 
-        $plugindefaults = get_config('workshopeval_calibrated');
+        $plugindefaults = get_config('workshopcalibration_examples');
         $current        = $this->_customdata['current'];
         $workshop       = $this->_customdata['workshop'];
 
-        $mform->addElement('header', 'general', get_string('settings', 'workshopeval_calibrated'));
+        $mform->addElement('header', 'general', get_string('settings', 'workshopcalibration_examples'));
 
-        $mform->addElement('checkbox', 'adjustgrades', get_string('adjustgrades', 'workshopeval_calibrated'));
-        $mform->setDefault('adjustgrades', true);
-        $mform->addHelpButton('adjustgrades','adjustgrades','workshopeval_calibrated');
-        
-        $mform->addElement('submit', 'submit', get_string('aggregategrades', 'workshop'));
+        $options = array();
+        for ($i = 9; $i >= 1; $i--) {
+            $options[$i] = get_string('comparisonlevel' . $i, 'workshopcalibration_examples');
+        }
+        $label = get_string('comparison', 'workshopcalibration_examples');
+        $mform->addElement('select', 'comparison', $label, $options);
+        $mform->addHelpButton('comparison', 'comparison', 'workshopcalibration_examples');
+        $mform->setDefault('comparison', $plugindefaults->accuracy);
+
+        $label = get_string('consistency', 'workshopcalibration_examples');
+        $mform->addElement('select', 'consistency', $label, $options);
+        $mform->addHelpButton('consistency', 'consistency', 'workshopcalibration_examples');
+        $mform->setDefault('consistency', $plugindefaults->consistence); //we have this fun typo because there's a bug with the settings form
+
+        $mform->addElement('submit', 'submit', get_string('calculatescores', 'workshop'));
 
         $this->set_data($current);
     }

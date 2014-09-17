@@ -24,8 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
-require_once(dirname(__FILE__).'/locallib.php');
+require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
+require_once(dirname(dirname(dirname(__FILE__))).'/locallib.php');
 
 $id         = required_param('id', PARAM_INT);  // workshop id
 $uid        = required_param('uid', PARAM_INT); // user id
@@ -43,7 +43,7 @@ $workshop = new workshop($workshop, $cm, $course);
 $assessments = $workshop->get_examples_for_reviewer($reviewer->id);
 $references = $workshop->get_examples_for_manager();
 
-$PAGE->set_url($workshop->all_exassess_url($reviewer->id));
+$PAGE->set_url($workshop->calibration_instance()->user_calibration_url($reviewer->id));
 $PAGE->set_title($workshop->name);
 $PAGE->set_heading($course->fullname);
 $PAGE->navbar->add(get_string('assessingexample', 'workshop')); //todo
@@ -62,11 +62,18 @@ if ($isreviewer or $canmanage) {
 // load the grading strategy logic
 $strategy = $workshop->grading_strategy_instance();
 
-// load the assessment form and process the submitted data eventually
-
 // output starts here
-$output = $PAGE->get_renderer('mod_workshop');      // workshop renderer
+$output = $PAGE->get_renderer('workshopcalibration_examples');      // workshop renderer
 echo $output->header();
+
+$calibration = $workshop->calibration_instance();
+$breakdown = $calibration->prepare_grade_breakdown($uid);
+if(!empty($breakdown)) {
+    echo $output->heading('Grade breakdown');
+    echo $output->render($breakdown);
+}
+
+$output = $PAGE->get_renderer('mod_workshop');      // workshop renderer
 echo $output->heading(get_string('exampleassessments', 'workshop', fullname($reviewer)), 2);
 
 foreach($assessments as $k => $v) {
@@ -92,5 +99,7 @@ foreach($assessments as $k => $v) {
     }
     
 }
+
+echo $output->single_button($workshop->view_url(),get_string('continue', 'moodle'));
 
 echo $output->footer();

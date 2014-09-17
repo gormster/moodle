@@ -89,5 +89,15 @@ if ($ADMIN->fulltree) {
             include($settingsfile);
         }
     }
+    
+    // include the settings of grading evaluation subplugins
+    $calibrations = get_plugin_list('workshopcalibration');
+    foreach ($calibrations as $calibration => $path) {
+        if (file_exists($settingsfile = $path . '/settings.php')) {
+            $settings->add(new admin_setting_heading('workshopcalibrationsetting'.$evaluation,
+                    get_string('calibration', 'workshop') . ' - ' . get_string('pluginname', 'workshopcalibration_' . $calibration), ''));
+            include($settingsfile);
+        }
+    }
 
 }

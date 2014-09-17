@@ -25,6 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2012040400;
+$plugin->version  = 2014063001;
 $plugin->requires = 2010090501;  // Requires this Moodle version
 $plugin->component = 'workshopeval_calibrated';
+$plugin->dependencies = array(
+    'workshopcalibration_examples'  => 2014063001,
+);

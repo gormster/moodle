@@ -346,7 +346,8 @@ class mod_workshop_renderer extends plugin_renderer_base {
      * @param workshop_user_plan $plan prepared for the user
      * @return string html code to be displayed
      */
-    protected function render_workshop_user_plan(workshop_user_plan $plan) {
+    protected function render_workshop_user_plan(workshop_user_plan $plan) {        
+        $width = 100 / count($plan->phases);
         $table = new html_table();
         $table->attributes['class'] = 'userplan';
         $table->head = array();
@@ -382,6 +383,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
             $table->colclasses[] = $classes;
             $cell = new html_table_cell();
             $cell->text = $this->helper_user_plan_tasks($phase->tasks);
+            $cell->style = "width: $width%";
             $row->cells[] = $cell;
         }
         $table->data = array($row);
@@ -562,6 +564,14 @@ class mod_workshop_renderer extends plugin_renderer_base {
                         $cell->attributes['class'] .= ' null';
                     } else {
                         $cell->attributes['class'] .= ' notnull';
+                        if ($assessment->flagged and !empty($options->showdiscrepancy)) {
+                            $cell->attributes['class'] .= ' flagged';
+                            $cell->attributes['title'] = "This grade is more than 2 standard deviations from the median. Consider reviewing this assessment.";
+                        }
+                        if ($assessment->submitterflagged == 1) {
+                            $cell->attributes['class'] .= ' flagged submitter';
+                            $cell->attributes['title'] = "This assessment has been flagged by its submitter as unfair. Please review this assessment."; //consider concatenating with previous.
+                        }
                     }
                     $row->cells[] = $cell;
                 }
@@ -579,7 +589,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
                     $assessment = self::array_nth($participant->reviewerof, $idx);
                     $cell = new html_table_cell();
                     $cell->text = $this->helper_grading_report_assessment($assessment, $options->showauthornames, $userinfo,
-                            get_string('gradegivento', 'workshop'), true);
+                            get_string('gradegivento', 'workshop'));
                     $cell->rowspan = $spangiven;
                     $cell->attributes['class'] = 'givengrade';
                     if (is_null($assessment) or is_null($assessment->grade)) {
@@ -587,6 +597,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
                     } else {
                         $cell->attributes['class'] .= ' notnull';
                     }
+                    
                     $row->cells[] = $cell;
                 }
                 // column #6 - total grade for assessment
@@ -855,6 +866,12 @@ class mod_workshop_renderer extends plugin_renderer_base {
 
         $o .= $this->output->container_end(); // header
 
+		if ($assessment->submission) {
+			
+			$o .= $this->container($this->helper_submission_content($assessment->submission), 'submission-full');
+		
+		}
+
         if (!is_null($assessment->form)) {
             $o .= print_collapsible_region_start('assessment-form-wrapper', uniqid('workshop-assessment'),
                     get_string('assessmentform', 'workshop'), '', false, true);
@@ -905,6 +922,56 @@ class mod_workshop_renderer extends plugin_renderer_base {
      */
     protected function render_workshop_example_reference_assessment(workshop_example_reference_assessment $assessment) {
         return $this->render_workshop_assessment($assessment);
+    }
+    
+    /// CALIBRATION REPORT
+    
+    protected function helper_calibration_report_reviewer(stdclass $reviewer) {
+        $out  = $this->output->user_picture($reviewer, array('courseid' => $this->page->course->id, 'size' => 35));
+        $out .= html_writer::tag('span', fullname($reviewer));
+
+        return $out;
+    }
+    
+    protected function render_workshop_calibration_report(workshop_calibration_report $report) {
+        
+        $options = $report->options;
+        
+        $table = new html_table();
+        
+        $sortbyfirstname = $this->helper_sortable_heading(get_string('firstname'), 'firstname', $options->sortby, $options->sorthow);
+        $sortbylastname = $this->helper_sortable_heading(get_string('lastname'), 'lastname', $options->sortby, $options->sorthow);
+        if (self::fullname_format() == 'lf') {
+            $sortbyname = $sortbylastname . ' / ' . $sortbyfirstname;
+        } else {
+            $sortbyname = $sortbyfirstname . ' / ' . $sortbylastname;
+        }
+
+        $table->head = array();
+        $table->head[] = $sortbyname;
+        $table->head[] = $this->helper_sortable_heading(get_string('score', 'workshop'), 'score', $options->sortby, $options->sorthow);
+        
+        foreach($report->reviewers as $reviewer) {
+            $row = new html_table_row();
+            
+            $reviewercell = new html_table_cell();
+            $reviewercell->text = $this->helper_calibration_report_reviewer($reviewer, $report->reviewers);
+            
+            $row->cells[] = $reviewercell;
+            
+            $scorecell = new html_table_cell();
+            $scorecell->text = isset($report->scores[$reviewer->id]) ? sprintf("%1.2f%%", $report->scores[$reviewer->id]) : get_string('nocalibrationscore', 'workshop');
+            if (isset($report->scores[$reviewer->id]) && isset($reviewer->calibrationlink)) {
+                $scorecell->text = html_writer::link($reviewer->calibrationlink, $scorecell->text);
+            }
+            
+            $row->cells[] = $scorecell;
+            
+            $table->data[] = $row;
+        }
+        
+        return html_writer::table($table);
+        
     }
 
     /**

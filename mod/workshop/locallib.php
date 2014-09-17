@@ -50,6 +50,7 @@ class workshop {
     /** the internal code of the workshop phases as are stored in the database */
     const PHASE_SETUP                   = 10;
     const PHASE_SUBMISSION              = 20;
+    const PHASE_CALIBRATION             = 25;
     const PHASE_ASSESSMENT              = 30;
     const PHASE_EVALUATION              = 40;
     const PHASE_CLOSED                  = 50;
@@ -176,6 +177,15 @@ class workshop {
     /** @var int number of example assessments to show to students */
     public $numexamples;
     
+    /** @var bool using calibration */
+    public $usecalibration;
+    
+    /** @var int 0 for no calibration; phase ID for "after x phase" */
+    public $calibrationphase;
+    
+    /** @var string */
+    public $calibrationmethod;
+	
     /**
      * @var workshop_strategy grading strategy instance
      * Do not use directly, get the instance using {@link workshop::grading_strategy_instance()}
@@ -187,6 +197,12 @@ class workshop {
      * Do not use directly, get the instance using {@link workshop::grading_evaluation_instance()}
      */
     protected $evaluationinstance = null;
+    
+    /**
+     * @var workshop_calibration calibration instance
+     * Do not use directly, get the instance using {@link workshop::calibration_instance()}
+     */
+    protected $calibrationinstance = null;
 
     /**
      * Initializes the workshop API instance using the data from DB
@@ -1801,6 +1817,42 @@ SQL;
         }
         return new $classname($this);
     }
+    
+    /**
+     * Returns instance of calibration plugin
+     *
+     * @param string $method The name of the calibration method
+     * @return workshop_calibration Calibration instance
+     */
+    public function calibration_instance() {
+        global $CFG;    // because we require other libs here
+        if (is_null($this->calibrationinstance)) {
+            if (empty($this->calibrationmethod)) {
+                $this->calibrationmethod = 'examples';
+            }
+            $calibrationlib = dirname(__FILE__) . '/calibration/' . $this->calibrationmethod . '/lib.php';
+            if (is_readable($calibrationlib)) {
+                require_once($calibrationlib);
+            } else {
+                // Fall back in case the subplugin is not available.
+                $this->calibrationmethod = 'examples';
+                $calibrationlib = dirname(__FILE__) . '/calibration/' . $this->calibrationmethod . '/lib.php';
+                if (is_readable($calibrationlib)) {
+                    require_once($calibrationlib);
+                } else {
+                    // Fall back in case the subplugin is not available any more.
+                    throw new coding_exception('Missing default grading calibration library ' . $calibrationlib);
+                }
+            }
+            $classname = 'workshop_' . $this->calibrationmethod . '_calibration_method';
+            $this->calibrationinstance = new $classname($this);
+            if (!($this->calibrationinstance instanceof workshop_calibration_method)) {
+                throw new coding_exception($classname . ' does not extend workshop_calibration_method class');
+            }
+        }
+        return $this->calibrationinstance;
+    }
+    
 
     /**
      * @return moodle_url of this workshop's view page
@@ -1844,17 +1896,6 @@ SQL;
         global $CFG;
         $assessmentid = clean_param($assessmentid, PARAM_INT);
         return new moodle_url('/mod/workshop/exassessment.php', array('asid' => $assessmentid));
-    }
-    
-    /**
-     * @param int $assessmentid The ID of assessment record
-     * @return moodle_url of the example assessment page
-     */
-    public function all_exassess_url($userid) {
-        global $CFG;
-        $userid = clean_param($userid, PARAM_INT);
-        $id = clean_param($this->id, PARAM_INT);
-        return new moodle_url('/mod/workshop/exassessments.php', array('id' => $id, 'uid' => $userid));
     }
 
     /**
@@ -1938,6 +1979,11 @@ SQL;
     public function aggregate_url() {
         global $CFG;
         return new moodle_url('/mod/workshop/aggregate.php', array('cmid' => $this->cm->id));
+    }
+    
+    public function calibrate_url() {
+        global $CFG;
+        return new moodle_url('/mod/workshop/calibrate.php', array('id' => $this->id));
     }
 
     /**
@@ -2087,6 +2133,12 @@ SQL;
         if (self::EXAMPLES_BEFORE_ASSESSMENT == $this->examplesmode and self::PHASE_ASSESSMENT == $this->phase) {
             return true;
         }
+        
+        //TODO: make this work properly for calibration
+        if (self::PHASE_CALIBRATION == $this->phase) {
+            return true;
+        }
+        
         return false;
     }
 
@@ -2111,7 +2163,7 @@ SQL;
         global $DB;
 
         $known = $this->available_phases_list();
-        if (!isset($known[$newphase])) {
+        if (!in_array($newphase,$known)) {
             return false;
         }
 
@@ -3163,14 +3215,22 @@ SQL;
     /**
      * @return array of available workshop phases
      */
-    protected function available_phases_list() {
-        return array(
-            self::PHASE_SETUP       => true,
-            self::PHASE_SUBMISSION  => true,
-            self::PHASE_ASSESSMENT  => true,
-            self::PHASE_EVALUATION  => true,
-            self::PHASE_CLOSED      => true,
+    public function available_phases_list() {
+        
+        $phases = array(
+            self::PHASE_SETUP,
+            self::PHASE_SUBMISSION,
+            self::PHASE_ASSESSMENT,
+            self::PHASE_EVALUATION,
+            self::PHASE_CLOSED
         );
+        if ($this->usecalibration) {
+            $index = array_search($this->calibrationphase, $phases);
+            if ($index !== false) {
+                array_splice($phases, $index + 1, 0, self::PHASE_CALIBRATION);
+            }
+        }
+        return $phases;
     }
 
     /**
@@ -3482,6 +3542,50 @@ class workshop_user_plan implements renderable {
         }
         $this->phases[workshop::PHASE_SUBMISSION] = $phase;
 
+        //----------------------------------------------------------
+        // setup | submission | * CALIBRATION | assessment | closed
+        //----------------------------------------------------------
+        
+        $phase = new stdclass();
+        $phase->title = get_string('phasecalibration', 'workshop');
+        $phase->tasks = array();
+        
+        if (has_capability('mod/workshop:submit', $workshop->context, $userid, false) and ! has_capability('mod/workshop:manageexamples', $workshop->context)) {
+            $task = new stdclass();
+            $task->title = get_string('exampleassesstask','workshop');
+            $phase->tasks[] = $task;
+        }
+        
+        if (has_capability('mod/workshop:overridegrades', $workshop->context)) {
+            $task = new stdclass();
+            $task->title = get_string('calculatecalibrationscores', 'workshop');
+            $phase->tasks[] = $task;
+			
+			$task = new stdclass();
+			$reviewers = $workshop->get_potential_reviewers();
+			$numexamples = (int)$workshop->numexamples ?: count($workshop->get_examples_for_manager());
+			$sql = <<<SQL
+SELECT a.reviewerid, count(a) 
+FROM {workshop_submissions} s 
+	LEFT JOIN {workshop_assessments} a 
+	ON a.submissionid = s.id 
+WHERE s.workshopid = :workshopid 
+	AND s.example = 1 
+	AND a.weight = 0 
+	AND a.grade IS NOT NULL
+GROUP BY a.reviewerid 
+HAVING count(a) >= :numexamples
+SQL;
+
+			$reviewcounts = $DB->get_records_sql($sql, array('workshopid' => $workshop->id, 'numexamples' => $numexamples));
+			
+			$task->title = get_string('calibrationcompletion', 'workshop', array('num' => count($reviewcounts), 'den' => count($reviewers)));
+			$task->completed = 'info';
+			$phase->tasks[] = $task;
+        }
+
+        $this->phases[workshop::PHASE_CALIBRATION] = $phase;
+
         //---------------------------------------------------------
         // setup | submission | * ASSESSMENT | evaluation | closed
         //---------------------------------------------------------
@@ -3652,6 +3756,13 @@ class workshop_user_plan implements renderable {
         $phase->title = get_string('phaseclosed', 'workshop');
         $phase->tasks = array();
         $this->phases[workshop::PHASE_CLOSED] = $phase;
+        
+        $orderedphases = $workshop->available_phases_list();
+        $phases = array();
+        foreach ($orderedphases as $k => $v) {
+            $phases[$v] = $this->phases[$v];
+        }
+        $this->phases = $phases;
 
         // Polish data, set default values if not done explicitly
         foreach ($this->phases as $phasecode => $phase) {
@@ -3977,7 +4088,7 @@ abstract class workshop_assessment_base {
 
     /** @var stdClass|null assessed submission's author user info */
     public $author = null;
-
+    
     /** @var array of actions */
     public $actions = array();
 
@@ -4603,6 +4714,117 @@ class workshop_random_examples_helper implements renderable {
     private function rgb_to_hex($rgb) {
         list($r,$g,$b) = $rgb;
         return sprintf('%02X%02X%02X',$r * 255,$g * 255,$b * 255);
+    }
+    
+}
+
+class workshop_calibration_report implements renderable {
+    
+    public $reviewers;
+    
+    public $examples;
+    
+    public $scores;
+    
+    public $options;
+    
+    function __construct(workshop $workshop, stdclass $options) {
+        
+        global $DB;
+        
+        //what we need: all of our reviewers (we don't care about submitters)
+        //all of those users' assessments of their assigned example submissions
+        //and all of their calibration scores (if they have been calculated)
+        
+        $reviewers = $workshop->get_potential_reviewers();
+        $exemplars = $workshop->get_examples_for_manager();
+        
+        //For clarity, we're going to prefix all the example "grade" and "gradinggrade" in the examples
+        //with "reference"
+        
+        foreach($exemplars as $k => $v) {
+            $v->referenceassessmentid = $v->assessmentid;
+            $v->referencegrade = $v->grade;
+            $v->referencegradinggrade = $v->gradinggrade;
+            unset($v->assessmentid);
+            unset($v->grade);
+            unset($v->gradinggrade);
+        }
+        
+        
+        list($userids, $params) = $DB->get_in_or_equal(array_keys($reviewers), SQL_PARAMS_NAMED);
+        
+        $userexamples = array();
+        
+        if ($workshop->numexamples > 0) {
+            $where = "workshopid = :workshopid AND userid $userids";
+            $params['workshopid'] = $workshop->id;
+            $rslt = $DB->get_records_select("workshop_user_examples", $where, $params);
+            foreach($rslt as $v) {
+                $ex = $exemplars[$v->submissionid];
+                $userexamples[$v->userid][$ex->id] = clone $ex;
+            }
+        } else {
+            foreach($reviewers as $v) {
+                foreach($exemplars as $ex) {
+                    $userexamples[$v->id][$ex->id] = clone $ex;
+                }
+            }
+        }
+        
+        // Get user's example results
+        if (empty($userexamples)) {
+        	$this->examples = array();
+        } else {
+	        list($submissionids, $sparams) = $DB->get_in_or_equal(array_keys($exemplars), SQL_PARAMS_NAMED, 'sub');
+	        list($reviewerids, $rparams) = $DB->get_in_or_equal(array_keys($userexamples), SQL_PARAMS_NAMED, 'usr');
+        
+	        $params = array_merge($sparams, $rparams);
+        
+	        $where = "submissionid $submissionids AND reviewerid $reviewerids AND weight = 0";
+	        $rslt = $DB->get_records_select("workshop_assessments",$where,$params);
+        
+	        foreach($rslt as $v) {
+	            $ex = $userexamples[$v->reviewerid][$v->submissionid];
+	            $ex->grade = $v->grade;
+	            $ex->gradinggrade = $v->gradinggrade;
+	            $ex->feedbackauthor = $v->feedbackauthor;
+	        }
+        
+        
+	        // Finally get their calibration results
+        
+	        // We actually ask for these from the calibration plugin.
+        
+	        $calibration = $workshop->calibration_instance();
+        
+	        $scores = $calibration->get_calibration_scores();
+        
+	        $sortby = $options->sortby; $sorthow = $options->sorthow;
+	        if (($sortby == 'lastname') || ($sortby == 'firstname')) {
+	            uasort($reviewers, function ($a, $b) use ($sortby, $sorthow) {
+	                if ($sorthow == 'ASC')
+	                    return strcmp($a->$sortby, $b->$sortby);
+	                else
+	                    return strcmp($b->$sortby, $a->$sortby);
+	            });
+	        }
+        
+	        // We also get a moodle_url for each reviewer's grade breakdown
+        
+	        foreach($reviewers as $r) {
+	            $url = $calibration->user_calibration_url($r->id);
+	            if (!empty($url)) {
+	                $r->calibrationlink = $url;
+	            }
+	        }
+		}
+		
+        $this->reviewers = $reviewers;
+        $this->examples = $userexamples;
+        $this->scores = $scores;
+        $this->options = $options;
+        
     }
     
 }

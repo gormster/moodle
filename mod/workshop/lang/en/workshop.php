@@ -351,8 +351,8 @@ $string['examplesreassess_desc'] = 'Allow students to reassess example submissio
 $string['examplesrequired'] = 'You must select <strong>Use examples</strong> to set up <strong>Calibrated</strong> grading.';
 $string['examplesmoderequired'] = 'Do not use <strong>voluntary</strong> example assessment when using <strong>Calibrated</strong> grading.';
 $string['exampleassessmentsname'] = '{$a}\'s example assessments';
-$string['explanation'] = 'Assessment grade breakdown for {$a}';
-$string['yourexplanation'] = 'Your assessment grade breakdown';
+$string['explanation'] = 'Calibration score breakdown for {$a}';
+$string['yourexplanation'] = 'Your calibration score breakdown';
 $string['showexamples'] = 'Show {$a}\'s example assessments';
 $string['showyourexamples'] = 'Show your example assessments';
 $string['showsubmission'] = 'Show Submission';
@@ -404,3 +404,25 @@ $string['feedback'] = 'Feedback';
 $string['wordcount'] = 'Word count: {$a}';
 
 $string['downloadallocations'] = 'Download Allocations';
+// Calibrationphase
+
+$string['calibration'] = 'Calibration';
+$string['usecalibration'] = 'Use Calibration';
+$string['usecalibration_desc'] = 'Calibrate students against the reference marker on the example assessments';
+$string['calibrationphase'] = 'Place calibration phase...';
+$string['beforesubmission'] = 'Before submission phase';
+$string['beforeassessment'] = 'Before assessment phase';
+$string['beforeevaluation'] = 'Before evaluation phase';
+$string['usecalibration_help'] = 'Calibration enables users to have their competence as reviewers determined before reviewing their peers\' work.';
+$string['calibrationphase_help'] = 'Calibration can be completed by your students either before they submit work, or before they assess their peers.';
+$string['phasecalibration'] = 'Calibration phase';
+$string['calculatecalibrationscores'] = 'Calculate calibration scores'; 
+$string['switchphase25info'] = 'You are about to switch the workshop into the <strong>Calibration phase</strong>. In this phase, potential reviewers will complete example assessments, and their assessments will be compared to the reference assessments you provided. This score will be used to assess their competence when it comes to reviewing their peers\' work.';
+$string['noexamples'] = 'This user has not been assigned any examples.';
+$string['nocalibrationscore'] = '–';
+$string['notcompleted'] = 'Not completed';
+$string['exampleassessment'] = 'Example Assessment';
+$string['score'] = 'Calibration Score';
+$string['calculatescores'] = 'Calculate Calibration Scores';
+$string['yourcalibration'] = 'Your calibration results';
+$string['calibrationcompletion'] = '{$a->num} / {$a->den} users have completed example assessments.';

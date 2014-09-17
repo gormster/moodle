@@ -202,6 +202,17 @@ case workshop::PHASE_SUBMISSION:
     }
 
     if (has_capability('mod/workshop:submit', $PAGE->context) and (!$examplesmust or $examplesdone)) {
+        if($workshop->usecalibration && $workshop->calibrationphase < workshop::PHASE_SUBMISSION) {
+            $calibrator = $workshop->calibration_instance();
+            $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
+            print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('yourcalibration', 'workshop'), '', true);
+            echo $output->box_start('generalbox');
+            echo $calibration_renderer->render($calibrator->prepare_grade_breakdown($USER->id));
+            echo $output->heading(html_writer::link($calibrator->user_calibration_url($USER->id), get_string('yourexplanation','workshop')));
+            echo $output->box_end();
+            print_collapsible_region_end();
+        }
+        
         print_collapsible_region_start('', 'workshop-viewlet-ownsubmission', get_string('yoursubmission', 'workshop'));
         echo $output->box_start('generalbox ownsubmission');
 
@@ -278,10 +289,74 @@ case workshop::PHASE_SUBMISSION:
 
     break;
 
+case workshop::PHASE_CALIBRATION:
+    
+    if (has_capability('mod/workshop:submit', $workshop->context)
+            and ! has_capability('mod/workshop:manageexamples', $workshop->context)) {
+        $examples = $userplan->get_examples();
+        $total = count($examples);
+        $left = 0;
+        // make sure the current user has all examples allocated
+        foreach ($examples as $exampleid => $example) {
+            if (is_null($example->assessmentid)) {
+                $examples[$exampleid]->assessmentid = $workshop->add_allocation($example, $USER->id, 0);
+            }
+            if (is_null($example->grade)) {
+                $left++;
+            }
+        }
+        if ($left > 0 and $workshop->examplesmode != workshop::EXAMPLES_VOLUNTARY) {
+            $examplesdone = false;
+        } else {
+            $examplesdone = true;
+        }
+        print_collapsible_region_start('', 'workshop-viewlet-examples', get_string('exampleassessments', 'workshop'), false, $examplesdone);
+        echo $output->box_start('generalbox exampleassessments');
+        if ($total == 0) {
+            echo $output->heading(get_string('noexamples', 'workshop'), 3);
+        } else {
+            foreach ($examples as $example) {
+                $summary = $workshop->prepare_example_summary($example);
+                echo $output->render($summary);
+            }
+        }
+        echo $output->box_end();
+        print_collapsible_region_end();        
+    }
+    
+    if (has_capability('mod/workshop:overridegrades', $workshop->context)) {
+        $calibration = $workshop->calibration_instance();
+        $form = $calibration->get_settings_form(new moodle_url($workshop->calibrate_url(),
+                compact('sortby', 'sorthow', 'page')));
+        $form->display();
+        
+        $options = new stdclass;
+        $options->sortby = $sortby;
+        $options->sorthow = $sorthow;
+        
+        $report = new workshop_calibration_report($workshop, $options);
+        echo $output->render($report);
+    }
+
+break;
+    
+
 case workshop::PHASE_ASSESSMENT:
 
     $ownsubmissionexists = null;
     if (has_capability('mod/workshop:submit', $PAGE->context)) {
+        
+        if($workshop->usecalibration and $workshop->calibrationphase < workshop::PHASE_ASSESSMENT) {
+            $calibrator = $workshop->calibration_instance();
+            $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
+            print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('yourcalibration', 'workshop'), '', true);
+            echo $output->box_start('generalbox');
+            echo $calibration_renderer->render($calibrator->prepare_grade_breakdown($USER->id));
+            echo $output->heading(html_writer::link($calibrator->user_calibration_url($USER->id), get_string('yourexplanation','workshop')));
+            echo $output->box_end();
+            print_collapsible_region_end();
+        }
+        
         if ($ownsubmission = $workshop->get_submission_by_author($USER->id)) {
             print_collapsible_region_start('', 'workshop-viewlet-ownsubmission', get_string('yoursubmission', 'workshop'), false, true);
             echo $output->box_start('generalbox ownsubmission');
@@ -473,10 +548,10 @@ case workshop::PHASE_EVALUATION:
                 $form = $evaluator->get_settings_form(new moodle_url($workshop->aggregate_url(),
                         compact('sortby', 'sorthow', 'page')));
                 $form->display();
-            }
-            
-            if ($evaluator->has_messages()) {
-                $evaluator->display_messages();
+				
+	            if ($evaluator->has_messages()) {
+	                $evaluator->display_messages();
+	            }
             }
 
             // prepare paging bar
@@ -539,6 +614,18 @@ case workshop::PHASE_EVALUATION:
         print_collapsible_region_end();
     }
     if (has_capability('mod/workshop:submit', $PAGE->context)) {
+        
+        if($workshop->usecalibration) {
+            $calibrator = $workshop->calibration_instance();
+            $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
+            print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('yourcalibration', 'workshop'), '', true);
+            echo $output->box_start('generalbox');
+            echo $calibration_renderer->render($calibrator->prepare_grade_breakdown($USER->id));
+            echo $output->heading(html_writer::link($calibrator->user_calibration_url($USER->id), get_string('yourexplanation','workshop')));
+            echo $output->box_end();
+            print_collapsible_region_end();
+        }
+        
         print_collapsible_region_start('', 'workshop-viewlet-ownsubmission', get_string('yoursubmission', 'workshop'));
         echo $output->box_start('generalbox ownsubmission');
         if ($submission = $workshop->get_submission_by_author($USER->id)) {
@@ -658,14 +745,27 @@ case workshop::PHASE_CLOSED:
             }
             echo $output->render($pagingbar);
             echo $output->perpage_selector($perpage);
+            
             $url = new moodle_url("download.php", array("id" => $cm->id));
             $btn = new single_button($url, get_string('downloadmarks', 'workshop'), 'get');
             echo $output->render($btn);
+                        
             echo $output->box_end();
             print_collapsible_region_end();
         }
     }
     if (has_capability('mod/workshop:submit', $PAGE->context)) {
+        if($workshop->usecalibration) {
+            $calibrator = $workshop->calibration_instance();
+            $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
+            print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('yourcalibration', 'workshop'), '', true);
+            echo $output->box_start('generalbox');
+            echo $calibration_renderer->render($calibrator->prepare_grade_breakdown($USER->id));
+            echo $output->heading(html_writer::link($calibrator->user_calibration_url($USER->id), get_string('yourexplanation','workshop')));
+            echo $output->box_end();
+            print_collapsible_region_end();
+        }
+        
         print_collapsible_region_start('', 'workshop-viewlet-ownsubmission', get_string('yoursubmission', 'workshop'));
         echo $output->box_start('generalbox ownsubmission');
         if ($submission = $workshop->get_submission_by_author($USER->id)) {
@@ -675,30 +775,6 @@ case workshop::PHASE_CLOSED:
         }
 
         echo $output->box_end();
-        
-
-
-        // display example assessments
-        if ($workshop->useexamples)
-        {
-            echo $output->heading(html_writer::link($workshop->all_exassess_url($USER->id), get_string('showyourexamples','workshop',fullname($USER))), 3);
-
-            $eval = $workshop->grading_evaluation_instance();
-
-            if (method_exists($eval, 'prepare_explanation_for_assessor')) {    
-                print_collapsible_region_start('', uniqid('workshop-grading-evaluation-explanation'), get_string('yourexplanation', 'workshop', fullname($USER)), '', true);
-                echo $output->box_start();
-    
-
-                $eval_output = $PAGE->get_renderer('workshopeval_calibrated');
-                $renderable = $eval->prepare_explanation_for_assessor($USER->id);
-                echo $eval_output->render($renderable);
-        
-                echo $output->box_end();
-                print_collapsible_region_end();
-            }
-    
-        }
 
         if (!empty($submission->gradeoverby) and strlen(trim($submission->feedbackauthor)) > 0) {
             echo $output->render(new workshop_feedback_author($submission));

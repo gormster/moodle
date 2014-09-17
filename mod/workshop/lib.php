@@ -86,6 +86,22 @@ function workshop_add_instance(stdclass $workshop) {
     $workshop->examplesreassess      = (int)!empty($workshop->examplesreassess);
     $workshop->evaluation            = 'best';
 
+	if ($workshop->usecalibration) {
+		
+		//here's a fun fact: disabling a checkbox stops it from being submitted with the form
+		$workshop->useexamples = true;
+		switch($workshop->calibrationphase) {
+			case workshop::PHASE_SETUP:
+				$workshop->examplesmode = workshop::EXAMPLES_BEFORE_SUBMISSION;
+				break;
+			case workshop::PHASE_SUBMISSION:
+				$workshop->examplesmode = workshop::EXAMPLES_BEFORE_ASSESSMENT;
+				break;
+		}
+		
+		$workshop->evaluation = 'calibrated';
+	}
+
     // insert the new record so we get the id
     $workshop->id = $DB->insert_record('workshop', $workshop);
 
@@ -148,9 +164,30 @@ function workshop_update_instance(stdclass $workshop) {
     $workshop->teammode              = (int)!empty($workshop->teammode);
     $workshop->examplescompare       = (int)!empty($workshop->examplescompare);
     $workshop->examplesreassess      = (int)!empty($workshop->examplesreassess);
-    $workshop->evaluation            = 'best';
+    $workshop->usecalibration        = (int)!empty($workshop->usecalibration);
 
     // todo - if the grading strategy is being changed, we may want to replace all aggregated peer grades with nulls
+
+	
+	if ($workshop->usecalibration) {
+		
+		//here's a fun fact: disabling a checkbox stops it from being submitted with the form
+		$workshop->useexamples = true;
+		switch($workshop->calibrationphase) {
+			case workshop::PHASE_SETUP:
+				$workshop->examplesmode = workshop::EXAMPLES_BEFORE_SUBMISSION;
+				break;
+			case workshop::PHASE_SUBMISSION:
+				$workshop->examplesmode = workshop::EXAMPLES_BEFORE_ASSESSMENT;
+				break;
+		}
+		
+		$oldcalibration = $DB->get_field('workshop', 'usecalibration', array('id' => $workshop->id));
+		if ($oldcalibration == false) {
+			//turning on calibration - we want to switch to the calibrated evaluation plugin
+			$workshop->evaluation = 'calibrated';
+		}
+	}
 
     $DB->update_record('workshop', $workshop);
     $context = context_module::instance($workshop->coursemodule);
@@ -172,6 +209,12 @@ function workshop_update_instance(stdclass $workshop) {
         $workshop->conclusion = file_save_draft_area_files($draftitemid, $context->id, 'mod_workshop', 'conclusion',
                 0, workshop::instruction_editors_options($context), $workshop->conclusioneditor['text']);
         $workshop->conclusionformat = $workshop->conclusioneditor['format'];
+    }
+    
+    if ($workshop->usecalibration) {
+        $workshop->calibrationphase = $workshop->calibrationphase;
+    } else {
+        $workshop->calibrationphase = 0;
     }
 
     // re-save the record with the replaced URLs in editor fields

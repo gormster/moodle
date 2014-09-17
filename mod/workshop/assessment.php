@@ -253,27 +253,22 @@ if (trim($workshop->instructreviewers)) {
 }
 
 // display example assessments
-if ($workshop->useexamples && (($isreviewer && (($workshop->phase == workshop::PHASE_CLOSED) || ($workshop->phase == workshop::PHASE_EVALUATION))) || $canviewallassessments))
+if ($workshop->usecalibration && (($isreviewer && (($workshop->phase == workshop::PHASE_CLOSED) || ($workshop->phase == workshop::PHASE_EVALUATION))) || $canviewallassessments))
 {
     $reviewer = $DB->get_record('user', array('id' => $assessment->reviewerid));
+    $calibrator = $workshop->calibration_instance();
     
-    echo $output->heading(html_writer::link($workshop->all_exassess_url($reviewer->id), get_string('showexamples','workshop',fullname($reviewer))));
-
-    $eval = $workshop->grading_evaluation_instance();
-
-    if (method_exists($eval, 'prepare_explanation_for_assessor')) {    
-        print_collapsible_region_start('', uniqid('workshop-grading-evaluation-explanation'), get_string('explanation', 'workshop', fullname($reviewer)), '', true);
-        echo $output->box_start();
-    
-
-        $eval_output = $PAGE->get_renderer('workshopeval_calibrated');
-        $renderable = $eval->prepare_explanation_for_assessor($assessment->reviewerid);
-        echo $eval_output->render($renderable);
-        
-        echo $output->box_end();
-        print_collapsible_region_end();
+    $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
+    print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('calibration', 'workshop'), '', true);
+    echo $output->box_start('generalbox');
+    $breakdown = $calibrator->prepare_grade_breakdown($reviewer->id);
+    echo $calibration_renderer->render($breakdown);
+    if (!$breakdown->empty) {
+	    echo $output->heading(html_writer::link($calibrator->user_calibration_url($reviewer->id), get_string('explanation','workshop', fullname($reviewer))));
     }
-    
+    echo $output->box_end();
+    print_collapsible_region_end();
+
 }
 
 // extend the current assessment record with user details

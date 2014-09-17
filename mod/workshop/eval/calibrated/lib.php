@@ -55,67 +55,40 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
 
     public function update_grading_grades(stdclass $settings, $restrict=null) {
 		
-		global $DB, $SESSION;
-		
-        // remember the recently used settings for this workshop
+        global $DB;
+        
+        $settings->adjustgrades = (int)!empty($settings->adjustgrades);
+        
+        // Remember the recently used settings for this workshop.
         if (empty($this->settings)) {
-            $this->settings = new stdclass();
             $record = new stdclass();
             $record->workshopid = $this->workshop->id;
-            $record->comparison = $settings->comparison;
-			$record->consistency = $settings->consistency;
+            $record->adjustgrades = $settings->adjustgrades;
             $DB->insert_record('workshopeval_calibrated', $record);
-        } elseif (($this->settings->comparison != $settings->comparison) || ($this->settings->consistency != $settings->consistency)) {
-            $DB->set_field('workshopeval_calibrated', 'comparison', $settings->comparison,
+        } elseif ($this->settings->adjustgrades != $settings->adjustgrades) {
+            $DB->set_field('workshopeval_calibrated', 'adjustgrades', $settings->adjustgrades,
                     array('workshopid' => $this->workshop->id));
-            $DB->set_field('workshopeval_calibrated', 'consistency', $settings->consistency,
-                    array('workshopid' => $this->workshop->id));
-					
         }
+        
+		$calibration_scores = $this->workshop->calibration_instance()->get_calibration_scores();
 		
-        $grader = $this->workshop->grading_strategy_instance();
-        
-        $this->settings->comparison = $settings->comparison;
-        $this->settings->consistency = $settings->consistency;
-
-        // get the information about the assessment dimensions
-        $diminfo = $grader->get_dimensions_info();
-
-		// fetch the reference assessments
-		$references = $this->get_reference_assessments();
-
-        // fetch a recordset with all assessments to process
-        $rs = $grader->get_assessments_recordset($restrict,true);
-		$rrs = array(); //to go over the recordset again later...
-        $users = array();
-        
-        $reference_assessments = array();
-        foreach($references as $r) { 
-            $reference_assessments[] = $r->assessmentid;
-        }
-        
-        foreach ($rs as $r) {
-            //skip the exemplar assessments
-            if (in_array($r->assessmentid,$reference_assessments))
-                continue;
-            
-            if (array_key_exists($r->submissionid,$references)) {
-                $users[$r->reviewerid][$r->submissionid][$r->dimensionid] = $r->grade;
-            }
-			$rrs[] = $r;
-        }
-        $rs->close();
-        
-        $SESSION->workshop_calibration_no_competent_reviewers = array();
-        
-        foreach($users as $u => $assessments) {
-            $calibration_scores[$u] = $this->calculate_calibration_score($assessments,$references,$diminfo) * 100;
-        }
+		$sql = <<<SQL
+		        SELECT a.id, a.reviewerid, a.grade
+		        FROM mdl_workshop_assessments a, mdl_workshop_submissions s 
+		        WHERE a.submissionid = s.id AND s.workshopid = :workshopid AND s.example = 0 AND a.weight > 0;
+SQL;
 		
-		foreach($rrs as $r) {
+		$assessments = $DB->get_records_sql($sql, array("workshopid" => $this->workshop->id));
+		
+		foreach($assessments as $a) {
             $record = new stdclass();
-            $record->id = $r->assessmentid;
-            $record->gradinggrade = grade_floatval($calibration_scores[$r->reviewerid]);
+            $record->id = $a->id;
+            if (!is_null($a->grade) and isset($calibration_scores[$a->reviewerid])) {
+                    $record->gradinggrade = grade_floatval($calibration_scores[$a->reviewerid]);
+            } else {
+                $record->gradinggrade = 0;
+            }
+            
 			$DB->update_record('workshop_assessments', $record, false);  // bulk operations expected
 		}
 		
@@ -150,60 +123,62 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
     
 	
 		global $DB;
-
-		//fetch all the assessments for all the submissions in this 
-		$sql = "SELECT a.id, a.submissionid, a.weight, a.grade, a.gradinggrade, a.gradinggradeover, s.title
-				FROM {workshop_submissions} s, {workshop_assessments} a
-				WHERE s.workshopid = {$this->workshop->id}
-					AND s.example = 0
-					AND a.submissionid = s.id
-				ORDER BY a.submissionid";
-		
-		$records = $DB->get_recordset_sql($sql);
-		
-		$weighted_grades = array();
-		$total_weight = 0;
-		$current_submission = null;
-		foreach($records as $v) {
-			
-			//this is actually "last": if the submissionid has changed, then we're on to a new submission.
-			//it's kind of a stupid way of doing it but unfortunately there's no seeking in moodle recordsets, so
-			//we can't get the submissionid of the next record to check if this is the last one
-			if (($current_submission == null) or ($v->submissionid != $current_submission->submissionid)) {
-
-				if ($current_submission != null)
-					$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
-				
-				//reset our vital statistics
-				$weighted_grades = array();
-				$total_weight = 0;
-				$current_submission = $v;
-				
-			}
-			
-			//just add the submission to the queue. we do all the work in the above if statement.
-			$gradinggrade = is_null($v->gradinggradeover) ? $v->gradinggrade : $v->gradinggradeover;
-			$weighted_grade = $v->grade * $v->weight * $gradinggrade;
-			$weighted_grades[] = $weighted_grade;
-			$total_weight += $gradinggrade * $v->weight;
-		}
-		
-		//do it for the last one
-		$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
         
-		$records->close();
+        if ($settings->adjustgrades) {
+
+    		//fetch all the assessments for all the submissions in this 
+    		$sql = "SELECT a.id, a.submissionid, a.weight, a.grade, a.gradinggrade, a.gradinggradeover, s.title
+    				FROM {workshop_submissions} s, {workshop_assessments} a
+    				WHERE s.workshopid = {$this->workshop->id}
+    					AND s.example = 0
+    					AND a.submissionid = s.id
+    				ORDER BY a.submissionid";
+		
+    		$records = $DB->get_recordset_sql($sql);
+		
+    		$weighted_grades = array();
+    		$total_weight = 0;
+    		$current_submission = $records->current();
+    		foreach($records as $v) {
+			
+    			//this is actually "last": if the submissionid has changed, then we're on to a new submission.
+    			//it's kind of a stupid way of doing it but unfortunately there's no seeking in moodle recordsets, so
+    			//we can't get the submissionid of the next record to check if this is the last one
+    			if (($v->submissionid != $current_submission->submissionid)) {
+
+    				$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
+				
+    				//reset our vital statistics
+    				$weighted_grades = array();
+    				$total_weight = 0;
+    				$current_submission = $v;
+				
+    			}
+			
+    			//just add the submission to the queue. we do all the work in the above if statement.
+    			$gradinggrade = is_null($v->gradinggradeover) ? $v->gradinggrade : $v->gradinggradeover;
+    			$weighted_grade = $v->grade * $v->weight * $gradinggrade;
+    			$weighted_grades[] = $weighted_grade;
+    			$total_weight += $gradinggrade * $v->weight;
+    		}
+		
+    		//do it for the last one
+    		$this->update_submission_grade($current_submission, $weighted_grades, $total_weight);
+        
+    		$records->close();
+            
+        }
     }
 	
 	private function update_submission_grade($submission, $weighted_grades, $total_weight) {
 		
-		global $DB, $SESSION;
+		global $DB;
 		
 		//perform weighted average
         if ($total_weight > 0) {
     		$weighted_avg = array_sum($weighted_grades) / $total_weight;
         } else {
             $weighted_avg = null;
-            $SESSION->workshop_calibration_no_competent_reviewers[$submission->submissionid] = $submission->title;
         }
         
 			
@@ -224,9 +199,53 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
         return new workshop_calibrated_evaluation_settings_form($actionurl, $customdata, 'post', '', $attributes);
 	}
     
+	public function get_settings() {
+		return $this->settings;
+	}
+	
+	private function get_no_competent_reviewers() {
+
+    	
+    	global $DB;
+    	
+    	$sql = 'SELECT a.id, a.submissionid, a.reviewerid, s.authorid, a.gradinggrade, a.weight
+    	          FROM {workshop_assessments} a
+    	    INNER JOIN {workshop_submissions} s ON (a.submissionid = s.id)
+    	         WHERE s.example = 0 AND s.workshopid = :workshopid';
+    	$params = array('workshopid' => $this->workshop->id);
+    	
+    	$allocations = $DB->get_records_sql($sql, $params);
+    	
+    	$submission_scores = array();
+    	foreach ($allocations as $a) {
+        	if (!is_null($a->gradinggrade) and ($a->weight > 0)) {
+            	if(!isset($submission_scores[$a->submissionid])) {
+                	$submission_scores[$a->submissionid] = 0;
+                }
+                $submission_scores[$a->submissionid] += $a->gradinggrade;
+            }
+        }
+        
+        $no_competent_reviewers = array();
+        foreach ($submission_scores as $sid => $value) {
+            if ($value == 0) {
+                $no_competent_reviewers[] = $sid;
+            }
+        }
+        
+        if (!empty($no_competent_reviewers)) {
+            list($select, $params) = $DB->get_in_or_equal($no_competent_reviewers);        
+            return $DB->get_records_select("workshop_submissions","id $select",$params,"id,title");
+        }
+        
+        return array();
+    	
+    }
+    
     public function has_messages() {
-        global $SESSION;
-        if (isset($SESSION->workshop_calibration_no_competent_reviewers) && count($SESSION->workshop_calibration_no_competent_reviewers)) {
+        $rslt = $this->get_no_competent_reviewers();
+        
+        if (count($rslt)) {
             return true;
         }
         return false;
@@ -234,17 +253,19 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
     
     public function display_messages() {
         //is this a hilariously incorrect way to do this?
-        global $output, $PAGE, $SESSION;
+        global $output, $PAGE;
         echo $output->box_start('no-competent-reviewers');
 
         echo get_string('nocompetentreviewers','workshopeval_calibrated');
 
+        $rslt = $this->get_no_competent_reviewers();
+
         echo html_writer::start_tag('ul');
-        foreach ($SESSION->workshop_calibration_no_competent_reviewers as $k => $v) {
+        foreach ($rslt as $k => $v) {
             echo html_writer::start_tag('li');
             $url = new moodle_url('/mod/workshop/submission.php',
                                   array('cmid' => $PAGE->context->instanceid, 'id' => $k));
-            echo html_writer::link($url, $v, array('class'=>'title'));
+            echo html_writer::link($url, $v->title, array('class'=>'title'));
             echo html_writer::end_tag('li');
         }
         echo html_writer::end_tag('ul');
@@ -254,114 +275,6 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
 	
     public static function delete_instance($workshopid) {
 		//TODO
-	}
-	
-	//Private functions
-    
-    /*
-    Thinking through this calculation:
-    
-    T is the set of all absdev of student's scores v exemplar scores
-    
-    x is the sum of T
-
-    you're aiming for LOWER x. Exemplar's x is 0. If x < 0.02, round to 0.
-    
-    Invert this and normalise it to 0..1. Exemplar's x is now 1. The worst possible x is 0.
-    
-    Scale this according to the accuracy curves.
-    
-    y is the mean absolute deviation of T. Once again you want small y. y falls in the range 0..50
-    
-    We invert and normalise y to 0..1. Exemplar's y is now 1. The worst possible y is 0.
-    
-    Plug y into the consistency curves. Multiply x by the result and you have your calibration score!
-    
-    */
-	
-	private function calculate_calibration_score($assessments, $references, $diminfo) {
-        
-        //before we even get started, make sure the user has completed enough assessments to be calibrated
-        $required_number_of_assessments = $this->workshop->numexamples or count($references);
-        if ( count($assessments) < $required_number_of_assessments ) {
-            return 0;
-        }
-        
-        //now that we've made sure of that, we need to get our set of deviations
-        
-        $absolute_deviations = array(); // the set of all absdev of student's scores v exemplar scores (T)
-        
-        foreach($references as $k => $a) {
-
-            foreach($a->diminfo as $dimid => $mydimval) {
-                if (!empty($assessments[$k])) {
-                    $theirdimval = $assessments[$k][$dimid];
-                    $dim = $diminfo[$dimid];
-
-                    $diff = abs( $mydimval - $theirdimval ); 
-                    $absolute_deviations[] = $this->normalize_grade($dim, $diff);
-                }
-            }
-        }
-        
-        $x = array_sum($absolute_deviations) / count($absolute_deviations);
-        
-        $x /= 100;
-        if ($x < 0.01) $x = 0; //round 99% up to 100%
-        $x = 1 - $x; //invert $x. 1 is now the best possible score.
-        
-        $grading_curve = $this::$grading_curves[$this->settings->comparison];
-        
-        if ($grading_curve >= 1) {
-            $x = 1 - pow(1-$x, $grading_curve);
-        } else {
-            $x = pow($x, 1 / $grading_curve);
-        }
-        
-        //now let's adjust for consistency
-        
-        //let's get the mean absolute deviation of T
-        
-        $mean = array_sum($absolute_deviations) / count($absolute_deviations);
-        $numerator = 0; //top half of the MAD fraction
-        foreach($absolute_deviations as $z) {
-            $numerator += abs($z - $mean);
-        }
-        $y = $numerator / count($absolute_deviations);
-        
-        $y /= 100;
-        if ($y < 0.01) $y = 0;
-        if ($y > 1) $y = 1; //this *shouldn't* happen, but I'm not ruling it out
-        $y = 1 - $y; //invert y. 1 is now the best possible score.
-        
-        $consistency_curve = $this::$grading_curves[9 - $this->settings->consistency]; //the consistency curves are actually around the other way - 0 means no consistency check while 8 is strictest. so we subtract the consistency setting from nine.
-        
-        //y = ax - a + 1
-        $consistency_multiplier = $consistency_curve * $y - $consistency_curve + 1;
-        
-        $x *= $consistency_multiplier;
-        
-        // restrict $x to 0..1
-        if ($x < 0) $x = 0;
-        if ($x > 1) $x = 1;
-        
-        return $x;
-		
-	}
-    
-    private function normalize_grade($dim,$grade) {
-        //todo: weight? is weight a factor here? probably should be...
-        $dimmin = $dim->min;
-        $dimmax = $dim->max;
-        if ($dimmin == $dimmax) {
-            return grade_floatval($dimmax);
-        } else {
-            return grade_floatval(($grade - $dimmin) / ($dimmax - $dimmin) * 100);
-        }
-    }
-	
-	private function get_example_assessments() {
-		
 	}
     
     public function prepare_explanation_for_assessor($userid) {
