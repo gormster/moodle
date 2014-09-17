@@ -20,7 +20,9 @@ if($form->exportValue('clear'))
 {
 
 	$vals = $DB->get_records('workshop_submissions',array('workshopid' => $workshop->id), '', 'id');
-	$DB->delete_records_list('workshop_assessments','submissionid',array_keys($vals));
+    list($p, $q) = $DB->get_in_or_equal($vals);
+    $select = "submissionid $p AND grade = NULL";
+	$DB->delete_records_select('workshop_assessments',$select,$q);
 
 } else {
 
