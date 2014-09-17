@@ -74,7 +74,7 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
 		
 		$sql = <<<SQL
 		        SELECT a.id, a.reviewerid, a.grade
-		        FROM mdl_workshop_assessments a, mdl_workshop_submissions s 
+		        FROM {workshop_assessments} a, {workshop_submissions} s 
 		        WHERE a.submissionid = s.id AND s.workshopid = :workshopid AND s.example = 0 AND a.weight > 0;
 SQL;
 		
