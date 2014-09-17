@@ -192,6 +192,10 @@ if ($canmanage and $assessment->weight == 1) {
     $assessment = $workshop->prepare_example_assessment($assessment, $mform, $options);
     $assessment->title = get_string('assessmentbyyourself', 'workshop');
     echo $output->render($assessment);
+    
+    if(!$workshop->examplesreassess and !empty($assessment->grade)) {
+        echo $output->single_button($workshop->view_url(), get_string('continue', 'moodle'));
+    }
 
 } else if ($canmanage) {
     $options = array(

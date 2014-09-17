@@ -232,7 +232,10 @@ if ($canmanage) {
 // ...and optionally assess it
 if ($canassess or ($canmanage and empty($edit) and empty($delete))) {
     $aurl = new moodle_url($workshop->exsubmission_url($example->id), array('assess' => 'on', 'sesskey' => sesskey()));
-    echo $output->single_button($aurl, get_string('exampleassess', 'workshop'), 'get');
+    $myassessment = $DB->get_field('workshop_assessments', 'grade',
+                array('submissionid' => $example->id, 'weight' => 0, 'reviewerid' => $USER->id));
+    $label = ($workshop->examplesreassess or (empty($myassessment))) ? get_string('exampleassess', 'workshop') : get_string('review', 'workshop');
+    echo $output->single_button($aurl, $label, 'get');
 }
 echo $output->container_end(); // buttonsbar
 // and possibly display the example's review(s) - todo
