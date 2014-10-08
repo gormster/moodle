@@ -91,6 +91,10 @@ class workshop_random_allocator implements workshop_allocator {
      */
     public function execute(workshop_random_allocator_setting $settings, workshop_allocation_result $result) {
 
+        // Increase timeout to max of 2 minutes.
+        // Writing thousands of records does take time
+        set_time_limit(120);
+
         $authors        = $this->get_authors();
         $reviewers      = $this->workshop->get_potential_reviewers(!$settings->assesswosubmission);
         $reviewers      = $this->workshop->get_grouped($reviewers);
@@ -638,19 +642,20 @@ class workshop_random_allocator implements workshop_allocator {
      * @param array $workload [groupid] => (int)workload
      * @return mixed int|bool id of the selected element or false if it is impossible to choose
      */
-    protected function get_element_with_lowest_workload($workload) {
-        $precision = 10;
+    protected function get_element_with_lowest_workload(&$workload) {
 
         if (empty($workload)) {
             return false;
         }
-        $minload = round(min($workload), $precision);
-        $minkeys = array();
-        foreach ($workload as $key => $val) {
-            if (round($val, $precision) == $minload) {
-                $minkeys[$key] = $val;
-            }
-        }
+
+        // calculate the minimum workload
+        $minload = min($workload);
+
+        // find element keys that match the minimum workload
+        $keys = array_keys($workload, $minload);
+
+        $minkeys = array_intersect_key($workload, array_flip($keys));
+
         return array_rand($minkeys);
     }
 

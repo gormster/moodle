@@ -61,7 +61,7 @@ class assign_upgrade_manager {
               return false;
         }
 
-        @set_time_limit(ASSIGN_MAX_UPGRADE_TIME_SECS);
+        core_php_time_limit::raise(ASSIGN_MAX_UPGRADE_TIME_SECS);
 
         // Get the module details.
         $oldmodule = $DB->get_record('modules', array('name'=>'assignment'), '*', MUST_EXIST);
@@ -90,6 +90,8 @@ class assign_upgrade_manager {
         $data->grade = $oldassignment->grade;
         $data->submissiondrafts = $oldassignment->resubmit;
         $data->requiresubmissionstatement = 0;
+        $data->markingworkflow = 0;
+        $data->markingallocation = 0;
         $data->cutoffdate = 0;
         // New way to specify no late submissions.
         if ($oldassignment->preventlate) {
@@ -177,22 +179,8 @@ class assign_upgrade_manager {
             }
 
             // Upgrade availability data.
-            $DB->set_field('course_modules_avail_fields',
-                           'coursemoduleid',
-                           $newcoursemodule->id,
-                           array('coursemoduleid'=>$oldcoursemodule->id));
-            $DB->set_field('course_modules_availability',
-                           'coursemoduleid',
-                           $newcoursemodule->id,
-                           array('coursemoduleid'=>$oldcoursemodule->id));
-            $DB->set_field('course_modules_availability',
-                           'sourcecmid',
-                           $newcoursemodule->id,
-                           array('sourcecmid'=>$oldcoursemodule->id));
-            $DB->set_field('course_sections_availability',
-                           'sourcecmid',
-                           $newcoursemodule->id,
-                           array('sourcecmid'=>$oldcoursemodule->id));
+            \core_availability\info::update_dependency_id_across_course(
+                    $newcoursemodule->course, 'course_modules', $oldcoursemodule->id, $newcoursemodule->id);
 
             // Upgrade completion data.
             $DB->set_field('course_modules_completion',
@@ -297,6 +285,15 @@ class assign_upgrade_manager {
             $sql = 'UPDATE {grade_items} SET itemmodule = ?, iteminstance = ? WHERE itemmodule = ? AND iteminstance = ?';
             $DB->execute($sql, $params);
 
+            // Create a mapping record to map urls from the old to the new assignment.
+            $mapping = new stdClass();
+            $mapping->oldcmid = $oldcoursemodule->id;
+            $mapping->oldinstance = $oldassignment->id;
+            $mapping->newcmid = $newcoursemodule->id;
+            $mapping->newinstance = $newassignment->get_instance()->id;
+            $mapping->timecreated = time();
+            $DB->insert_record('assignment_upgrade', $mapping);
+
             $gradesdone = true;
 
         } catch (Exception $exception) {
@@ -389,9 +386,7 @@ class assign_upgrade_manager {
         $newcm->completionview            = $cm->completionview;
         $newcm->completionexpected        = $cm->completionexpected;
         if (!empty($CFG->enableavailability)) {
-            $newcm->availablefrom             = $cm->availablefrom;
-            $newcm->availableuntil            = $cm->availableuntil;
-            $newcm->showavailability          = $cm->showavailability;
+            $newcm->availability = $cm->availability;
         }
         $newcm->showdescription = $cm->showdescription;
 

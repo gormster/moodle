@@ -107,6 +107,9 @@
         <KEY NAME="overriddenby_fk" TYPE="foreign" FIELDS="gradinggradeoverby" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="reviewer_fk" TYPE="foreign" FIELDS="reviewerid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+          <INDEX NAME="submissionreviewer" UNIQUE="true" FIELDS="submissionid, reviewerid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="workshop_grades" COMMENT="How the reviewers filled-up the grading forms, given grades and comments">
       <FIELDS>
@@ -120,8 +123,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="assessment_fk" TYPE="foreign" FIELDS="assessmentid" REFTABLE="workshop_assessments" REFFIELDS="id"/>
         <KEY NAME="formfield_uk" TYPE="unique" FIELDS="assessmentid, strategy, dimensionid" COMMENT="The combination of assessmentid, strategy and dimensionid must be unique"/>
+        <KEY NAME="assessment_fk" TYPE="foreign" FIELDS="assessmentid" REFTABLE="workshop_assessments" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="workshop_aggregations" COMMENT="Aggregated grades for assessment are stored here. The aggregated grade for submission is stored in workshop_submissions">
@@ -134,9 +137,9 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="workshopuser" TYPE="unique" FIELDS="workshopid, userid" COMMENT="The combination of workshopid with userid must be unique in this table"/>
         <KEY NAME="workshop_fk" TYPE="foreign" FIELDS="workshopid" REFTABLE="workshop" REFFIELDS="id"/>
         <KEY NAME="user_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="workshopuser" TYPE="unique" FIELDS="workshopid, userid" COMMENT="The combination of workshopid with userid must be unique in this table"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="workshop_old" COMMENT="Legacy workshop table to be dropped later in Moodle 2.x">

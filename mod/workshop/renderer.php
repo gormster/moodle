@@ -18,8 +18,7 @@
 /**
  * Workshop module renderering methods are defined here
  *
- * @package    mod
- * @subpackage workshop
+ * @package    mod_workshop
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -106,13 +105,10 @@ class mod_workshop_renderer extends plugin_renderer_base {
                 $byfullname = get_string('byfullname', 'workshop', array( "name" => $submission->group->name, "url" => ""));
                 $oo = $this->output->container($byfullname, 'fullname');
             } else {
-                $author             = new stdclass();
-                $author->id         = $submission->authorid;
-                $author->firstname  = $submission->authorfirstname;
-                $author->lastname   = $submission->authorlastname;
-                $author->picture    = $submission->authorpicture;
-                $author->imagealt   = $submission->authorimagealt;
-                $author->email      = $submission->authoremail;
+                $author = new stdClass();
+                $additionalfields = explode(',', user_picture::fields());
+                $author = username_load_fields_from_object($author, $submission, 'author', $additionalfields);
+
                 $userpic            = $this->output->user_picture($author, array('courseid' => $this->page->course->id, 'size' => 64));
                 $userurl            = new moodle_url('/user/view.php',
                                                 array('id' => $author->id, 'course' => $this->page->course->id));
@@ -201,12 +197,8 @@ class mod_workshop_renderer extends plugin_renderer_base {
 
         if (!$anonymous) {
             $author             = new stdClass();
-            $author->id         = $summary->authorid;
-            $author->firstname  = $summary->authorfirstname;
-            $author->lastname   = $summary->authorlastname;
-            $author->picture    = $summary->authorpicture;
-            $author->imagealt   = $summary->authorimagealt;
-            $author->email      = $summary->authoremail;
+            $additionalfields = explode(',', user_picture::fields());
+            $author = username_load_fields_from_object($author, $summary, 'author', $additionalfields);
             $userpic            = $this->output->user_picture($author, array('courseid' => $this->page->course->id, 'size' => 35));
             $userurl            = new moodle_url('/user/view.php',
                                             array('id' => $author->id, 'course' => $this->page->course->id));
@@ -232,27 +224,27 @@ class mod_workshop_renderer extends plugin_renderer_base {
         $o .= $this->output->container_end(); // end of the main wrapper
         return $o;
     }
-    
+
     protected function render_workshop_group_submission_summary(workshop_group_submission_summary $summary) {
         $o  = '';    // output HTML code
         $anonymous = $summary->is_anonymous();
         $classes = 'submission-summary group-submission-summary';
-    
+
         if ($anonymous) {
             $classes .= ' anonymous';
         }
-    
+
         $gradestatus = '';
-    
+
         if ($summary->status == 'notgraded') {
             $classes    .= ' notgraded';
             $gradestatus = $this->output->container(get_string('nogradeyet', 'workshop'), 'grade-status');
-    
+
         } else if ($summary->status == 'graded') {
             $classes    .= ' graded';
             $gradestatus = $this->output->container(get_string('alreadygraded', 'workshop'), 'grade-status');
         }
-    
+
         $o .= $this->output->container_start($classes);  // main wrapper
         $o .= html_writer::link($summary->url, format_string($summary->title), array('class' => 'title'));
 
@@ -262,25 +254,25 @@ class mod_workshop_renderer extends plugin_renderer_base {
                                             array('id' => $this->page->course->id, 'group' => $summary->group->id));
             $a->name            = $summary->group->name;
     		$a->url				= $url->out();
-    										
+
             $byfullname         = get_string('byfullname', 'workshop', $a);
-    
+
             $oo = $this->output->container($byfullname, 'fullname');
             $o  .= $this->output->container($oo, 'author');
         }
-    
+
         $created = get_string('userdatecreated', 'workshop', userdate($summary->timecreated));
         $o .= $this->output->container($created, 'userdate created');
-    
+
         if ($summary->timemodified > $summary->timecreated) {
             $modified = get_string('userdatemodified', 'workshop', userdate($summary->timemodified));
             $o .= $this->output->container($modified, 'userdate modified');
         }
-    
+
         $o .= $gradestatus;
         $o .= $this->output->container_end(); // end of the main wrapper
         return $o;
-    
+
     }
 
     /**
@@ -295,7 +287,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
         $classes = 'submission-full example';
         $o .= $this->output->container_start($classes);
         $o .= $this->output->container_start('header');
-        $o .= $this->output->heading(format_string($example->title), 3, 'title');
+        $o .= $this->output->container(format_string($example->title), array('class' => 'title'));
         $o .= $this->output->container_end(); // end of header
 
         $content = file_rewrite_pluginfile_urls($example->content, 'pluginfile.php', $this->page->context->id,
@@ -407,6 +399,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
      * @return string HTML to be echoed
      */
     protected function render_workshop_allocation_result(workshop_allocation_result $result) {
+        global $CFG;
 
         $status = $result->get_status();
 
@@ -452,7 +445,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
         if (is_array($logs) and !empty($logs)) {
             $o .= html_writer::start_tag('ul', array('class' => 'allocation-init-results'));
             foreach ($logs as $log) {
-                if ($log->type == 'debug' and !debugging('', DEBUG_DEVELOPER)) {
+                if ($log->type == 'debug' and !$CFG->debugdeveloper) {
                     // display allocation debugging messages for developers only
                     continue;
                 }
@@ -624,29 +617,29 @@ class mod_workshop_renderer extends plugin_renderer_base {
 
         return html_writer::table($table);
     }
-    
-    
+
+
     /**
     * Renders the workshop grading report for visible groups mode
     *
     * @param workshop_grouped_grading_report $gradingreport
     * @return string HTML
     */
-    
+
     protected function render_workshop_grouped_grading_report(workshop_grouped_grading_report $gradingreport) {
         //todo
         $data       = $gradingreport->get_data();
         $options    = $gradingreport->get_options();
         $grades     = $data->grades;
         $userinfo   = $data->userinfo;
-    
+
         if (empty($grades)) {
             return '';
         }
-    
+
         $table = new html_table();
         $table->attributes['class'] = 'grading-report grouped';
-    
+
         $table->head = array();
     	$table->head[] = $this->helper_sortable_heading(get_string('groupname','group'), 'name', $options->sortby, $options->sorthow);
         $table->head[] = $this->helper_sortable_heading(get_string('submission', 'workshop'), 'submissiontitle',
@@ -660,15 +653,15 @@ class mod_workshop_renderer extends plugin_renderer_base {
             $table->head[] = $this->helper_sortable_heading(get_string('submissiongradeof', 'workshop', $data->maxgrade),
                     'submissiongrade', $options->sortby, $options->sorthow);
         }
-    
+
         $table->rowclasses  = array();
         $table->colclasses  = array();
         $table->data        = array();
-    
+
         foreach ($grades as $participant) {
             $numofreceived  = count($participant->reviewedby);
             $published      = $participant->submissionpublished;
-    
+
             // compute the number of <tr> table rows needed to display this participant
             if ($numofreceived > 0) {
                 $numoftrs       = $numofreceived;
@@ -677,7 +670,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
                 $numoftrs       = 1;
                 $spanreceived   = 1;
             }
-    
+
             for ($tr = 0; $tr < $numoftrs; $tr++) {
                 $row = new html_table_row();
                 if ($published) {
@@ -720,10 +713,10 @@ class mod_workshop_renderer extends plugin_renderer_base {
     				$idx = intval($tr / $spanreceived);
     				$assessment = self::array_nth($participant->reviewedby, $idx);
                     $cell = new html_table_cell();
-    				
+
     				if($assessment) {
     					$gradinggrade =	empty($userinfo[$assessment->userid]->gradinggrade) ? null : $userinfo[$assessment->userid]->gradinggrade;
-    				
+
                        $cell->text = $this->helper_grading_report_grade($gradinggrade);
                        $cell->rowspan = $spanreceived;
                        $cell->attributes['class'] = 'gradinggrade';
@@ -738,14 +731,14 @@ class mod_workshop_renderer extends plugin_renderer_base {
                     $cell->attributes['class'] = 'submissiongrade';
                     $row->cells[] = $cell;
                 }
-    
+
                 $table->data[] = $row;
             }
         }
-    
+
         return html_writer::table($table);
     }
-    
+
 
     /**
      * Renders the feedback for the author of the submission
@@ -766,7 +759,7 @@ class mod_workshop_renderer extends plugin_renderer_base {
     protected function render_workshop_feedback_reviewer(workshop_feedback_reviewer $feedback) {
         return $this->helper_render_feedback($feedback);
     }
-    
+
     /**
      * Helper method to rendering feedback
      *
@@ -858,10 +851,10 @@ class mod_workshop_renderer extends plugin_renderer_base {
                 );
             }
         }
-        
+
         $created = get_string('userdatecreated', 'workshop', userdate($assessment->timecreated));
         $o .= $this->output->container($created, 'userdate created');
-        
+
         if ($assessment->timemodified > $assessment->timecreated) {
             $modified = get_string('userdatemodified', 'workshop', userdate($assessment->timemodified));
             $o .= $this->output->container($modified, 'userdate modified');
@@ -886,17 +879,17 @@ class mod_workshop_renderer extends plugin_renderer_base {
                     get_string('assessmentform', 'workshop'), '', false, true);
             if (isset($assessment->reference_form)) {
                 $o .= $this->output->container_start('center');
-                
+
                 $o .= $this->output->container_start('inline-block');
                 $o .= $this->output->heading(get_string('assessmentreference','workshop'), 2, 'reference-assessment');
                 $o .= $this->output->container(self::moodleform($assessment->reference_form));
                 $o .= $this->output->container_end();
-                
+
                 $o .= $this->output->container_start('inline-block');
                 $o .= $this->output->heading(get_string('assessmentbyfullname','workshop', fullname($assessment->reviewer)), 2, 'example-assessment');
                 $o .= $this->output->container(self::moodleform($assessment->form));
                 $o .= $this->output->container_end();
-                
+
                 $o .= $this->output->container_end();
             } else {
                 $o .= $this->output->container(self::moodleform($assessment->form), 'assessment-form');
@@ -1203,7 +1196,7 @@ HTML;
             return $outputfiles;
         }
     }
-    
+
     function helper_submission_wordcount($content) {
         $content = strip_tags($content);
         $content = html_entity_decode($content);
@@ -1385,16 +1378,16 @@ HTML;
         }
         return $text;
     }
-    
+
     protected function render_workshop_random_examples_helper(workshop_random_examples_helper $helper) {
         $precision = ini_set('precision',4);
         $o = '';
         $infos = array();
         $problems = array();
         $titles = workshop_random_examples_helper::$descriptors[count($helper->slices)];
-        
+
         $helptext = $this->output->heading_with_help("What does this mean?","randomexampleshelp",'workshop');
-        
+
         foreach($helper->slices as $i => $s) {
             $o .= "<div class='slice' style='background-color: #$s->colour; width: $s->width; left: $s->min%'></div>";
             $o .= "<div class='mean' style='background-color: #$s->meancolour; left: $s->mean%'></div>";
@@ -1418,7 +1411,7 @@ HTML;
         ini_set('precision',$precision);
         return "$helptext<div class='random-examples-helper'>$o</div> <div class='random-examples-info'>" . implode($infos) . "</div>$problemstr";
     }
-    
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Static helpers

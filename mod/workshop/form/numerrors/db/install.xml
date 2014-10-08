@@ -30,8 +30,8 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="workshop_fk" TYPE="foreign" FIELDS="workshopid" REFTABLE="workshop" REFFIELDS="id"/>
         <KEY NAME="nonegative_uq" TYPE="unique" FIELDS="workshopid, nonegative" COMMENT="Number of negative must be unique within the given workshop"/>
+        <KEY NAME="workshop_fk" TYPE="foreign" FIELDS="workshopid" REFTABLE="workshop" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

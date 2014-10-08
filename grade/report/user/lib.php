@@ -152,13 +152,33 @@ class grade_report_user extends grade_report {
     public $pbarurl;
 
     /**
+     * The modinfo object to be used.
+     *
+     * @var course_modinfo
+     */
+    protected $modinfo = null;
+
+    /**
+     * View as user.
+     *
+     * When this is set to true, the visibility checks, and capability checks will be
+     * applied to the user whose grades are being displayed. This is very useful when
+     * a mentor/parent is viewing the report of their mentee because they need to have
+     * access to the same information, but not more, not less.
+     *
+     * @var boolean
+     */
+    protected $viewasuser = false;
+
+    /**
      * Constructor. Sets local copies of user preferences and initialises grade_tree.
      * @param int $courseid
      * @param object $gpr grade plugin return tracking object
      * @param string $context
      * @param int $userid The id of the user
+     * @param bool $viewasuser Set this to true when the current user is a mentor/parent of the targetted user.
      */
-    public function __construct($courseid, $gpr, $context, $userid) {
+    public function __construct($courseid, $gpr, $context, $userid, $viewasuser = null) {
         global $DB, $CFG;
         parent::__construct($courseid, $gpr, $context);
 
@@ -173,6 +193,8 @@ class grade_report_user extends grade_report {
         $this->showweight      = grade_get_setting($this->courseid, 'report_user_showweight',      !empty($CFG->grade_report_user_showweight));
         $this->showlettergrade = grade_get_setting($this->courseid, 'report_user_showlettergrade', !empty($CFG->grade_report_user_showlettergrade));
         $this->showaverage     = grade_get_setting($this->courseid, 'report_user_showaverage',     !empty($CFG->grade_report_user_showaverage));
+
+        $this->viewasuser = $viewasuser;
 
         // The default grade decimals is 2
         $defaultdecimals = 2;
@@ -203,10 +225,18 @@ class grade_report_user extends grade_report {
 
         $this->tabledata = array();
 
-        $this->canviewhidden = has_capability('moodle/grade:viewhidden', context_course::instance($this->courseid));
-
-        // get the user (for full name)
+        // Get the user (for full name).
         $this->user = $DB->get_record('user', array('id' => $userid));
+
+        // What user are we viewing this as?
+        $coursecontext = context_course::instance($this->courseid);
+        if ($viewasuser) {
+            $this->modinfo = new course_modinfo($this->course, $this->user->id);
+            $this->canviewhidden = has_capability('moodle/grade:viewhidden', $coursecontext, $this->user->id);
+        } else {
+            $this->modinfo = $this->gtree->modinfo;
+            $this->canviewhidden = has_capability('moodle/grade:viewhidden', $coursecontext);
+        }
 
         // base url for sorting by first/last name
         $this->baseurl = $CFG->wwwroot.'/grade/report?id='.$courseid.'&amp;userid='.$userid;
@@ -350,7 +380,7 @@ class grade_report_user extends grade_report {
 
             /// Hidden Items
             if ($grade_grade->grade_item->is_hidden()) {
-                $hidden = ' hidden';
+                $hidden = ' dimmed_text';
             }
 
             $hide = false;
@@ -360,16 +390,16 @@ class grade_report_user extends grade_report {
                     ($this->showhiddenitems == GRADE_REPORT_USER_HIDE_UNTIL && !$grade_grade->is_hiddenuntil()))) {
                 $hide = true;
             } else if (!empty($grade_object->itemmodule) && !empty($grade_object->iteminstance)) {
-                // The grade object can be marked visible but still be hidden if...
-                //  1) "enablegroupmembersonly" is on and the activity is assigned to a grouping the user is not in.
-                //  2) the student cannot see the activity due to conditional access and its set to be hidden entirely.
-                $instances = $this->gtree->modinfo->get_instances_of($grade_object->itemmodule);
+                // The grade object can be marked visible but still be hidden if
+                // the student cannot see the activity due to conditional access
+                // and it's set to be hidden entirely.
+                $instances = $this->modinfo->get_instances_of($grade_object->itemmodule);
                 if (!empty($instances[$grade_object->iteminstance])) {
                     $cm = $instances[$grade_object->iteminstance];
                     if (!$cm->uservisible) {
-                        // Further checks are required to determine whether the activity is entirely hidden or just greyed out.
-                        if ($cm->is_user_access_restricted_by_group() || $cm->is_user_access_restricted_by_conditional_access() ||
-                                $cm->is_user_access_restricted_by_capability()) {
+                        // If there is 'availableinfo' text then it is only greyed
+                        // out and not entirely hidden.
+                        if (!$cm->availableinfo) {
                             $hide = true;
                         }
                     }
@@ -415,7 +445,7 @@ class grade_report_user extends grade_report {
                     $data['weight']['headers'] = "$header_cat $header_row weight";
                     // has a weight assigned, might be extra credit
                     if ($grade_object->aggregationcoef > 0 && $type <> 'courseitem') {
-                        $data['weight']['content'] = number_format($grade_object->aggregationcoef,2).'%';
+                        $data['weight']['content'] = number_format($grade_object->aggregationcoef,2);
                     }
                 }
 
@@ -431,12 +461,21 @@ class grade_report_user extends grade_report {
                         $data['grade']['content'] = get_string('submittedon', 'grades', userdate($grade_grade->get_datesubmitted(), get_string('strftimedatetimeshort')));
 
                     } elseif ($grade_grade->is_hidden()) {
-                            $data['grade']['class'] = $class.' hidden';
+                            $data['grade']['class'] = $class.' dimmed_text';
                             $data['grade']['content'] = '-';
                     } else {
                         $data['grade']['class'] = $class;
-                        $gradeval = $this->blank_hidden_total($this->courseid, $grade_grade->grade_item, $gradeval);
-                        $data['grade']['content'] = grade_format_gradevalue($gradeval, $grade_grade->grade_item, true);
+                        $adjustedgrade = $this->blank_hidden_total_and_adjust_bounds($this->courseid,
+                                                                                     $grade_grade->grade_item,
+                                                                                     $gradeval);
+
+                        // We temporarily adjust the view of this grade item - because the min and
+                        // max are affected by the hidden values in the aggregation.
+                        $grade_grade->grade_item->grademax = $adjustedgrade['grademax'];
+                        $grade_grade->grade_item->grademin = $adjustedgrade['grademin'];
+                        $data['grade']['content'] = grade_format_gradevalue($adjustedgrade['grade'],
+                                                                            $grade_grade->grade_item,
+                                                                            true);
                     }
                     $data['grade']['headers'] = "$header_cat $header_row grade";
                 }
@@ -454,7 +493,7 @@ class grade_report_user extends grade_report {
                         $data['percentage']['class'] = $class.' gradingerror';
                         $data['percentage']['content'] = get_string('error');
                     } else if ($grade_grade->is_hidden()) {
-                        $data['percentage']['class'] = $class.' hidden';
+                        $data['percentage']['class'] = $class.' dimmed_text';
                         $data['percentage']['content'] = '-';
                     } else {
                         $data['percentage']['class'] = $class;
@@ -469,7 +508,7 @@ class grade_report_user extends grade_report {
                         $data['lettergrade']['class'] = $class.' gradingerror';
                         $data['lettergrade']['content'] = get_string('error');
                     } else if ($grade_grade->is_hidden()) {
-                        $data['lettergrade']['class'] = $class.' hidden';
+                        $data['lettergrade']['class'] = $class.' dimmed_text';
                         if (!$this->canviewhidden) {
                             $data['lettergrade']['content'] = '-';
                         } else {
@@ -488,7 +527,7 @@ class grade_report_user extends grade_report {
                         $data['rank']['class'] = $class.' gradingerror';
                         $data['rank']['content'] = get_string('error');
                         } elseif ($grade_grade->is_hidden()) {
-                            $data['rank']['class'] = $class.' hidden';
+                            $data['rank']['class'] = $class.' dimmed_text';
                             $data['rank']['content'] = '-';
                     } else if (is_null($gradeval)) {
                         // no grade, no rank
@@ -636,42 +675,34 @@ class grade_report_user extends grade_report {
 
     /**
      * Builds the grade item averages.
-     *
      */
     function calculate_averages() {
         global $USER, $DB;
 
         if ($this->showaverage) {
-            // this settings are actually grader report settings (not user report)
+            // This settings are actually grader report settings (not user report)
             // however we're using them as having two separate but identical settings the
-            // user would have to keep in sync would be annoying
+            // user would have to keep in sync would be annoying.
             $averagesdisplaytype   = $this->get_pref('averagesdisplaytype');
             $averagesdecimalpoints = $this->get_pref('averagesdecimalpoints');
             $meanselection         = $this->get_pref('meanselection');
             $shownumberofgrades    = $this->get_pref('shownumberofgrades');
 
             $avghtml = '';
-            $avgcssclass = 'avg';
-
-            $straverage = get_string('overallaverage', 'grades');
-
             $groupsql = $this->groupsql;
             $groupwheresql = $this->groupwheresql;
-            //$groupwheresqlparams = ;
-
-            if ($shownumberofgrades) {
-                $straverage .= ' (' . get_string('submissions', 'grades') . ') ';
-            }
-
             $totalcount = $this->get_numusers(false);
 
-            //limit to users with a gradeable role ie students
+            // We want to query both the current context and parent contexts.
+            list($relatedctxsql, $relatedctxparams) = $DB->get_in_or_equal($this->context->get_parent_context_ids(true), SQL_PARAMS_NAMED, 'relatedctx');
+
+            // Limit to users with a gradeable role ie students.
             list($gradebookrolessql, $gradebookrolesparams) = $DB->get_in_or_equal(explode(',', $this->gradebookroles), SQL_PARAMS_NAMED, 'grbr0');
 
-            //limit to users with an active enrolment
+            // Limit to users with an active enrolment.
             list($enrolledsql, $enrolledparams) = get_enrolled_sql($this->context);
 
-            $params = array_merge($this->groupwheresql_params, $gradebookrolesparams, $enrolledparams);
+            $params = array_merge($this->groupwheresql_params, $gradebookrolesparams, $enrolledparams, $relatedctxparams);
             $params['courseid'] = $this->courseid;
 
             // find sums of all grade items in course
@@ -684,7 +715,7 @@ class grade_report_user extends grade_report {
                                    SELECT DISTINCT ra.userid
                                      FROM {role_assignments} ra
                                     WHERE ra.roleid $gradebookrolessql
-                                      AND ra.contextid " . get_related_contexts_string($this->context) . "
+                                      AND ra.contextid $relatedctxsql
                            ) rainner ON rainner.userid = u.id
                       $groupsql
                      WHERE gi.courseid = :courseid
@@ -715,7 +746,7 @@ class grade_report_user extends grade_report {
                                SELECT DISTINCT ra.userid
                                  FROM {role_assignments} ra
                                 WHERE ra.roleid $gradebookrolessql
-                                  AND ra.contextid " . get_related_contexts_string($this->context) . "
+                                  AND ra.contextid $relatedctxsql
                            ) rainner ON rainner.userid = u.id
                       LEFT JOIN {grade_grades} gg
                              ON (gg.itemid = gi.id AND gg.userid = u.id AND gg.finalgrade IS NOT NULL AND gg.hidden = 0)
@@ -756,8 +787,6 @@ class grade_report_user extends grade_report {
                     $mean_count = $totalcount;
                 }
 
-                $decimalpoints = $item->get_decimals();
-
                 // Determine which display type to use for this average
                 if (!empty($USER->gradeediting) && $USER->gradeediting[$this->courseid]) {
                     $displaytype = GRADE_DISPLAY_TYPE_REAL;
@@ -772,7 +801,6 @@ class grade_report_user extends grade_report {
                 // Override grade_item setting if a display preference (not inherit) was set for the averages
                 if ($averagesdecimalpoints == GRADE_REPORT_PREFERENCE_INHERIT) {
                     $decimalpoints = $item->get_decimals();
-
                 } else {
                     $decimalpoints = $averagesdecimalpoints;
                 }
@@ -906,7 +934,14 @@ function grade_report_user_settings_definition(&$mform) {
     $mform->addHelpButton('report_user_showtotalsifcontainhidden', 'hidetotalifhiddenitems', 'grades');
 }
 
-function grade_report_user_profilereport($course, $user) {
+/**
+ * Profile report callback.
+ *
+ * @param object $course The course.
+ * @param object $user The user.
+ * @param boolean $viewasuser True when we are viewing this as the targetted user sees it.
+ */
+function grade_report_user_profilereport($course, $user, $viewasuser = false) {
     global $OUTPUT;
     if (!empty($course->showgrades)) {
 
@@ -918,7 +953,7 @@ function grade_report_user_profilereport($course, $user) {
         /// return tracking object
         $gpr = new grade_plugin_return(array('type'=>'report', 'plugin'=>'user', 'courseid'=>$course->id, 'userid'=>$user->id));
         // Create a report instance
-        $report = new grade_report_user($course->id, $gpr, $context, $user->id);
+        $report = new grade_report_user($course->id, $gpr, $context, $user->id, $viewasuser);
 
         // print the page
         echo '<div class="grade-report-user">'; // css fix to share styles with real report page

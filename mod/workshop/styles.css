@@ -232,6 +232,7 @@
 .path-mod-workshop .allocation-init-results .debug {
     color: black;
     background-color: #ddd;
+    display: none;
 }
 
 /**

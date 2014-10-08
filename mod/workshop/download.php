@@ -108,7 +108,7 @@ foreach($feedbackset as $record) {
     if(isset($submissions[$record->submissionid])) {
         $submissions[$record->submissionid]->feedback[$record->reviewerid] = $record->feedbackauthor;
     }
-    
+
     if(isset($examples[$record->submissionid])) {
         if($record->weight == 1) {
             $examples[$record->submissionid]->referencefeedback = $record->feedbackauthor;
@@ -283,7 +283,7 @@ foreach($assessments as $reviewerid => $a) {
                 $needs_feedback = true;
             }
         }
-        
+
         $row['overallmark'] = $total;
         $row['scaledmark'] = round($examplegrades[$reviewerid][$exid]->grade, 2);
 

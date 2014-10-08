@@ -18,8 +18,7 @@
 /**
  * Aggregates the grades for submission and grades for assessments
  *
- * @package    mod
- * @subpackage workshop
+ * @package    mod_workshop
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -65,8 +64,7 @@ if (!empty($settingsdata)) {
     $workshop->aggregate_submission_grades();           // updates 'grade' in {workshop_submissions}
     $evaluator->update_grading_grades($settingsdata);   // updates 'gradinggrade' in {workshop_assessments}
     $workshop->aggregate_grading_grades();              // updates 'gradinggrade' in {workshop_aggregations}
-    $workshop->log('update aggregate grades');
-    
+
     //New functionality: calibrated plugin needs to update submission grades based on calibration scores
     if (method_exists($evaluator, "update_submission_grades")) {
         $evaluator->update_submission_grades($settingsdata);

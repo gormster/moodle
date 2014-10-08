@@ -42,6 +42,7 @@ class assign_submit_for_grading_page implements renderable {
      * Constructor
      * @param string $notifications - Any mesages to display
      * @param int $coursemoduleid
+     * @param moodleform $confirmform
      */
     public function __construct($notifications, $coursemoduleid, $confirmform) {
         $this->notifications = $notifications;
@@ -64,16 +65,23 @@ class assign_gradingmessage implements renderable {
     public $message = '';
     /** @var int $coursemoduleid */
     public $coursemoduleid = 0;
+    /** @var int $gradingerror should be set true if there was a problem grading */
+    public $gradingerror = null;
 
     /**
      * Constructor
      * @param string $heading This is the heading to display
      * @param string $message This is the message to display
+     * @param bool $gradingerror Set to true to display the message as an error.
+     * @param int $coursemoduleid
+     * @param int $page This is the current quick grading page
      */
-    public function __construct($heading, $message, $coursemoduleid) {
+    public function __construct($heading, $message, $coursemoduleid, $gradingerror = false, $page = null) {
         $this->heading = $heading;
         $this->message = $message;
         $this->coursemoduleid = $coursemoduleid;
+        $this->gradingerror = $gradingerror;
+        $this->page = $page;
     }
 
 }
@@ -125,6 +133,8 @@ class assign_user_summary implements renderable {
     public $uniqueidforuser;
     /** @var array $extrauserfields */
     public $extrauserfields;
+    /** @var bool $suspendeduser */
+    public $suspendeduser;
 
     /**
      * Constructor
@@ -134,19 +144,22 @@ class assign_user_summary implements renderable {
      * @param bool $blindmarking
      * @param int $uniqueidforuser
      * @param array $extrauserfields
+     * @param bool $suspendeduser
      */
     public function __construct(stdClass $user,
                                 $courseid,
                                 $viewfullnames,
                                 $blindmarking,
                                 $uniqueidforuser,
-                                $extrauserfields) {
+                                $extrauserfields,
+                                $suspendeduser = false) {
         $this->user = $user;
         $this->courseid = $courseid;
         $this->viewfullnames = $viewfullnames;
         $this->blindmarking = $blindmarking;
         $this->uniqueidforuser = $uniqueidforuser;
         $this->extrauserfields = $extrauserfields;
+        $this->suspendeduser = $suspendeduser;
     }
 }
 
@@ -399,6 +412,7 @@ class assign_submission_status implements renderable {
      * @param int $extensionduedate - Any extension to the due date granted for this user
      * @param context $context - Any extension to the due date granted for this user
      * @param bool $blindmarking - Should we hide student identities from graders?
+     * @param string $gradingcontrollerpreview
      * @param string $attemptreopenmethod - The method of reopening student attempts.
      * @param int $maxattempts - How many attempts can a student make?
      */
@@ -468,34 +482,40 @@ class assign_submission_status implements renderable {
  */
 class assign_attempt_history implements renderable {
 
-    /** @var array submissions */
+    /** @var array submissions - The list of previous attempts */
     public $submissions = array();
-    /** @var array grades */
+    /** @var array grades - The grades for the previous attempts */
     public $grades = array();
-    /** @var array submissionplugins */
+    /** @var array submissionplugins - The list of submission plugins to render the previous attempts */
     public $submissionplugins = array();
-    /** @var array feedbackplugins */
+    /** @var array feedbackplugins - The list of feedback plugins to render the previous attempts */
     public $feedbackplugins = array();
-    /** @var int coursemoduleid */
+    /** @var int coursemoduleid - The cmid for the assignment */
     public $coursemoduleid = 0;
-    /** @var string returnaction */
+    /** @var string returnaction - The action for the next page. */
     public $returnaction = '';
-    /** @var string returnparams */
+    /** @var string returnparams - The params for the next page. */
     public $returnparams = array();
-    /** @var bool cangrade */
+    /** @var bool cangrade - Does this user have grade capability? */
     public $cangrade = false;
+    /** @var string useridlistid - Id of the useridlist stored in cache, this plus rownum determines the userid */
+    public $useridlistid = 0;
+    /** @var int rownum - The rownum of the user in the useridlistid - this plus useridlistid determines the userid */
+    public $rownum = 0;
 
     /**
      * Constructor
      *
-     * @param $submissions
-     * @param $grades
-     * @param $submissionplugins
-     * @param $feedbackplugins
-     * @param $coursemoduleid
-     * @param $returnaction
-     * @param $returnparams
-     * @param $cangrade
+     * @param array $submissions
+     * @param array $grades
+     * @param array $submissionplugins
+     * @param array $feedbackplugins
+     * @param int $coursemoduleid
+     * @param string $returnaction
+     * @param array $returnparams
+     * @param bool $cangrade
+     * @param int $useridlistid
+     * @param int $rownum
      */
     public function __construct($submissions,
                                 $grades,
@@ -504,7 +524,9 @@ class assign_attempt_history implements renderable {
                                 $coursemoduleid,
                                 $returnaction,
                                 $returnparams,
-                                $cangrade) {
+                                $cangrade,
+                                $useridlistid,
+                                $rownum) {
         $this->submissions = $submissions;
         $this->grades = $grades;
         $this->submissionplugins = $submissionplugins;
@@ -513,6 +535,8 @@ class assign_attempt_history implements renderable {
         $this->returnaction = $returnaction;
         $this->returnparams = $returnparams;
         $this->cangrade = $cangrade;
+        $this->useridlistid = $useridlistid;
+        $this->rownum = $rownum;
     }
 }
 
@@ -558,6 +582,26 @@ class assign_header implements renderable {
         $this->coursemoduleid = $coursemoduleid;
         $this->subpage = $subpage;
         $this->preface = $preface;
+    }
+}
+
+/**
+ * Renderable header related to an individual subplugin
+ * @package   mod_assign
+ * @copyright 2014 Henning Bostelmann
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class assign_plugin_header implements renderable {
+    /** @var assign_plugin $plugin */
+    public $plugin = null;
+
+    /**
+     * Header for a single plugin
+     *
+     * @param assign_plugin $plugin
+     */
+    public function __construct(assign_plugin $plugin) {
+        $this->plugin = $plugin;
     }
 }
 
@@ -643,8 +687,8 @@ class assign_course_index_summary implements renderable {
     /**
      * constructor
      *
-     * @param $usesections boolean - True if this course format uses sections
-     * @param $courseformatname string - The id of this course format
+     * @param boolean $usesections - True if this course format uses sections
+     * @param string $courseformatname - The id of this course format
      */
     public function __construct($usesections, $courseformatname) {
         $this->usesections = $usesections;
@@ -734,26 +778,6 @@ class assign_files implements renderable {
                 $this->portfolioform = $button->to_html(PORTFOLIO_ADD_TEXT_LINK);
             }
 
-        }
-
-        // Plagiarism check if it is enabled.
-        $output = '';
-        if (!empty($CFG->enableplagiarism)) {
-            require_once($CFG->libdir . '/plagiarismlib.php');
-
-            // For plagiarism_get_links.
-            $assignment = new assign($this->context, null, null);
-            foreach ($files as $file) {
-
-                $linkparams = array('userid' => $sid,
-                                    'file' => $file,
-                                    'cmid' => $this->cm->id,
-                                    'course' => $this->course,
-                                    'assignment' => $assignment->get_instance());
-                $output .= plagiarism_get_links($linkparams);
-
-                $output .= '<br />';
-            }
         }
 
         $this->preprocess($this->dir, $filearea, $component);

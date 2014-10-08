@@ -399,7 +399,7 @@ class workshop_accumulative_strategy implements workshop_strategy {
      */
     public static function delete_instance($workshopid) {
         global $DB;
-        
+
         $DB->delete_records('workshopform_accumulative', array('workshopid' => $workshopid));
         $DB->delete_records('workshopform_accum_config', array('workshopid' => $workshopid));
     }
@@ -424,7 +424,7 @@ class workshop_accumulative_strategy implements workshop_strategy {
 
         return $DB->get_records_sql($sql, $params);
     }
-    
+
     protected function load_config() {
         global $DB;
 
@@ -565,7 +565,7 @@ class workshop_accumulative_strategy implements workshop_strategy {
                 // does not influence the final grade
                 continue;
             }
-            
+
             if ($this->config->additive) {
                 if ($dimension->grade >= 0) {
                     $sumgrades  += $grade->grade * $dimension->weight * 100;

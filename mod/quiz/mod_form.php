@@ -17,8 +17,7 @@
 /**
  * Defines the quiz module ettings form.
  *
- * @package    mod
- * @subpackage quiz
+ * @package    mod_quiz
  * @copyright  2006 Jamie Pratt
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -37,6 +36,9 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_quiz_mod_form extends moodleform_mod {
+    /** @var array options to be used with date_time_selector fields in the quiz. */
+    public static $datefieldoptions = array('optional' => true, 'step' => 1);
+
     protected $_feedbacks;
     protected static $reviewfields = array(); // Initialised in the constructor.
 
@@ -79,11 +81,11 @@ class mod_quiz_mod_form extends moodleform_mod {
 
         // Open and close dates.
         $mform->addElement('date_time_selector', 'timeopen', get_string('quizopen', 'quiz'),
-                array('optional' => true, 'step' => 1));
+                self::$datefieldoptions);
         $mform->addHelpButton('timeopen', 'quizopenclose', 'quiz');
 
         $mform->addElement('date_time_selector', 'timeclose', get_string('quizclose', 'quiz'),
-                array('optional' => true, 'step' => 1));
+                self::$datefieldoptions);
 
         // Time limit.
         $mform->addElement('duration', 'timelimit', get_string('timelimit', 'quiz'),
@@ -247,11 +249,11 @@ class mod_quiz_mod_form extends moodleform_mod {
                 'neq', 'wontmatch');
 
         // -------------------------------------------------------------------------------
-        $mform->addElement('header', 'display', get_string('display', 'form'));
+        $mform->addElement('header', 'display', get_string('appearance'));
 
         // Show user picture.
-        $mform->addElement('selectyesno', 'showuserpicture',
-                get_string('showuserpicture', 'quiz'));
+        $mform->addElement('select', 'showuserpicture', get_string('showuserpicture', 'quiz'),
+                quiz_get_user_image_options());
         $mform->addHelpButton('showuserpicture', 'showuserpicture', 'quiz');
         $mform->setAdvanced('showuserpicture', $quizconfig->showuserpicture_adv);
         $mform->setDefault('showuserpicture', $quizconfig->showuserpicture);
@@ -348,7 +350,7 @@ class mod_quiz_mod_form extends moodleform_mod {
         $repeatedoptions = array();
         $repeatarray[] = $mform->createElement('editor', 'feedbacktext',
                 get_string('feedback', 'quiz'), array('rows' => 3), array('maxfiles' => EDITOR_UNLIMITED_FILES,
-                        'noclean' => true, 'context' => $this->context, 'collapsed' => 1));
+                        'noclean' => true, 'context' => $this->context));
         $repeatarray[] = $mform->createElement('text', 'feedbackboundaries',
                 get_string('gradeboundary', 'quiz'), array('size' => 10));
         $repeatedoptions['feedbacktext']['type'] = PARAM_RAW;
@@ -370,7 +372,7 @@ class mod_quiz_mod_form extends moodleform_mod {
         $mform->insertElementBefore($mform->createElement('editor',
                 "feedbacktext[$nextel]", get_string('feedback', 'quiz'), array('rows' => 3),
                 array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true,
-                      'context' => $this->context, 'collapsed' => 1)),
+                      'context' => $this->context)),
                 'boundary_add_fields');
         $mform->insertElementBefore($mform->createElement('static',
                 'gradeboundarystatic2', get_string('gradeboundary', 'quiz'), '0%'),
@@ -424,10 +426,12 @@ class mod_quiz_mod_form extends moodleform_mod {
             }
         }
 
-        $mform->disabledIf('correctness' . $whenname, 'attempt' . $whenname);
-        $mform->disabledIf('specificfeedback' . $whenname, 'attempt' . $whenname);
-        $mform->disabledIf('generalfeedback' . $whenname, 'attempt' . $whenname);
-        $mform->disabledIf('rightanswer' . $whenname, 'attempt' . $whenname);
+        if ($whenname != 'during') {
+            $mform->disabledIf('correctness' . $whenname, 'attempt' . $whenname);
+            $mform->disabledIf('specificfeedback' . $whenname, 'attempt' . $whenname);
+            $mform->disabledIf('generalfeedback' . $whenname, 'attempt' . $whenname);
+            $mform->disabledIf('rightanswer' . $whenname, 'attempt' . $whenname);
+        }
     }
 
     protected function preprocessing_review_settings(&$toform, $whenname, $when) {

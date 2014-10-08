@@ -21,8 +21,7 @@
  * All the functions neeeded by Moodle core, gradebook, file subsystem etc
  * are placed here.
  *
- * @package    mod
- * @subpackage workshop
+ * @package    mod_workshop
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -261,21 +260,21 @@ function workshop_delete_instance($id) {
     $DB->delete_records_list('workshop_submissions', 'id', array_keys($submissions));
 
     // call the static clean-up methods of all available subplugins
-    $strategies = get_plugin_list('workshopform');
+    $strategies = core_component::get_plugin_list('workshopform');
     foreach ($strategies as $strategy => $path) {
         require_once($path.'/lib.php');
         $classname = 'workshop_'.$strategy.'_strategy';
         call_user_func($classname.'::delete_instance', $workshop->id);
     }
 
-    $allocators = get_plugin_list('workshopallocation');
+    $allocators = core_component::get_plugin_list('workshopallocation');
     foreach ($allocators as $allocator => $path) {
         require_once($path.'/lib.php');
         $classname = 'workshop_'.$allocator.'_allocator';
         call_user_func($classname.'::delete_instance', $workshop->id);
     }
 
-    $evaluators = get_plugin_list('workshopeval');
+    $evaluators = core_component::get_plugin_list('workshopeval');
     foreach ($evaluators as $evaluator => $path) {
         require_once($path.'/lib.php');
         $classname = 'workshop_'.$evaluator.'_evaluation';
@@ -297,6 +296,24 @@ function workshop_delete_instance($id) {
     grade_update('mod/workshop', $workshop->course, 'mod', 'workshop', $workshop->id, 1, null, array('deleted' => true));
 
     return true;
+}
+
+/**
+ * List the actions that correspond to a view of this module.
+ * This is used by the participation report.
+ * @return array
+ */
+function workshop_get_view_actions() {
+    return array('view', 'view all', 'view submission', 'view example');
+}
+
+/**
+ * List the actions that correspond to a post of this module.
+ * This is used by the participation report.
+ * @return array
+ */
+function workshop_get_post_actions() {
+    return array('add', 'add assessment', 'add example', 'add submission', 'update', 'update submission');
 }
 
 /**
@@ -414,11 +431,12 @@ function workshop_user_complete($course, $user, $mod, $workshop) {
 function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
     global $CFG, $USER, $DB, $OUTPUT;
 
+    $authoramefields = get_all_user_name_fields(true, 'author', null, 'author');
+    $reviewerfields = get_all_user_name_fields(true, 'reviewer', null, 'reviewer');
+
     $sql = "SELECT s.id AS submissionid, s.title AS submissiontitle, s.timemodified AS submissionmodified,
-                   author.id AS authorid, author.lastname AS authorlastname, author.firstname AS authorfirstname,
-                   a.id AS assessmentid, a.timemodified AS assessmentmodified,
-                   reviewer.id AS reviewerid, reviewer.lastname AS reviewerlastname, reviewer.firstname AS reviewerfirstname,
-                   cm.id AS cmid
+                   author.id AS authorid, $authoramefields, a.id AS assessmentid, a.timemodified AS assessmentmodified,
+                   reviewer.id AS reviewerid, $reviewerfields, cm.id AS cmid
               FROM {workshop} w
         INNER JOIN {course_modules} cm ON cm.instance = w.id
         INNER JOIN {modules} md ON md.id = cm.module
@@ -429,7 +447,8 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
              WHERE cm.course = ?
                    AND md.name = 'workshop'
                    AND s.example = 0
-                   AND (s.timemodified > ? OR a.timemodified > ?)";
+                   AND (s.timemodified > ? OR a.timemodified > ?)
+          ORDER BY s.timemodified";
 
     $rs = $DB->get_recordset_sql($sql, array($course->id, $timestart, $timestart));
 
@@ -450,20 +469,14 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
             continue;
         }
 
-        if ($viewfullnames) {
-            // remember all user names we can use later
-            if (empty($users[$activity->authorid])) {
-                $u = new stdclass();
-                $u->lastname = $activity->authorlastname;
-                $u->firstname = $activity->authorfirstname;
-                $users[$activity->authorid] = $u;
-            }
-            if ($activity->reviewerid and empty($users[$activity->reviewerid])) {
-                $u = new stdclass();
-                $u->lastname = $activity->reviewerlastname;
-                $u->firstname = $activity->reviewerfirstname;
-                $users[$activity->reviewerid] = $u;
-            }
+        // remember all user names we can use later
+        if (empty($users[$activity->authorid])) {
+            $u = new stdclass();
+            $users[$activity->authorid] = username_load_fields_from_object($u, $activity, 'author');
+        }
+        if ($activity->reviewerid and empty($users[$activity->reviewerid])) {
+            $u = new stdclass();
+            $users[$activity->reviewerid] = username_load_fields_from_object($u, $activity, 'reviewer');
         }
 
         $context = context_module::instance($cm->id);
@@ -475,7 +488,7 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
             $s->authorid = $activity->authorid;
             $s->timemodified = $activity->submissionmodified;
             $s->cmid = $activity->cmid;
-            if (has_capability('mod/workshop:viewauthornames', $context)) {
+            if ($activity->authorid == $USER->id || has_capability('mod/workshop:viewauthornames', $context)) {
                 $s->authornamevisible = true;
             } else {
                 $s->authornamevisible = false;
@@ -496,18 +509,14 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
                             break;
                         }
 
-                        if (is_null($modinfo->groups)) {
-                            $modinfo->groups = groups_get_user_groups($course->id); // load all my groups and cache it in modinfo
-                        }
-
                         // this might be slow - show only submissions by users who share group with me in this cm
-                        if (empty($modinfo->groups[$cm->id])) {
+                        if (!$modinfo->get_groups($cm->groupingid)) {
                             break;
                         }
                         $authorsgroups = groups_get_all_groups($course->id, $s->authorid, $cm->groupingid);
                         if (is_array($authorsgroups)) {
                             $authorsgroups = array_keys($authorsgroups);
-                            $intersect = array_intersect($authorsgroups, $modinfo->groups[$cm->id]);
+                            $intersect = array_intersect($authorsgroups, $modinfo->get_groups($cm->groupingid));
                             if (empty($intersect)) {
                                 break;
                             } else {
@@ -532,7 +541,7 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
             $a->reviewerid = $activity->reviewerid;
             $a->timemodified = $activity->assessmentmodified;
             $a->cmid = $activity->cmid;
-            if (has_capability('mod/workshop:viewreviewernames', $context)) {
+            if ($activity->reviewerid == $USER->id || has_capability('mod/workshop:viewreviewernames', $context)) {
                 $a->reviewernamevisible = true;
             } else {
                 $a->reviewernamevisible = false;
@@ -553,18 +562,14 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
                             break;
                         }
 
-                        if (is_null($modinfo->groups)) {
-                            $modinfo->groups = groups_get_user_groups($course->id); // load all my groups and cache it in modinfo
-                        }
-
                         // this might be slow - show only submissions by users who share group with me in this cm
-                        if (empty($modinfo->groups[$cm->id])) {
+                        if (!$modinfo->get_groups($cm->groupingid)) {
                             break;
                         }
                         $reviewersgroups = groups_get_all_groups($course->id, $a->reviewerid, $cm->groupingid);
                         if (is_array($reviewersgroups)) {
                             $reviewersgroups = array_keys($reviewersgroups);
-                            $intersect = array_intersect($reviewersgroups, $modinfo->groups[$cm->id]);
+                            $intersect = array_intersect($reviewersgroups, $modinfo->get_groups($cm->groupingid));
                             if (empty($intersect)) {
                                 break;
                             } else {
@@ -591,7 +596,7 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
         echo $OUTPUT->heading(get_string('recentsubmissions', 'workshop'), 3);
         foreach ($submissions as $id => $submission) {
             $link = new moodle_url('/mod/workshop/submission.php', array('id'=>$id, 'cmid'=>$submission->cmid));
-            if ($viewfullnames and $submission->authornamevisible) {
+            if ($submission->authornamevisible) {
                 $author = $users[$submission->authorid];
             } else {
                 $author = null;
@@ -603,9 +608,10 @@ function workshop_print_recent_activity($course, $viewfullnames, $timestart) {
     if (!empty($assessments)) {
         $shown = true;
         echo $OUTPUT->heading(get_string('recentassessments', 'workshop'), 3);
+        core_collator::asort_objects_by_property($assessments, 'timemodified');
         foreach ($assessments as $id => $assessment) {
             $link = new moodle_url('/mod/workshop/assessment.php', array('asid' => $id));
-            if ($viewfullnames and $assessment->reviewernamevisible) {
+            if ($assessment->reviewernamevisible) {
                 $reviewer = $users[$assessment->reviewerid];
             } else {
                 $reviewer = null;
@@ -670,12 +676,14 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
     $params['submissionmodified'] = $timestart;
     $params['assessmentmodified'] = $timestart;
 
+    $authornamefields = get_all_user_name_fields(true, 'author', null, 'author');
+    $reviewerfields = get_all_user_name_fields(true, 'reviewer', null, 'reviewer');
+
     $sql = "SELECT s.id AS submissionid, s.title AS submissiontitle, s.timemodified AS submissionmodified,
-                   author.id AS authorid, author.lastname AS authorlastname, author.firstname AS authorfirstname,
-                   author.picture AS authorpicture, author.imagealt AS authorimagealt, author.email AS authoremail,
-                   a.id AS assessmentid, a.timemodified AS assessmentmodified,
-                   reviewer.id AS reviewerid, reviewer.lastname AS reviewerlastname, reviewer.firstname AS reviewerfirstname,
-                   reviewer.picture AS reviewerpicture, reviewer.imagealt AS reviewerimagealt, reviewer.email AS revieweremail
+                   author.id AS authorid, $authornamefields, author.picture AS authorpicture, author.imagealt AS authorimagealt,
+                   author.email AS authoremail, a.id AS assessmentid, a.timemodified AS assessmentmodified,
+                   reviewer.id AS reviewerid, $reviewerfields, reviewer.picture AS reviewerpicture,
+                   reviewer.imagealt AS reviewerimagealt, reviewer.email AS revieweremail
               FROM {workshop_submissions} s
         INNER JOIN {workshop} w ON s.workshopid = w.id
         INNER JOIN {user} author ON s.authorid = author.id
@@ -694,13 +702,8 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
     $context         = context_module::instance($cm->id);
     $grader          = has_capability('moodle/grade:viewall', $context);
     $accessallgroups = has_capability('moodle/site:accessallgroups', $context);
-    $viewfullnames   = has_capability('moodle/site:viewfullnames', $context);
     $viewauthors     = has_capability('mod/workshop:viewauthornames', $context);
     $viewreviewers   = has_capability('mod/workshop:viewreviewernames', $context);
-
-    if (is_null($modinfo->groups)) {
-        $modinfo->groups = groups_get_user_groups($course->id); // load all my groups and cache it in modinfo
-    }
 
     $submissions = array(); // recent submissions indexed by submission id
     $assessments = array(); // recent assessments indexed by assessment id
@@ -708,28 +711,18 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
 
     foreach ($rs as $activity) {
 
-        if ($viewfullnames) {
-            // remember all user names we can use later
-            if (empty($users[$activity->authorid])) {
-                $u = new stdclass();
-                $u->id = $activity->authorid;
-                $u->lastname = $activity->authorlastname;
-                $u->firstname = $activity->authorfirstname;
-                $u->picture = $activity->authorpicture;
-                $u->imagealt = $activity->authorimagealt;
-                $u->email = $activity->authoremail;
-                $users[$activity->authorid] = $u;
-            }
-            if ($activity->reviewerid and empty($users[$activity->reviewerid])) {
-                $u = new stdclass();
-                $u->id = $activity->reviewerid;
-                $u->lastname = $activity->reviewerlastname;
-                $u->firstname = $activity->reviewerfirstname;
-                $u->picture = $activity->reviewerpicture;
-                $u->imagealt = $activity->reviewerimagealt;
-                $u->email = $activity->revieweremail;
-                $users[$activity->reviewerid] = $u;
-            }
+        // remember all user names we can use later
+        if (empty($users[$activity->authorid])) {
+            $u = new stdclass();
+            $additionalfields = explode(',', user_picture::fields());
+            $u = username_load_fields_from_object($u, $activity, 'author', $additionalfields);
+            $users[$activity->authorid] = $u;
+        }
+        if ($activity->reviewerid and empty($users[$activity->reviewerid])) {
+            $u = new stdclass();
+            $additionalfields = explode(',', user_picture::fields());
+            $u = username_load_fields_from_object($u, $activity, 'reviewer', $additionalfields);
+            $users[$activity->reviewerid] = $u;
         }
 
         if ($activity->submissionmodified > $timestart and empty($submissions[$activity->submissionid])) {
@@ -738,7 +731,7 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
             $s->title = $activity->submissiontitle;
             $s->authorid = $activity->authorid;
             $s->timemodified = $activity->submissionmodified;
-            if (has_capability('mod/workshop:viewauthornames', $context)) {
+            if ($activity->authorid == $USER->id || has_capability('mod/workshop:viewauthornames', $context)) {
                 $s->authornamevisible = true;
             } else {
                 $s->authornamevisible = false;
@@ -760,13 +753,13 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
                         }
 
                         // this might be slow - show only submissions by users who share group with me in this cm
-                        if (empty($modinfo->groups[$cm->id])) {
+                        if (!$modinfo->get_groups($cm->groupingid)) {
                             break;
                         }
                         $authorsgroups = groups_get_all_groups($course->id, $s->authorid, $cm->groupingid);
                         if (is_array($authorsgroups)) {
                             $authorsgroups = array_keys($authorsgroups);
-                            $intersect = array_intersect($authorsgroups, $modinfo->groups[$cm->id]);
+                            $intersect = array_intersect($authorsgroups, $modinfo->get_groups($cm->groupingid));
                             if (empty($intersect)) {
                                 break;
                             } else {
@@ -791,7 +784,7 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
             $a->submissiontitle = $activity->submissiontitle;
             $a->reviewerid = $activity->reviewerid;
             $a->timemodified = $activity->assessmentmodified;
-            if (has_capability('mod/workshop:viewreviewernames', $context)) {
+            if ($activity->reviewerid == $USER->id || has_capability('mod/workshop:viewreviewernames', $context)) {
                 $a->reviewernamevisible = true;
             } else {
                 $a->reviewernamevisible = false;
@@ -813,13 +806,13 @@ function workshop_get_recent_mod_activity(&$activities, &$index, $timestart, $co
                         }
 
                         // this might be slow - show only submissions by users who share group with me in this cm
-                        if (empty($modinfo->groups[$cm->id])) {
+                        if (!$modinfo->get_groups($cm->groupingid)) {
                             break;
                         }
                         $reviewersgroups = groups_get_all_groups($course->id, $a->reviewerid, $cm->groupingid);
                         if (is_array($reviewersgroups)) {
                             $reviewersgroups = array_keys($reviewersgroups);
-                            $intersect = array_intersect($reviewersgroups, $modinfo->groups[$cm->id]);
+                            $intersect = array_intersect($reviewersgroups, $modinfo->get_groups($cm->groupingid));
                             if (empty($intersect)) {
                                 break;
                             } else {
@@ -997,7 +990,18 @@ function workshop_cron() {
             $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
             $workshop = new workshop($workshop, $cm, $course);
             $workshop->switch_phase(workshop::PHASE_ASSESSMENT);
-            $workshop->log('update switch phase', $workshop->view_url(), $workshop->phase);
+
+            $params = array(
+                'objectid' => $workshop->id,
+                'context' => $workshop->context,
+                'courseid' => $workshop->course->id,
+                'other' => array(
+                    'workshopphase' => $workshop->phase
+                )
+            );
+            $event = \mod_workshop\event\phase_switched::create($params);
+            $event->trigger();
+
             // disable the automatic switching now so that it is not executed again by accident
             // if the teacher changes the phase back to the submission one
             $DB->set_field('workshop', 'phaseswitchassessment', 0, array('id' => $workshop->id));
@@ -1024,7 +1028,7 @@ function workshop_cron() {
 function workshop_scale_used($workshopid, $scaleid) {
     global $CFG; // other files included from here
 
-    $strategies = get_plugin_list('workshopform');
+    $strategies = core_component::get_plugin_list('workshopform');
     foreach ($strategies as $strategy => $strategypath) {
         $strategylib = $strategypath . '/lib.php';
         if (is_readable($strategylib)) {
@@ -1057,7 +1061,7 @@ function workshop_scale_used($workshopid, $scaleid) {
 function workshop_scale_used_anywhere($scaleid) {
     global $CFG; // other files included from here
 
-    $strategies = get_plugin_list('workshopform');
+    $strategies = core_component::get_plugin_list('workshopform');
     foreach ($strategies as $strategy => $strategypath) {
         $strategylib = $strategypath . '/lib.php';
         if (is_readable($strategylib)) {
@@ -1272,6 +1276,17 @@ function workshop_grade_item_category_update($workshop) {
                     $gradeitem->set_parent($workshop->gradinggradecategory);
                 }
             }
+            if (!empty($workshop->add)) {
+                $gradecategory = $gradeitem->get_parent_category();
+                if (grade_category::aggregation_uses_aggregationcoef($gradecategory->aggregation)) {
+                    if ($gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
+                        $gradeitem->aggregationcoef = 1;
+                    } else {
+                        $gradeitem->aggregationcoef = 0;
+                    }
+                    $gradeitem->update();
+                }
+            }
         }
     }
 }
@@ -1347,10 +1362,8 @@ function workshop_pluginfile($course, $cm, $context, $filearea, array $args, $fo
             send_file_not_found();
         }
 
-        $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
-
         // finally send the file
-        send_stored_file($file, $lifetime, 0, $forcedownload, $options);
+        send_stored_file($file, null, 0, $forcedownload, $options);
 
     } else if ($filearea === 'instructreviewers') {
         array_shift($args); // itemid is ignored here
@@ -1362,10 +1375,8 @@ function workshop_pluginfile($course, $cm, $context, $filearea, array $args, $fo
             send_file_not_found();
         }
 
-        $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
-
         // finally send the file
-        send_stored_file($file, $lifetime, 0, $forcedownload, $options);
+        send_stored_file($file, null, 0, $forcedownload, $options);
 
     } else if ($filearea === 'conclusion') {
         array_shift($args); // itemid is ignored here
@@ -1377,10 +1388,8 @@ function workshop_pluginfile($course, $cm, $context, $filearea, array $args, $fo
             send_file_not_found();
         }
 
-        $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
-
         // finally send the file
-        send_stored_file($file, $lifetime, 0, $forcedownload, $options);
+        send_stored_file($file, null, 0, $forcedownload, $options);
 
     } else if ($filearea === 'submission_content' or $filearea === 'submission_attachment') {
         $itemid = (int)array_shift($args);

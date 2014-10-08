@@ -53,7 +53,7 @@ class workshop_best_evaluation_settings_form extends moodleform {
         $label = get_string('comparison', 'workshopeval_best');
         $mform->addElement('select', 'comparison', $label, $options);
         $mform->addHelpButton('comparison', 'comparison', 'workshopeval_best');
-        $mform->setDefault('comparison', $plugindefaults->comparison);
+        $mform->setDefault('comparison', $plugindefaults->bcomparison);
 
         $mform->addElement('submit', 'submit', get_string('aggregategrades', 'workshop'));
 

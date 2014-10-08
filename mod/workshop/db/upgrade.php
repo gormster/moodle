@@ -162,7 +162,7 @@ function xmldb_workshop_upgrade($oldversion) {
             $field = new xmldb_field('examplesreassess', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '1');
             $dbman->add_field($table, $field);
         }
-       
+
         $field = new xmldb_field('numexamples', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -186,20 +186,40 @@ function xmldb_workshop_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2013032501, 'workshop');
-         
+
     }
+
+    // Add unique index to assessments table to improve assesment allocation.
+    if ($oldversion < 2014042900) {
+
+        $index = new xmldb_index('submissionreviewer', XMLDB_INDEX_UNIQUE, array('submissionid', 'reviewerid'));
+        $table = new xmldb_table('workshop_assessments');
+
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_mod_savepoint(true, 2014042900, 'workshop');
+    }
+
+    // Moodle v2.6.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v2.7.0 release upgrade line.
+    // Put any upgrade step following this.
+
     
-    if ($oldversion < 2013050103) {
+    if ($oldversion < 2014092600) {
         $table = new xmldb_table('workshop_assessments');
         $field = new xmldb_field('submitterflagged', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, false, '0');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         
-        upgrade_mod_savepoint(true, 2013050103, 'workshop');
+        upgrade_mod_savepoint(true, 2014092600, 'workshop');
     }
     
-    if ($oldversion < 2014063001) {
+    if ($oldversion < 2014092601) {
         $table = new xmldb_table('workshop');
         
         $field = new xmldb_field('usecalibration', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, false, '0');
@@ -234,10 +254,10 @@ function xmldb_workshop_upgrade($oldversion) {
             $dbman->create_table($table);
         }
         
-        upgrade_mod_savepoint(true, 2014063001, 'workshop');
+        upgrade_mod_savepoint(true, 2014092601, 'workshop');
     }
 	
-	if ($oldversion < 2014063002) {
+	if ($oldversion < 2014092602) {
 		$table = new xmldb_table('workshop');
 		
 		$field = new xmldb_field('submitterflagging', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, false, '1');
@@ -245,7 +265,7 @@ function xmldb_workshop_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 		
-		upgrade_mod_savepoint(true, 2014063002, 'workshop');
+		upgrade_mod_savepoint(true, 2014092602, 'workshop');
 	}
 
 

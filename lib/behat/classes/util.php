@@ -43,6 +43,11 @@ require_once(__DIR__ . '/../../filelib.php');
 class behat_util extends testing_util {
 
     /**
+     * The behat test site fullname and shortname.
+     */
+    const BEHATSITENAME = "Acceptance test site";
+
+    /**
      * @var array Files to skip when resetting dataroot folder
      */
     protected static $datarootskiponreset = array('.', '..', 'behat', 'behattestdir.txt');
@@ -58,10 +63,15 @@ class behat_util extends testing_util {
      * @return void
      */
     public static function install_site() {
-        global $DB;
-
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/user/lib.php');
         if (!defined('BEHAT_UTIL')) {
             throw new coding_exception('This method can be only used by Behat CLI tool');
+        }
+
+        $tables = $DB->get_tables(false);
+        if (!empty($tables)) {
+            behat_error(BEHAT_EXITCODE_INSTALLED);
         }
 
         // New dataroot.
@@ -70,10 +80,17 @@ class behat_util extends testing_util {
         $options = array();
         $options['adminuser'] = 'admin';
         $options['adminpass'] = 'admin';
-        $options['fullname'] = 'Acceptance test site';
-        $options['shortname'] = 'Acceptance test site';
+        $options['fullname'] = self::BEHATSITENAME;
+        $options['shortname'] = self::BEHATSITENAME;
 
         install_cli_database($options, false);
+
+        // We need to keep the installed dataroot filedir files.
+        // So each time we reset the dataroot before running a test, the default files are still installed.
+        self::save_original_data_files();
+
+        $frontpagesummary = new admin_setting_special_frontpagedesc();
+        $frontpagesummary->write_setting(self::BEHATSITENAME);
 
         // Update admin user info.
         $user = $DB->get_record('user', array('username' => 'admin'));
@@ -82,14 +99,17 @@ class behat_util extends testing_util {
         $user->lastname = 'User';
         $user->city = 'Perth';
         $user->country = 'AU';
-        $DB->update_record('user', $user);
+        user_update_user($user, false);
 
         // Disable email message processor.
         $DB->set_field('message_processors', 'enabled', '0', array('name' => 'email'));
 
         // Sets maximum debug level.
         set_config('debug', DEBUG_DEVELOPER);
-        set_config('debugdisplay', true);
+        set_config('debugdisplay', 1);
+
+        // Disable some settings that are not wanted on test sites.
+        set_config('noemailever', 1);
 
         // Keeps the current version of database and dataroot.
         self::store_versions_hash();
@@ -168,7 +188,7 @@ class behat_util extends testing_util {
      * features and steps definitions.
      *
      * Stores a file in dataroot/behat to allow Moodle to switch
-     * to the test environment when using cli-server (or $CFG->behat_switchcompletely)
+     * to the test environment when using cli-server.
      * @throws coding_exception
      * @return void
      */
@@ -180,7 +200,7 @@ class behat_util extends testing_util {
         }
 
         // Checks the behat set up and the PHP version.
-        if ($errorcode = behat_command::behat_setup_problem(true)) {
+        if ($errorcode = behat_command::behat_setup_problem()) {
             exit($errorcode);
         }
 
@@ -214,7 +234,7 @@ class behat_util extends testing_util {
         }
 
         // Checks the behat set up and the PHP version, returning an error code if something went wrong.
-        if ($errorcode = behat_command::behat_setup_problem(true)) {
+        if ($errorcode = behat_command::behat_setup_problem()) {
             return $errorcode;
         }
 

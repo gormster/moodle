@@ -3,7 +3,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Workshop module renderer class
+ * workshop module renderer class
  *
  * @copyright 2009 David Mudrak <david.mudrak@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

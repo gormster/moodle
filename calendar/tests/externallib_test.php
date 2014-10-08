@@ -38,7 +38,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since Moodle 2.5
  */
-class core_calendar_external_testcase extends externallib_advanced_testcase {
+class core_calendar_externallib_testcase extends externallib_advanced_testcase {
 
     /**
      * Tests set up
@@ -97,7 +97,7 @@ class core_calendar_external_testcase extends externallib_advanced_testcase {
                 return false;
             }
         }
-        if (empty($prop->courseid)) {
+        if (!isset($prop->courseid)) {
             $prop->courseid = $SITE->id;
         }
         $event = new calendar_event($prop);

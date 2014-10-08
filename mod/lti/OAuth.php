@@ -181,7 +181,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod {
         // (3) some sort of specific discovery code based on request
         //
         // either way should return a string representation of the certificate
-        throw Exception("fetch_public_cert not implemented");
+        throw OAuthException("fetch_public_cert not implemented");
     }
 
     protected function fetch_private_cert(&$request) {
@@ -189,7 +189,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod {
         // (1) do a lookup in a table of trusted certs keyed off of consumer
         //
         // either way should return a string representation of the certificate
-        throw Exception("fetch_private_cert not implemented");
+        throw OAuthException("fetch_private_cert not implemented");
     }
 
     public function build_signature(&$request, $consumer, $token) {
@@ -754,7 +754,13 @@ class OAuthUtil {
         if (function_exists('apache_request_headers')) {
             // we need this to get the actual Authorization: header
             // because apache tends to tell us it doesn't exist
-            return apache_request_headers();
+            $in = apache_request_headers();
+            $out = array();
+            foreach ($in as $key => $value) {
+                $key = str_replace(" ", "-", ucwords(strtolower(str_replace("-", " ", $key))));
+                $out[$key] = $value;
+            }
+            return $out;
         }
         // otherwise we don't have apache and are just going to have to hope
         // that $_SERVER actually contains what we need

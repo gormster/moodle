@@ -51,19 +51,6 @@ define('MEMORY_EXTRA', -3);
 /** Extremely large memory limit - not recommended for standard scripts */
 define('MEMORY_HUGE', -4);
 
-/**
- * Software maturity levels used by the core and plugins
- */
-define('MATURITY_ALPHA',    50);    // internals can be tested using white box techniques
-define('MATURITY_BETA',     100);   // feature complete, ready for preview and testing
-define('MATURITY_RC',       150);   // tested, will be released unless there are fatal bugs
-define('MATURITY_STABLE',   200);   // ready for production deployment
-
-/**
- * Special value that can be used in $plugin->dependencies in version.php files.
- */
-define('ANY_VERSION', 'any');
-
 
 /**
  * Simple class. It is usually used instead of stdClass because it looks
@@ -215,10 +202,10 @@ class required_capability_exception extends moodle_exception {
         $capabilityname = get_capability_string($capability);
         if ($context->contextlevel == CONTEXT_MODULE and preg_match('/:view$/', $capability)) {
             // we can not go to mod/xx/view.php because we most probably do not have cap to view it, let's go to course instead
-            $paranetcontext = context::instance_by_id(get_parent_contextid($context));
-            $link = get_context_url($paranetcontext);
+            $parentcontext = $context->get_parent_context();
+            $link = $parentcontext->get_url();
         } else {
-            $link = get_context_url($context);
+            $link = $context->get_url();
         }
         parent::__construct($errormessage, $stringfile, $link, $capabilityname);
     }
@@ -529,8 +516,7 @@ function get_exception_info($ex) {
     // Remove some absolute paths from message and debugging info.
     $searches = array();
     $replaces = array();
-    $cfgnames = array('tempdir', 'cachedir', 'themedir',
-        'langmenucachefile', 'langcacheroot', 'dataroot', 'dirroot');
+    $cfgnames = array('tempdir', 'cachedir', 'localcachedir', 'themedir', 'dataroot', 'dirroot');
     foreach ($cfgnames as $cfgname) {
         if (property_exists($CFG, $cfgname)) {
             $searches[] = $CFG->$cfgname;
@@ -643,10 +629,16 @@ function get_docs_url($path = null) {
         // that will ensure people end up at the latest version of the docs.
         $branch = '.';
     }
-    if (!empty($CFG->docroot)) {
-        return $CFG->docroot . '/' . $branch . '/' . current_language() . '/' . $path;
+    if (empty($CFG->doclang)) {
+        $lang = current_language();
     } else {
-        return 'http://docs.moodle.org/'. $branch . '/' . current_language() . '/' . $path;
+        $lang = $CFG->doclang;
+    }
+    $end = '/' . $branch . '/' . $lang . '/' . $path;
+    if (empty($CFG->docroot)) {
+        return 'http://docs.moodle.org'. $end;
+    } else {
+        return $CFG->docroot . $end ;
     }
 }
 
@@ -665,7 +657,7 @@ function format_backtrace($callers, $plaintext = false) {
         return '';
     }
 
-    $from = $plaintext ? '' : '<ul style="text-align: left">';
+    $from = $plaintext ? '' : '<ul style="text-align: left" data-rel="backtrace">';
     foreach ($callers as $caller) {
         if (!isset($caller['line'])) {
             $caller['line'] = '?'; // probably call_user_func()
@@ -718,37 +710,34 @@ function ini_get_bool($ini_get_arg) {
 function setup_validate_php_configuration() {
    // this must be very fast - no slow checks here!!!
 
-   if (ini_get_bool('register_globals')) {
-       print_error('globalswarning', 'admin');
-   }
    if (ini_get_bool('session.auto_start')) {
        print_error('sessionautostartwarning', 'admin');
-   }
-   if (ini_get_bool('magic_quotes_runtime')) {
-       print_error('fatalmagicquotesruntime', 'admin');
    }
 }
 
 /**
- * Initialise global $CFG variable
- * @return void
+ * Initialise global $CFG variable.
+ * @private to be used only from lib/setup.php
  */
 function initialise_cfg() {
     global $CFG, $DB;
 
+    if (!$DB) {
+        // This should not happen.
+        return;
+    }
+
     try {
-        if ($DB) {
-            $localcfg = get_config('core');
-            foreach ($localcfg as $name => $value) {
-                if (property_exists($CFG, $name)) {
-                    // config.php settings always take precedence
-                    continue;
-                }
-                $CFG->{$name} = $value;
-            }
-        }
+        $localcfg = get_config('core');
     } catch (dml_exception $e) {
-        // most probably empty db, going to install soon
+        // Most probably empty db, going to install soon.
+        return;
+    }
+
+    foreach ($localcfg as $name => $value) {
+        // Note that get_config() keeps forced settings
+        // and normalises values to string if possible.
+        $CFG->{$name} = $value;
     }
 }
 
@@ -781,7 +770,10 @@ function initialise_fullme() {
         // Do not abuse this to try to solve lan/wan access problems!!!!!
 
     } else {
-        if (($rurl['host'] !== $wwwroot['host']) or (!empty($wwwroot['port']) and $rurl['port'] != $wwwroot['port'])) {
+        if (($rurl['host'] !== $wwwroot['host']) or
+                (!empty($wwwroot['port']) and $rurl['port'] != $wwwroot['port']) or
+                (strpos($rurl['path'], $wwwroot['path']) !== 0)) {
+
             // Explain the problem and redirect them to the right URL
             if (!defined('NO_MOODLE_COOKIES')) {
                 define('NO_MOODLE_COOKIES', true);
@@ -945,6 +937,103 @@ function setup_get_remote_url() {
 }
 
 /**
+ * Try to work around the 'max_input_vars' restriction if necessary.
+ */
+function workaround_max_input_vars() {
+    // Make sure this gets executed only once from lib/setup.php!
+    static $executed = false;
+    if ($executed) {
+        debugging('workaround_max_input_vars() must be called only once!');
+        return;
+    }
+    $executed = true;
+
+    if (!isset($_SERVER["CONTENT_TYPE"]) or strpos($_SERVER["CONTENT_TYPE"], 'multipart/form-data') !== false) {
+        // Not a post or 'multipart/form-data' which is not compatible with "php://input" reading.
+        return;
+    }
+
+    if (!isloggedin() or isguestuser()) {
+        // Only real users post huge forms.
+        return;
+    }
+
+    $max = (int)ini_get('max_input_vars');
+
+    if ($max <= 0) {
+        // Most probably PHP < 5.3.9 that does not implement this limit.
+        return;
+    }
+
+    if ($max >= 200000) {
+        // This value should be ok for all our forms, by setting it in php.ini
+        // admins may prevent any unexpected regressions caused by this hack.
+
+        // Note there is no need to worry about DDoS caused by making this limit very high
+        // because there are very many easier ways to DDoS any Moodle server.
+        return;
+    }
+
+    if (count($_POST, COUNT_RECURSIVE) < $max) {
+        return;
+    }
+
+    // Large POST request with enctype supported by php://input.
+    // Parse php://input in chunks to bypass max_input_vars limit, which also applies to parse_str().
+    $str = file_get_contents("php://input");
+    if ($str === false or $str === '') {
+        // Some weird error.
+        return;
+    }
+
+    $delim = '&';
+    $fun = create_function('$p', 'return implode("'.$delim.'", $p);');
+    $chunks = array_map($fun, array_chunk(explode($delim, $str), $max));
+
+    foreach ($chunks as $chunk) {
+        $values = array();
+        parse_str($chunk, $values);
+
+        merge_query_params($_POST, $values);
+        merge_query_params($_REQUEST, $values);
+    }
+}
+
+/**
+ * Merge parsed POST chunks.
+ *
+ * NOTE: this is not perfect, but it should work in most cases hopefully.
+ *
+ * @param array $target
+ * @param array $values
+ */
+function merge_query_params(array &$target, array $values) {
+    if (isset($values[0]) and isset($target[0])) {
+        // This looks like a split [] array, lets verify the keys are continuous starting with 0.
+        $keys1 = array_keys($values);
+        $keys2 = array_keys($target);
+        if ($keys1 === array_keys($keys1) and $keys2 === array_keys($keys2)) {
+            foreach ($values as $v) {
+                $target[] = $v;
+            }
+            return;
+        }
+    }
+    foreach ($values as $k => $v) {
+        if (!isset($target[$k])) {
+            $target[$k] = $v;
+            continue;
+        }
+        if (is_array($target[$k]) and is_array($v)) {
+            merge_query_params($target[$k], $v);
+            continue;
+        }
+        // We should not get here unless there are duplicates in params.
+        $target[$k] = $v;
+    }
+}
+
+/**
  * Initializes our performance info early.
  *
  * Pairs up with get_performance_info() which is actually
@@ -1026,7 +1115,14 @@ function raise_memory_limit($newlimit) {
         }
 
     } else if ($newlimit == MEMORY_HUGE) {
+        // MEMORY_HUGE uses 2G or MEMORY_EXTRA, whichever is bigger.
         $newlimit = get_real_size('2G');
+        if (!empty($CFG->extramemorylimit)) {
+            $extra = get_real_size($CFG->extramemorylimit);
+            if ($extra > $newlimit) {
+                $newlimit = $extra;
+            }
+        }
 
     } else {
         $newlimit = get_real_size($newlimit);
@@ -1165,11 +1261,11 @@ function disable_output_buffering() {
  */
 function redirect_if_major_upgrade_required() {
     global $CFG;
-    $lastmajordbchanges = 2013041800.00;
+    $lastmajordbchanges = 2014040800.00;
     if (empty($CFG->version) or (float)$CFG->version < $lastmajordbchanges or
             during_initial_install() or !empty($CFG->adminsetuppending)) {
         try {
-            @session_get_instance()->terminate_current();
+            @\core\session\manager::terminate_current();
         } catch (Exception $e) {
             // Ignore any errors, redirect to upgrade anyway.
         }
@@ -1224,7 +1320,7 @@ function upgrade_ensure_not_running($warningonly = false) {
 function check_dir_exists($dir, $create = true, $recursive = true) {
     global $CFG;
 
-    umask(0000); // just in case some evil code changed it
+    umask($CFG->umaskpermissions);
 
     if (is_dir($dir)) {
         return true;
@@ -1256,7 +1352,7 @@ function make_writable_directory($dir, $exceptiononerror = true) {
         }
     }
 
-    umask(0000); // just in case some evil code changed it
+    umask($CFG->umaskpermissions);
 
     if (!file_exists($dir)) {
         if (!mkdir($dir, $CFG->directorypermissions, true)) {
@@ -1292,11 +1388,13 @@ function make_writable_directory($dir, $exceptiononerror = true) {
  * @param string $dir  the full path of the directory to be protected
  */
 function protect_directory($dir) {
+    global $CFG;
     // Make sure a .htaccess file is here, JUST IN CASE the files area is in the open and .htaccess is supported
     if (!file_exists("$dir/.htaccess")) {
         if ($handle = fopen("$dir/.htaccess", 'w')) {   // For safety
             @fwrite($handle, "deny from all\r\nAllowOverride None\r\nNote: this file is broken intentionally, we do not want anybody to undo it in subdirectory!\r\n");
             @fclose($handle);
+            @chmod("$dir/.htaccess", $CFG->filepermissions);
         }
     }
 }
@@ -1316,7 +1414,10 @@ function make_upload_directory($directory, $exceptiononerror = true) {
         debugging('Use make_temp_directory() for creation of temporary directory and $CFG->tempdir to get the location.');
 
     } else if (strpos($directory, 'cache/') === 0 or $directory === 'cache') {
-        debugging('Use make_cache_directory() for creation of chache directory and $CFG->cachedir to get the location.');
+        debugging('Use make_cache_directory() for creation of cache directory and $CFG->cachedir to get the location.');
+
+    } else if (strpos($directory, 'localcache/') === 0 or $directory === 'localcache') {
+        debugging('Use make_localcache_directory() for creation of local cache directory and $CFG->localcachedir to get the location.');
     }
 
     protect_directory($CFG->dataroot);
@@ -1345,6 +1446,8 @@ function make_temp_directory($directory, $exceptiononerror = true) {
 /**
  * Create a directory under cachedir and make sure it is writable.
  *
+ * Note: this cache directory is shared by all cluster nodes.
+ *
  * @param string $directory  the full path of the directory to be created under $CFG->cachedir
  * @param bool $exceptiononerror throw exception if error encountered
  * @return string|false Returns full path to directory if successful, false if not; may throw exception
@@ -1358,6 +1461,58 @@ function make_cache_directory($directory, $exceptiononerror = true) {
         protect_directory($CFG->dataroot);
     }
     return make_writable_directory("$CFG->cachedir/$directory", $exceptiononerror);
+}
+
+/**
+ * Create a directory under localcachedir and make sure it is writable.
+ * The files in this directory MUST NOT change, use revisions or content hashes to
+ * work around this limitation - this means you can only add new files here.
+ *
+ * The content of this directory gets purged automatically on all cluster nodes
+ * after calling purge_all_caches() before new data is written to this directory.
+ *
+ * Note: this local cache directory does not need to be shared by cluster nodes.
+ *
+ * @param string $directory the relative path of the directory to be created under $CFG->localcachedir
+ * @param bool $exceptiononerror throw exception if error encountered
+ * @return string|false Returns full path to directory if successful, false if not; may throw exception
+ */
+function make_localcache_directory($directory, $exceptiononerror = true) {
+    global $CFG;
+
+    make_writable_directory($CFG->localcachedir, $exceptiononerror);
+
+    if ($CFG->localcachedir !== "$CFG->dataroot/localcache") {
+        protect_directory($CFG->localcachedir);
+    } else {
+        protect_directory($CFG->dataroot);
+    }
+
+    if (!isset($CFG->localcachedirpurged)) {
+        $CFG->localcachedirpurged = 0;
+    }
+    $timestampfile = "$CFG->localcachedir/.lastpurged";
+
+    if (!file_exists($timestampfile)) {
+        touch($timestampfile);
+        @chmod($timestampfile, $CFG->filepermissions);
+
+    } else if (filemtime($timestampfile) <  $CFG->localcachedirpurged) {
+        // This means our local cached dir was not purged yet.
+        remove_dir($CFG->localcachedir, true);
+        if ($CFG->localcachedir !== "$CFG->dataroot/localcache") {
+            protect_directory($CFG->localcachedir);
+        }
+        touch($timestampfile);
+        @chmod($timestampfile, $CFG->filepermissions);
+        clearstatcache();
+    }
+
+    if ($directory === '') {
+        return $CFG->localcachedir;
+    }
+
+    return make_writable_directory("$CFG->localcachedir/$directory", $exceptiononerror);
 }
 
 /**
@@ -1654,12 +1809,18 @@ width: 80%; -moz-border-radius: 20px; padding: 15px">
             $htmllang = '';
         }
 
+        $footer = '';
+        if (MDL_PERF_TEST) {
+            $perfinfo = get_performance_info();
+            $footer = '<footer>' . $perfinfo['html'] . '</footer>';
+        }
+
         return '<!DOCTYPE html>
 <html ' . $htmllang . '>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 '.$meta.'
 <title>' . $title . '</title>
-</head><body>' . $content . '</body></html>';
+</head><body>' . $content . $footer . '</body></html>';
     }
 }

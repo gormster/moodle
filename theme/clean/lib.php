@@ -116,6 +116,9 @@ function theme_clean_set_customcss($css, $customcss) {
 /**
  * Returns an object containing HTML for the areas affected by settings.
  *
+ * Do not add Clean specific logic in here, child themes should be able to
+ * rely on that function just by declaring settings with similar names.
+ *
  * @param renderer_base $output Pass in $OUTPUT.
  * @param moodle_page $page Pass in $PAGE.
  * @return stdClass An object with the following properties:
@@ -147,28 +150,25 @@ function theme_clean_get_html_for_settings(renderer_base $output, moodle_page $p
 }
 
 /**
- * Deprecated: Please call theme_clean_process_css instead.
+ * All theme functions should start with theme_clean_
  * @deprecated since 2.5.1
  */
-function clean_process_css($css, $theme) {
-    debugging('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__, DEBUG_DEVELOPER);
-    return theme_clean_process_css($css, $theme);
+function clean_process_css() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }
 
 /**
- * Deprecated: Please call theme_clean_set_logo instead.
+ * All theme functions should start with theme_clean_
  * @deprecated since 2.5.1
  */
-function clean_set_logo($css, $logo) {
-    debugging('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__, DEBUG_DEVELOPER);
-    return theme_clean_set_logo($css, $logo);
+function clean_set_logo() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }
 
 /**
- * Deprecated: Please call theme_clean_set_customcss instead.
+ * All theme functions should start with theme_clean_
  * @deprecated since 2.5.1
  */
-function clean_set_customcss($css, $customcss) {
-    debugging('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__, DEBUG_DEVELOPER);
-    return theme_clean_set_customcss($css, $customcss);
+function clean_set_customcss() {
+    throw new coding_exception('Please call theme_'.__FUNCTION__.' instead of '.__FUNCTION__);
 }

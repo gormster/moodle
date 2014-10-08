@@ -131,7 +131,7 @@ class cachestore_memcache extends cache_store implements cache_is_configurable {
 
         $this->connection = new Memcache;
         foreach ($this->servers as $server) {
-            $this->connection->addServer($server[0], $server[1], true, $server[2]);
+            $this->connection->addServer($server[0], (int) $server[1], true, (int) $server[2]);
         }
         // Test the connection to the pool of servers.
         $this->isready = @$this->connection->set($this->parse_key('ping'), 'ping', MEMCACHE_COMPRESSED, 1);
@@ -216,7 +216,7 @@ class cachestore_memcache extends cache_store implements cache_is_configurable {
      * @return int
      */
     public static function get_supported_modes(array $configuration = array()) {
-        return self::MODE_APPLICATION + self::MODE_SESSION;
+        return self::MODE_APPLICATION;
     }
 
     /**
@@ -350,7 +350,12 @@ class cachestore_memcache extends cache_store implements cache_is_configurable {
         $lines = explode("\n", $data->servers);
         $servers = array();
         foreach ($lines as $line) {
-            $line = trim($line, ':');
+            // Trim surrounding colons and default whitespace.
+            $line = trim(trim($line), ":");
+            // Skip blank lines.
+            if ($line === '') {
+                continue;
+            }
             $servers[] = explode(':', $line, 3);
         }
         return array(
@@ -431,5 +436,29 @@ class cachestore_memcache extends cache_store implements cache_is_configurable {
      */
     public function my_name() {
         return $this->name;
+    }
+
+    /**
+     * Used to notify of configuration conflicts.
+     *
+     * The warnings returned here will be displayed on the cache configuration screen.
+     *
+     * @return string[] Returns an array of warnings (strings)
+     */
+    public function get_warnings() {
+        global $CFG;
+        $warnings = array();
+        if (isset($CFG->session_memcached_save_path) && count($this->servers)) {
+            $bits = explode(':', $CFG->session_memcached_save_path, 3);
+            $host = array_shift($bits);
+            $port = (count($bits)) ? array_shift($bits) : '11211';
+            foreach ($this->servers as $server) {
+                if ($server[0] === $host && $server[1] == $port) {
+                    $warnings[] = get_string('sessionhandlerconflict', 'cachestore_memcache', $this->my_name());
+                    break;
+                }
+            }
+        }
+        return $warnings;
     }
 }

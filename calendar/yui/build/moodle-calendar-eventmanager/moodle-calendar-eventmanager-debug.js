@@ -52,6 +52,7 @@ Y.extend(EVENT, Y.Base, {
                 width : Math.floor(constraint.get('offsetWidth')*0.9)+"px"
             });
             panel.render(td);
+            node.setAttribute('aria-controls', panel.get('id'));
             panel.get('boundingBox').addClass('calendar-event-panel');
             panel.get('boundingBox').setAttribute('aria-live', 'off');
             this.on('showevent', panel.show, panel);
@@ -61,6 +62,7 @@ Y.extend(EVENT, Y.Base, {
         }
     },
     startShow : function() {
+        this.cancelHide();
         if (this.get(SHOWTIMEOUT) !== null) {
             this.cancelShow();
         }
@@ -81,6 +83,7 @@ Y.extend(EVENT, Y.Base, {
         this.fire('showevent');
     },
     startHide : function() {
+        this.cancelShow();
         if (this.get(HIDETIMEOUT) !== null) {
             this.cancelHide();
         }

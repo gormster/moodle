@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,8 +17,7 @@
 /**
  * Strings for component 'workshop', language 'en', branch 'MOODLE_20_STABLE'
  *
- * @package    mod
- * @subpackage workshop
+ * @package    mod_workshop
  * @copyright  2009 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -81,12 +79,12 @@ $string['clearassessmentsconfirm'] = 'Are you sure you want to clear all assessm
 $string['clearaggregatedgradesconfirm'] = 'Are you sure you want to clear the calculated grades for submissions and grades for assessment?';
 $string['conclusion'] = 'Conclusion';
 $string['conclusion_help'] = 'Conclusion text is displayed to participants at the end of the activity.';
-$string['configexamplesmode'] = 'Default mode of examples assessment in workshops';
-$string['configgrade'] = 'Default maximum grade for submission in workshops';
+$string['configexamplesmode'] = 'Default mode of examples assessment in Enhanced Workshop\'s';
+$string['configgrade'] = 'Default maximum grade for submission in Enhanced Workshop\'s';
 $string['configgradedecimals'] = 'Default number of digits that should be shown after the decimal point when displaying grades.';
-$string['configgradinggrade'] = 'Default maximum grade for assessment in workshops';
-$string['configmaxbytes'] = 'Default maximum submission file size for all workshops on the site (subject to course limits and other local settings)';
-$string['configstrategy'] = 'Default grading strategy for workshops';
+$string['configgradinggrade'] = 'Default maximum grade for assessment in Enhanced Workshop\'s';
+$string['configmaxbytes'] = 'Default maximum submission file size for all Enhanced Workshop\'s on the site (subject to course limits and other local settings)';
+$string['configstrategy'] = 'Default grading strategy for Enhanced Workshop\'s';
 $string['createsubmission'] = 'Start preparing your submission';
 $string['daysago'] = '{$a} days ago';
 $string['daysleft'] = '{$a} days left';
@@ -106,6 +104,17 @@ $string['evaluation'] = 'Grading evaluation';
 $string['evaluationmethod'] = 'Grading evaluation method';
 $string['evaluationmethod_help'] = 'The grading evaluation method determines how the grade for assessment is calculated. You can let it re-calculate grades repeatedly with different settings unless you are happy with the result.';
 $string['evaluationsettings'] = 'Grading evaluation settings';
+$string['eventassessableuploaded'] = 'A submission has been uploaded.';
+$string['eventassessmentevaluationsreset'] = 'Assessment evaluations reset';
+$string['eventassessmentevaluated'] = 'Assessment evaluated';
+$string['eventassessmentreevaluated'] = 'Assessment re-evaluated';
+$string['eventsubmissionassessed'] = 'Submission assessed';
+$string['eventsubmissionassessmentsreset'] = 'Submission assessments cleared';
+$string['eventsubmissioncreated'] = 'Submission created';
+$string['eventsubmissionreassessed'] = 'Submission re-assessed';
+$string['eventsubmissionupdated'] = 'Submission updated';
+$string['eventsubmissionviewed'] = 'Submission viewed';
+$string['eventphaseswitched'] = 'Phase switched';
 $string['example'] = 'Example submission';
 $string['exampleadd'] = 'Add example submission';
 $string['exampleassess'] = 'Assess example submission';
@@ -150,7 +159,7 @@ $string['gradegivento'] = '&gt;';
 $string['gradeitemassessment'] = '{$a->workshopname} (assessment)';
 $string['gradeitemsubmission'] = '{$a->workshopname} (submission)';
 $string['gradeover'] = 'Override grade for submission';
-$string['gradesreport'] = 'Workshop grades report';
+$string['gradesreport'] = 'Enhanced Workshop grades report';
 $string['gradereceivedfrom'] = '&lt;';
 $string['gradeinfo'] = 'Grade: {$a->received} of {$a->max}';
 $string['gradinggrade'] = 'Grade for assessment';
@@ -159,7 +168,7 @@ $string['gradinggradecalculated'] = 'Calculated grade for assessment';
 $string['gradinggradeof'] = 'Grade for assessment (of {$a})';
 $string['gradinggradeover'] = 'Override grade for assessment';
 $string['gradingsettings'] = 'Grading settings';
-$string['groupnoallowed'] = 'You are not allowed to access any group in this workshop';
+$string['groupnoallowed'] = 'You are not allowed to access any group in this Enhanced Workshop';
 $string['chooseuser'] = 'Choose user...';
 $string['iamsure'] = 'Yes, I am sure';
 $string['info'] = 'Info';
@@ -171,27 +180,27 @@ $string['latesubmissions_desc'] = 'Allow submissions after the deadline';
 $string['latesubmissions_help'] = 'If enabled, an author may submit their work after the submissions deadline or during the assessment phase. Late submissions cannot be edited though.';
 $string['latesubmissionsallowed'] = 'Late submissions are allowed';
 $string['maxbytes'] = 'Maximum submission attachment size';
-$string['modulename'] = 'Workshop';
-$string['modulename_help'] = 'The workshop activity module enables the collection, review and peer assessment of students\' work.
+$string['modulename'] = 'Enhanced Workshop';
+$string['modulename_help'] = 'The Enhanced Workshop activity module enables the collection, review and peer assessment of students\' work.
 
 Students can submit any digital content (files), such as word-processed documents or spreadsheets and can also type text directly into a field using the text editor.
 
 Submissions are assessed using a multi-criteria assessment form defined by the teacher. The process of peer assessment and understanding the assessment form can be practised in advance with example submissions provided by the teacher, together with a reference assessment. Students are given the opportunity to assess one or more of their peers\' submissions. Submissions and reviewers may be anonymous if required.
 
-Students obtain two grades in a workshop activity - a grade for their submission and a grade for their assessment of their peers\' submissions. Both grades are recorded in the gradebook.';
+Students obtain two grades in a Enhanced Workshop activity - a grade for their submission and a grade for their assessment of their peers\' submissions. Both grades are recorded in the gradebook.';
 $string['modulename_link'] = 'mod/workshop/view';
-$string['modulenameplural'] = 'Workshops';
+$string['modulenameplural'] = 'Enhanced Workshop\'s';
 $string['mysubmission'] = 'My submission';
 $string['nattachments'] = 'Maximum number of submission attachments';
-$string['noexamples'] = 'No examples yet in this workshop';
+$string['noexamples'] = 'No examples yet in this Enhanced Workshop';
 $string['noexamplesformready'] = 'You must define the assessment form before providing example submissions';
 $string['nogradeyet'] = 'No grade yet';
 $string['nosubmissionfound'] = 'No submission found for this user';
-$string['nosubmissions'] = 'No submissions yet in this workshop';
+$string['nosubmissions'] = 'No submissions yet in this Enhanced Workshop';
 $string['nothingtoreview'] = 'Nothing to review';
 $string['notassessed'] = 'Not assessed yet';
 $string['notoverridden'] = 'Not overriden';
-$string['noworkshops'] = 'There are no workshops in this course';
+$string['noworkshops'] = 'There are no Enhanced Workshop\'s in this course';
 $string['noyoursubmission'] = 'You have not submitted your work yet';
 $string['nullgrade'] = '-';
 $string['overallfeedback'] = 'Overall feedback';
@@ -202,7 +211,7 @@ $string['overallfeedbackmode_0'] = 'Disabled';
 $string['overallfeedbackmode_1'] = 'Enabled and optional';
 $string['overallfeedbackmode_2'] = 'Enabled and required';
 $string['overallfeedbackmode_help'] = 'If enabled, a text field is displayed at the bottom of the assessment form. Reviewers can put the overall assessment of the submission there, or provide additional explanation of their assessment.';
-$string['page-mod-workshop-x'] = 'Any workshop module page';
+$string['page-mod-workshop-x'] = 'Any Enhanced Workshop module page';
 $string['participant'] = 'Participant';
 $string['participantrevierof'] = 'Participant is reviewer of';
 $string['participantreviewedby'] = 'Participant is reviewed by';
@@ -212,18 +221,18 @@ $string['phaseevaluation'] = 'Grading evaluation phase';
 $string['phasesoverlap'] = 'The submission phase and the assessment phase can not overlap';
 $string['phasesetup'] = 'Setup phase';
 $string['phasesubmission'] = 'Submission phase';
-$string['pluginadministration'] = 'Workshop administration';
-$string['pluginname'] = 'Workshop';
+$string['pluginadministration'] = 'Enhanced Workshop administration';
+$string['pluginname'] = 'Enhanced Workshop';
 $string['prepareexamples'] = 'Prepare example submissions';
 $string['previewassessmentform'] = 'Preview';
 $string['publishedsubmissions'] = 'Published submissions';
 $string['publishsubmission'] = 'Publish submission';
-$string['publishsubmission_help'] = 'Published submissions are available to the others when the workshop is closed.';
+$string['publishsubmission_help'] = 'Published submissions are available to the others when the Enhanced Workshop is closed.';
 $string['reassess'] = 'Re-assess';
 $string['review'] = 'Review';
 $string['receivedgrades'] = 'Grades received';
-$string['recentassessments'] = 'Workshop assessments:';
-$string['recentsubmissions'] = 'Workshop submissions:';
+$string['recentassessments'] = 'Enhanced Workshop assessments:';
+$string['recentsubmissions'] = 'Enhanced Workshop submissions:';
 $string['saveandclose'] = 'Save and close';
 $string['saveandcontinue'] = 'Save and continue editing';
 $string['saveandpreview'] = 'Save and preview';
@@ -241,19 +250,19 @@ $string['strategy_help'] = 'The grading strategy determines the assessment form 
 * Comments - Comments are given regarding specified aspects but no grade can be given
 * Number of errors - Comments and a yes/no assessment are given regarding specified assertions
 * Rubric - A level assessment is given regarding specified criteria';
-$string['strategyhaschanged'] = 'The workshop grading strategy has changed since the form was opened for editing.';
+$string['strategyhaschanged'] = 'The Enhanced Workshop grading strategy has changed since the form was opened for editing.';
 $string['submission'] = 'Submission';
-$string['submissionby'] = 'Submission by {$a}';
 $string['submissionattachment'] = 'Attachment';
+$string['submissionby'] = 'Submission by {$a}';
 $string['submissioncontent'] = 'Submission content';
 $string['submissionend'] = 'Submissions deadline';
 $string['submissionendbeforestart'] = 'Submissions deadline can not be specified before the open for submissions date';
 $string['submissionendevent'] = '{$a} (submissions deadline)';
 $string['submissionenddatetime'] = 'Submissions deadline: {$a->daydatetime} ({$a->distanceday})';
 $string['submissionendswitch'] = 'Switch to the next phase after the submissions deadline';
-$string['submissionendswitch_help'] = 'If the submissions deadline is specified and this box is checked, the workshop will automatically switch to the assessment phase after the submissions deadline.
+$string['submissionendswitch_help'] = 'If the submissions deadline is specified and this box is checked, the Enhanced Workshop will automatically switch to the assessment phase after the submissions deadline.
 
-If you enable this feature, it is recommended to set up the scheduled allocation method, too. If the submissions are not allocated, no assessment can be done even if the workshop itself is in the assessment phase.';
+If you enable this feature, it is recommended to set up the scheduled allocation method, too. If the submissions are not allocated, no assessment can be done even if the Enhanced Workshop itself is in the assessment phase.';
 $string['submissiongrade'] = 'Grade for submission';
 $string['submissiongrade_help'] = 'This setting specifies the maximum grade that may be obtained for submitted work.';
 $string['submissiongradeof'] = 'Grade for submission (of {$a})';
@@ -270,22 +279,22 @@ $string['subplugintype_workshopform'] = 'Grading strategy';
 $string['subplugintype_workshopform_plural'] = 'Grading strategies';
 $string['switchingphase'] = 'Switching phase';
 $string['switchphase'] = 'Switch phase';
-$string['switchphase10info'] = 'You are about to switch the workshop into the <strong>Setup phase</strong>. In this phase, users cannot modify their submissions or their assessments. Teachers may use this phase to change workshop settings, modify the grading strategy or tweak assessment forms.';
-$string['switchphase20info'] = 'You are about to switch the workshop into the <strong>Submission phase</strong>. Students may submit their work during this phase (within the submission access control dates, if set). Teachers may allocate submissions for peer review.';
-$string['switchphase30auto'] = 'Workshop will automatically switch into the assessment phase after {$a->daydatetime} ({$a->distanceday})';
-$string['switchphase30info'] = 'You are about to switch the workshop into the <strong>Assessment phase</strong>. In this phase, reviewers may assess the submissions they have been allocated (within the assessment access control dates, if set).';
-$string['switchphase40info'] = 'You are about to switch the workshop into the <strong>Grading evaluation phase</strong>. In this phase, users cannot modify their submissions or their assessments. Teachers may use the grading evaluation tools to calculate final grades and provide feedback for reviewers.';
-$string['switchphase50info'] = 'You are about to close the workshop. This will result in the calculated grades appearing in the gradebook. Students may view their submissions and their submission assessments.';
+$string['switchphase10info'] = 'You are about to switch the Enhanced Workshop into the <strong>Setup phase</strong>. In this phase, users cannot modify their submissions or their assessments. Teachers may use this phase to change Enhanced Workshop settings, modify the grading strategy or tweak assessment forms.';
+$string['switchphase20info'] = 'You are about to switch the Enhanced Workshop into the <strong>Submission phase</strong>. Students may submit their work during this phase (within the submission access control dates, if set). Teachers may allocate submissions for peer review.';
+$string['switchphase30auto'] = 'Enhanced Workshop will automatically switch into the assessment phase after {$a->daydatetime} ({$a->distanceday})';
+$string['switchphase30info'] = 'You are about to switch the Enhanced Workshop into the <strong>Assessment phase</strong>. In this phase, reviewers may assess the submissions they have been allocated (within the assessment access control dates, if set).';
+$string['switchphase40info'] = 'You are about to switch the Enhanced Workshop into the <strong>Grading evaluation phase</strong>. In this phase, users cannot modify their submissions or their assessments. Teachers may use the grading evaluation tools to calculate final grades and provide feedback for reviewers.';
+$string['switchphase50info'] = 'You are about to close the Workshop (UNSW). This will result in the calculated grades appearing in the gradebook. Students may view their submissions and their submission assessments.';
 $string['taskassesspeers'] = 'Assess peers';
 $string['taskassesspeersdetails'] = 'total: {$a->total}<br />pending: {$a->todo}';
 $string['taskassessself'] = 'Assess yourself';
 $string['taskconclusion'] = 'Provide a conclusion of the activity';
 $string['taskinstructauthors'] = 'Provide instructions for submission';
 $string['taskinstructreviewers'] = 'Provide instructions for assessment';
-$string['taskintro'] = 'Set the workshop description';
+$string['taskintro'] = 'Set the Enhanced Workshop description';
 $string['tasksubmit'] = 'Submit your work';
-$string['toolbox'] = 'Workshop toolbox';
-$string['undersetup'] = 'The workshop is currently being set up. Please wait until it is switched to the next phase.';
+$string['toolbox'] = 'Enhanced Workshop toolbox';
+$string['undersetup'] = 'The Enhanced Workshop is currently being set up. Please wait until it is switched to the next phase.';
 $string['useexamples'] = 'Use examples';
 $string['useexamples_desc'] = 'Example submissions are provided for practice in assessing';
 $string['useexamples_help'] = 'If enabled, users can try assessing one or more example submissions and compare their assessment with a reference assessment.';
@@ -294,25 +303,25 @@ $string['usepeerassessment_desc'] = 'Students may assess the work of others';
 $string['usepeerassessment_help'] = 'If enabled, a user may be allocated submissions from other users to assess and will receive a grade for assessment in addition to a grade for their own submission.';
 $string['userdatecreated'] = 'submitted on <span>{$a}</span>';
 $string['userdatemodified'] = 'modified on <span>{$a}</span>';
-$string['userplan'] = 'Workshop planner';
-$string['userplan_help'] = 'The workshop planner displays all phases of the activity and lists the tasks for each phase. The current phase is highlighted and task completion is indicated with a tick.';
+$string['userplan'] = 'Enhanced Workshop planner';
+$string['userplan_help'] = 'The Enhanced Workshop planner displays all phases of the activity and lists the tasks for each phase. The current phase is highlighted and task completion is indicated with a tick.';
 $string['useselfassessment'] = 'Use self-assessment';
 $string['useselfassessment_help'] = 'If enabled, a user may be allocated their own submission to assess and will receive a grade for assessment in addition to a grade for their submission.';
 $string['useselfassessment_desc'] = 'Students may assess their own work';
 $string['weightinfo'] = 'Weight: {$a}';
 $string['withoutsubmission'] = 'Reviewer without own submission';
-$string['workshop:addinstance'] = 'Add a new workshop';
+$string['workshop:addinstance'] = 'Add a new Enhanced Workshop';
 $string['workshop:allocate'] = 'Allocate submissions for review';
 $string['workshop:editdimensions'] = 'Edit assessment forms';
 $string['workshop:ignoredeadlines'] = 'Ignore time restrictions';
 $string['workshop:manageexamples'] = 'Manage example submissions';
-$string['workshopname'] = 'Workshop name';
+$string['workshopname'] = 'Enhanced Workshop name';
 $string['workshop:overridegrades'] = 'Override calculated grades';
 $string['workshop:peerassess'] = 'Peer assess';
 $string['workshop:publishsubmissions'] = 'Publish submissions';
 $string['workshop:submit'] = 'Submit';
 $string['workshop:switchphase'] = 'Switch phase';
-$string['workshop:view'] = 'View workshop';
+$string['workshop:view'] = 'View Enhanced Workshop';
 $string['workshop:viewallassessments'] = 'View all assessments';
 $string['workshop:viewallsubmissions'] = 'View all submissions';
 $string['workshop:viewauthornames'] = 'View author names';
@@ -329,18 +338,18 @@ $string['teammode_desc'] = 'Allow students to submit work as a team.';
 $string['teammode_help'] = <<<MDOWN
 Allows students to submit work as a team.
 
-Enabling team mode means that work is treated as being submitted by a whole group. When one student submits work, that submission counts for everyone in that student's team, and everyone in their team can edit that submission as if it were their own. Teams are the same as groups; when you make a workshop in Team Mode, you must ensure that every student belongs to exactly one group. The teams are scoped by the grouping you select for the workshop at the bottom of this page, so if your students belong to more than one group, make a grouping with groups such that they only belong to one.
+Enabling team mode means that work is treated as being submitted by a whole group. When one student submits work, that submission counts for everyone in that student's team, and everyone in their team can edit that submission as if it were their own. Teams are the same as groups; when you make a Enhanced Workshop in Team Mode, you must ensure that every student belongs to exactly one group. The teams are scoped by the grouping you select for the Enhanced Workshop at the bottom of this page, so if your students belong to more than one group, make a grouping with groups such that they only belong to one.
 
 If self-assessment is disabled, students are prevented from marking their own team's work.
 MDOWN;
 $string['teammode_disabled'] = 'Team mode is disabled because you have no groups in your course.';
-$string['teammode_ungroupedwarning'] = 'Warning: If the workshop is in Team mode, then users MUST be part of at least one group to submit work.<br/>
+$string['teammode_ungroupedwarning'] = 'Warning: If the Enhanced Workshop is in Team mode, then users MUST be part of at least one group to submit work.<br/>
 	<br/>
 These users are currently not in a group: {$a}';
 $string['teammode_notingroupwarning'] = 'You are not in any groups. You cannot submit work for this assessment.';
 $string['teammode_duplicategroupnameswarning'] = 'You have some groups with the same name, so you can\'t upload data. You need to change their names or allocate manually. (Duplicate names: {$a})';
 $string['teammode_multiplegroupswarning'] = 'You have users in multiple groups ({$a}). Please select a grouping with unique groups.';
-$string['teammode_nogroupswarning'] = 'There are no groups in your course, or in the selected grouping. <strong>Team mode has been disabled</strong>. If you wish to continue in team mode, create some groups, then edit the settings this workshop and re-enabled team mode.';
+$string['teammode_nogroupswarning'] = 'There are no groups in your course, or in the selected grouping. <strong>Team mode has been disabled</strong>. If you wish to continue in team mode, create some groups, then edit the settings this Enhanced Workshop and re-enabled team mode.';
 
 //Additions: Calibration
 $string['examplescompare'] = 'Example comparison';
@@ -371,11 +380,11 @@ $string['randomexamplesoverlapwarning'] = 'The {$a->prev} and {$a->next} bracket
 $string['randomexampleshelp'] = 'Random Examples: What does this mean?';
 $string['randomexampleshelp_help'] = <<<MDOWN
 
-When you choose to show your students more than one example assessment (and not all of them), Workshop attempts to give them a good spread of examples, choosing poor, average and good assessments evenly. It also picks assessments semi-randomly, to prevent students cheating off each other. This is especially useful for the Calibration evaluation method.
+When you choose to show your students more than one example assessment (and not all of them), Enhanced Workshop attempts to give them a good spread of examples, choosing poor, average and good assessments evenly. It also picks assessments semi-randomly, to prevent students cheating off each other. This is especially useful for the Calibration evaluation method.
 
 In order to help you create better examples, we've got this handy tool. It gives you a quick and easy visual representation of your example assessments.
 
-When Workshop is picking example assessments for a student, it divides all the assessments into n even brackets, where n is the number of example assessments you chose for each student to do. You can see these brackets here, represented by the coloured bars. These represent the range of the lowest to the highest mark in that bracket.
+When Enhanced Workshop is picking example assessments for a student, it divides all the assessments into n even brackets, where n is the number of example assessments you chose for each student to do. You can see these brackets here, represented by the coloured bars. These represent the range of the lowest to the highest mark in that bracket.
 
 The small bars are the individual example assessments, while the tall, thick bars are the average mark for that bracket.
 

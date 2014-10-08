@@ -56,11 +56,17 @@ function xmldb_workshopform_accumulative_upgrade($oldversion) {
         $table->add_field('additive', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
         $table->add_key('primary',XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('uqfk_workshop',XMLDB_KEY_UNIQUE, array('workshopid'));
-        
+
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
     }
+
+    // Moodle v2.6.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Moodle v2.7.0 release upgrade line.
+    // Put any upgrade step following this.
 
     return true;
 }

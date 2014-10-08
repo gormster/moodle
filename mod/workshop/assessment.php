@@ -29,8 +29,7 @@
  * has been prepared for him/her (during the allocation). So even a user without the
  * peerassess capability (like a 'teacher', for example) can become a reviewer.
  *
- * @package    mod
- * @subpackage workshop
+ * @package    mod_workshop
  * @copyright  2009 David Mudrak <david.mudrak@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -103,11 +102,13 @@ if ($assessmenteditable and $workshop->useexamples and $workshop->examplesmode =
         and !has_capability('mod/workshop:manageexamples', $workshop->context)) {
     // the reviewer must have submitted their own submission
     $reviewersubmission = $workshop->get_submission_by_author($assessment->reviewerid);
+    $output = $PAGE->get_renderer('mod_workshop');
     if (!$reviewersubmission) {
         // no money, no love
         $assessmenteditable = false;
         echo $output->header();
-        echo $output->heading(get_string('exampleneedsubmission', 'workshop'), 2);
+        echo $output->heading(format_string($workshop->name));
+        notice(get_string('exampleneedsubmission', 'workshop'), new moodle_url('/mod/workshop/view.php', array('id' => $cm->id)));
         echo $output->footer();
         exit;
     } else {
@@ -116,7 +117,8 @@ if ($assessmenteditable and $workshop->useexamples and $workshop->examplesmode =
             if (is_null($example->grade)) {
                 $assessmenteditable = false;
                 echo $output->header();
-                echo $output->heading(get_string('exampleneedassessed', 'workshop'), 2);
+                echo $output->heading(format_string($workshop->name));
+                notice(get_string('exampleneedassessed', 'workshop'), new moodle_url('/mod/workshop/view.php', array('id' => $cm->id)));
                 echo $output->footer();
                 exit;
             }
@@ -160,11 +162,6 @@ if (is_null($assessment->grade) and !$assessmenteditable) {
     if ($mform->is_cancelled()) {
         redirect($workshop->view_url());
     } elseif ($assessmenteditable and ($data = $mform->get_data())) {
-        if (is_null($assessment->grade)) {
-            $workshop->log('add assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
-        } else {
-            $workshop->log('update assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
-        }
 
         // Let the grading strategy subplugin save its data.
         $rawgrade = $strategy->save_assessment($assessment, $data);
@@ -190,7 +187,29 @@ if (is_null($assessment->grade) and !$assessmenteditable) {
         if (isset($data->weight) and $cansetassessmentweight) {
             $coredata->weight = $data->weight;
         }
-        $DB->update_record('workshop_assessments', $coredata);
+        // Update the assessment data if there is something other than just the 'id'.
+        if (count((array)$coredata) > 1 ) {
+            $DB->update_record('workshop_assessments', $coredata);
+            $params = array(
+                'relateduserid' => $submission->authorid,
+                'objectid' => $assessment->id,
+                'context' => $workshop->context,
+                'other' => array(
+                    'workshopid' => $workshop->id,
+                    'submissionid' => $assessment->submissionid
+                )
+            );
+
+            if (is_null($assessment->grade)) {
+                // All workshop_assessments are created when allocations are made. The create event is of more use located here.
+                $event = \mod_workshop\event\submission_assessed::create($params);
+                $event->trigger();
+            } else {
+                $params['other']['grade'] = $assessment->grade;
+                $event = \mod_workshop\event\submission_reassessed::create($params);
+                $event->trigger();
+            }
+        }
 
         // And finally redirect the user's browser.
         if (!is_null($rawgrade) and isset($data->saveandclose)) {
@@ -244,7 +263,8 @@ if ($canoverridegrades or $cansetassessmentweight) {
 
 // output starts here
 echo $output->header();
-echo $output->heading(get_string('assessedsubmission', 'workshop'), 2);
+echo $output->heading(format_string($workshop->name));
+echo $output->heading(get_string('assessedsubmission', 'workshop'), 3);
 
 $submission = $workshop->get_submission_by_id($submission->id);     // reload so can be passed to the renderer
 echo $output->render($workshop->prepare_submission($submission, has_capability('mod/workshop:viewauthornames', $workshop->context)));
@@ -264,7 +284,7 @@ if ($workshop->usecalibration && (($isreviewer && (($workshop->phase == workshop
 {
     $reviewer = $DB->get_record('user', array('id' => $assessment->reviewerid));
     $calibrator = $workshop->calibration_instance();
-    
+
     $calibration_renderer = $PAGE->get_renderer('workshopcalibration_'.$workshop->calibrationmethod);
     print_collapsible_region_start('', 'workshop-viewlet-calibrationresults', get_string('calibration', 'workshop'), '', true);
     echo $output->box_start('generalbox');

@@ -260,7 +260,7 @@ class comment {
             throw new coding_exception('You cannot change the component of a comment once it has been set');
         }
         $this->component = $component;
-        list($this->plugintype, $this->pluginname) = normalize_component($component);
+        list($this->plugintype, $this->pluginname) = core_component::normalize_component($component);
     }
 
     /**
@@ -526,9 +526,9 @@ class comment {
             $c->content     = $u->ccontent;
             $c->format      = $u->cformat;
             $c->timecreated = $u->ctimecreated;
-            $c->strftimeformat = get_string('strftimerecent', 'langconfig');
+            $c->strftimeformat = get_string('strftimerecentfull', 'langconfig');
             $url = new moodle_url('/user/view.php', array('id'=>$u->id, 'course'=>$this->courseid));
-            $c->profileurl = $url->out(true);
+            $c->profileurl = $url->out(false); // URL should not be escaped just yet.
             $c->fullname = fullname($u);
             $c->time = userdate($c->timecreated, $c->strftimeformat);
             $c->content = format_text($c->content, $c->format, $formatoptions);
@@ -651,6 +651,24 @@ class comment {
             }
             $newcmt->time = userdate($newcmt->timecreated, $newcmt->strftimeformat);
 
+            // Trigger comment created event.
+            if (core_component::is_core_subsystem($this->component)) {
+                $eventclassname = '\\core\\event\\' . $this->component . '_comment_created';
+            } else {
+                $eventclassname = '\\' . $this->component . '\\event\comment_created';
+            }
+            if (class_exists($eventclassname)) {
+                $event = $eventclassname::create(
+                        array(
+                            'context' => $this->context,
+                            'objectid' => $newcmt->id,
+                            'other' => array(
+                                'itemid' => $this->itemid
+                                )
+                            ));
+                $event->trigger();
+            }
+
             return $newcmt;
         } else {
             throw new comment_exception('dbupdatefailed');
@@ -685,7 +703,7 @@ class comment {
         global $DB;
         $contexts = array();
         $contexts[] = $context->id;
-        $children = get_child_contexts($context);
+        $children = $context->get_child_contexts();
         foreach ($children as $c) {
             $contexts[] = $c->id;
         }
@@ -709,6 +727,24 @@ class comment {
             throw new comment_exception('nopermissiontocomment');
         }
         $DB->delete_records('comments', array('id'=>$commentid));
+        // Trigger comment delete event.
+        if (core_component::is_core_subsystem($this->component)) {
+            $eventclassname = '\\core\\event\\' . $this->component . '_comment_deleted';
+        } else {
+            $eventclassname = '\\' . $this->component . '\\event\comment_deleted';
+        }
+        if (class_exists($eventclassname)) {
+            $event = $eventclassname::create(
+                    array(
+                        'context' => $this->context,
+                        'objectid' => $commentid,
+                        'other' => array(
+                            'itemid' => $this->itemid
+                            )
+                        ));
+            $event->add_record_snapshot('comments', $comment);
+            $event->trigger();
+        }
         return true;
     }
 

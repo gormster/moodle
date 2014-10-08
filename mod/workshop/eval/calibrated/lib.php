@@ -71,7 +71,7 @@ class workshop_calibrated_evaluation extends workshop_evaluation {
         }
         
 		$calibration_scores = $this->workshop->calibration_instance()->get_calibration_scores();
-		
+
 		$sql = <<<SQL
 		        SELECT a.id, a.reviewerid, a.grade
 		        FROM {workshop_assessments} a, {workshop_submissions} s 
@@ -89,9 +89,8 @@ SQL;
                 $record->gradinggrade = 0;
             }
             
-			$DB->update_record('workshop_assessments', $record, false);  // bulk operations expected
-		}
-		
+            $DB->update_record('workshop_assessments', $record, false);  // bulk operations expected
+        }
 	}
     
     private function get_reference_assessments() {
