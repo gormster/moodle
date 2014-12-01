@@ -217,7 +217,7 @@ class workshop_examples_calibration_method implements workshop_calibration_metho
         if ($dimmin == $dimmax) {
             return grade_floatval($dimmax);
         } else {
-            return grade_floatval(($grade - $dimmin) / ($dimmax - $dimmin) * 100);
+            return grade_floatval(($grade) / ($dimmax - $dimmin) * 100);
         }
     }
     
@@ -378,7 +378,7 @@ class workshop_examples_calibration_explanation implements renderable {
         if ($dimmin == $dimmax) {
             return grade_floatval($dimmax);
         } else {
-            return grade_floatval(($grade - $dimmin) / ($dimmax - $dimmin) * 100);
+            return grade_floatval(($grade) / ($dimmax - $dimmin) * 100);
         }
     }
     
