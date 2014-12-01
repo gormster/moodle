@@ -986,11 +986,12 @@ $cache = '.var_export($cache, true).';
             } else {
                 $plugs = self::fetch_plugins($type, $typedir);
             }
+
             foreach ($plugs as $plug => $fullplug) {
                 $plugin = new stdClass();
                 $plugin->version = null;
                 $module = $plugin;
-                @include($fullplug.'/version.php');
+                include($fullplug.'/version.php');
                 $versions[$type.'_'.$plug] = $plugin->version;
             }
         }

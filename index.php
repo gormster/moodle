@@ -60,7 +60,8 @@
         print_maintenance_message();
     }
 
-    if ($hassiteconfig && moodle_needs_upgrading()) {
+    $needs_upgrading = moodle_needs_upgrading();
+    if ($hassiteconfig && $needs_upgrading) {
         redirect($CFG->wwwroot .'/'. $CFG->admin .'/index.php');
     }
 
