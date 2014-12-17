@@ -705,6 +705,14 @@ class mod_workshop_renderer extends plugin_renderer_base {
                         $cell->attributes['class'] .= ' null';
                     } else {
                         $cell->attributes['class'] .= ' notnull';
+                        if ($assessment->flagged and !empty($options->showdiscrepancy)) {
+                            $cell->attributes['class'] .= ' flagged';
+                            $cell->attributes['title'] = "This grade is more than 2 standard deviations from the median. Consider reviewing this assessment.";
+                        }
+                        if ($assessment->submitterflagged == 1) {
+                            $cell->attributes['class'] .= ' flagged submitter';
+                            $cell->attributes['title'] = "This assessment has been flagged by its submitter as unfair. Please review this assessment."; //consider concatenating with previous.
+                        }
                     }
                     $row->cells[] = $cell;
                 }

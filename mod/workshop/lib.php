@@ -78,6 +78,7 @@ function workshop_add_instance(stdclass $workshop) {
     $workshop->useexamples           = (int)!empty($workshop->useexamples);
     $workshop->usepeerassessment     = 1;
     $workshop->useselfassessment     = (int)!empty($workshop->useselfassessment);
+    $workshop->usecalibration        = (int)!empty($workshop->useselfassessment);
     $workshop->latesubmissions       = (int)!empty($workshop->latesubmissions);
     $workshop->phaseswitchassessment = (int)!empty($workshop->phaseswitchassessment);
     $workshop->teammode              = (int)!empty($workshop->teammode);

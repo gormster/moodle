@@ -355,7 +355,7 @@ class workshop {
      */
     public function limited_available_evaluators_list() {
         $evals = array();
-        foreach (get_plugin_list_with_file('workshopeval', 'lib.php', false) as $eval => $evalpath) {
+        foreach (core_component::get_plugin_list_with_file('workshopeval', 'lib.php', false) as $eval => $evalpath) {
             $evals[$eval] = get_string('pluginname', 'workshopeval_' . $eval);
             if ($eval == "calibrated") {
                 if ($this->useexamples == false || $this->examplesmode == workshop::EXAMPLES_VOLUNTARY || count($this->get_examples_for_manager()) == 0) {
@@ -2705,27 +2705,74 @@ SQL;
     	}
     	$grades = $grades2;
     	
+        
+        
     	//yep yep now we good let's get some reviewers
     	$findusers = array(); // we'll use this later to look up our userinfo
+        $reviewer_submissions = array(); // we'll use this later to calculate outliers
     	foreach($grades as $k => $v) {
     		if(!empty($v->submissionid)) { //if this group has a submission
-    			$vals = $DB->get_records("workshop_assessments", array("submissionid" => $v->submissionid), 'weight DESC', 'reviewerid AS userid, id AS assessmentid, submissionid, grade, gradinggrade, gradinggradeover, weight');
+    			$vals = $DB->get_records("workshop_assessments", array("submissionid" => $v->submissionid), 'weight DESC', 'reviewerid AS userid, id AS assessmentid, submissionid, grade, gradinggrade, gradinggradeover, weight, submitterflagged');
                 foreach($vals as $userid => $val) {
                     $val->grade = $this->real_grade($val->grade);
                     $val->gradinggrade = $this->real_grading_grade($val->gradinggrade);
                     $val->gradinggradeover = $this->real_grading_grade($val->gradinggradeover);
-                }
-                
-    			$v->reviewedby = $vals;
-    			foreach($vals as $k => $v) {
-    				$findusers[] = $v->userid;
+
+    				$findusers[] = $val->userid;
+                    $reviewer_submissions[$v->submissionid][$val->assessmentid] = $val->grade;
     			}
+    			$v->reviewedby = $vals;
     		} else {
     			$v->reviewedby = array();
     		}
     	}
-    	
-    	$userinfo = $DB->get_records_list("user","id",$findusers,'','id,firstname,lastname,picture,imagealt,email');
+        
+        
+        
+        
+        
+        
+        //Highlight discrepancies
+        $flags = array();
+        
+        foreach ($reviewer_submissions as $submissionid => $s) {
+            if (count($s) > 2) {
+                //Calculate the standard deviation of the assessment grades for this submission
+                $mean = array_sum($s) / count($s);
+                $diffs = array();
+                foreach ($s as $v) {
+                    $diffs[] = pow($v - $mean, 2);
+                }
+                
+                $diffmean = array_sum($diffs) / count($diffs);
+                $stddev = sqrt($diffmean);
+                
+                //Get the median of our marks
+                
+                $s2 = $s; // Don't muck up our original array
+                
+                sort($s2,SORT_NUMERIC); 
+                $median = (count($s2) % 2) ? 
+                 $s2[floor(count($s2)/2)] : 
+                 ($s2[floor(count($s2)/2)] + $s2[floor(count($s2)/2) - 1]) / 2;
+                
+                //Now if there's any outside ±2 std dev flag them
+                foreach ($s as $assessmentid => $grade) {
+                    if (($grade < $median - 2 * $stddev) or ($grade > $median + 2 * $stddev)) {
+                        $flags[$assessmentid] = true;
+                    }
+                }
+            }
+        }
+        
+        
+        foreach($grades as $groupid => $values) {
+            foreach($values->reviewedby as $k => $v) {
+                $v->flagged = isset($flags[$v->assessmentid]);
+            }
+        }
+        
+    	$userinfo = $DB->get_records_list("user","id",$findusers,'',user_picture::fields());
     	
         if (!empty($findusers)) {            
             list($select, $params) = $DB->get_in_or_equal($findusers, SQL_PARAMS_NAMED);
