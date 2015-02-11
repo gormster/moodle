@@ -73,7 +73,13 @@ $event->trigger();
 // the event so that the scheduled allocator had a chance to allocate submissions.
 if ($workshop->phase == workshop::PHASE_SUBMISSION and $workshop->phaseswitchassessment
         and $workshop->submissionend > 0 and $workshop->submissionend < time()) {
-    $workshop->switch_phase(workshop::PHASE_ASSESSMENT);
+            
+    $newphase = workshop::PHASE_ASSESSMENT;
+    if ($workshop->usecalibration && ($workshop->calibrationphase == workshop::PHASE_SUBMISSION)) {
+        $newphase = workshop::PHASE_CALIBRATION;
+    }
+    
+    $workshop->switch_phase($newphase);
     // Disable the automatic switching now so that it is not executed again by accident
     // if the teacher changes the phase back to the submission one.
     $DB->set_field('workshop', 'phaseswitchassessment', 0, array('id' => $workshop->id));

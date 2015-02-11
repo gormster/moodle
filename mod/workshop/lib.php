@@ -990,7 +990,17 @@ function workshop_cron() {
             $cm = get_coursemodule_from_instance('workshop', $workshop->id, $workshop->course, false, MUST_EXIST);
             $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
             $workshop = new workshop($workshop, $cm, $course);
-            $workshop->switch_phase(workshop::PHASE_ASSESSMENT);
+            
+            // Determine the phase to switch to. If the workshop has a Calibration phase,
+            // and the Calibration phase is set to "After Submission", then switch to it
+            // to Calibration; otherwise switch to Assessment
+            
+            $newphase = workshop::PHASE_ASSESSMENT;
+            if ($workshop->usecalibration && ($workshop->calibrationphase == workshop::PHASE_SUBMISSION)) {
+                $newphase = workshop::PHASE_CALIBRATION;
+            }
+            
+            $workshop->switch_phase($newphase);
 
             $params = array(
                 'objectid' => $workshop->id,
