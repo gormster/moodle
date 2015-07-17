@@ -408,6 +408,7 @@ $string['markeridnumber'] = 'Marker ID Number';
 $string['markername'] = 'Marker Name';
 $string['comments'] = 'Comments';
 $string['feedback'] = 'Feedback';
+$string['submissiondate'] = 'Submission date';
 
 
 $string['wordcount'] = 'Word count: {$a}';

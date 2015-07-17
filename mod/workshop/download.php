@@ -150,7 +150,7 @@ $csv->add_data(array("\xEF\xBB\xBF"));
 // First we need an array of headers.
 
 $headers = array();
-$h = $teammode ? array("name", "submissiontitle", "submissiongrade") : array("idnumber", "name", "submissiontitle", "submissiongrade", "gradinggrade");
+$h = $teammode ? array("name", "submissiontitle", "submissiongrade", "submissiondate") : array("idnumber", "name", "submissiontitle", "submissiongrade", "submissiondate", "gradinggrade");
 foreach($h as $i) {
     $headers[$i] = get_string($i, 'workshop');
 }
@@ -160,7 +160,6 @@ foreach($h as $i) {
 $table1 = array();
 
 // $table1 is an enumerated array of associative arrays; a list of dicts.
-
 foreach($data->grades as $k => $grade) {
     $row = array();
     
@@ -175,6 +174,10 @@ foreach($data->grades as $k => $grade) {
 
     $row['submissiontitle'] = $grade->submissiontitle;
     $row['submissiongrade'] = $grade->submissiongrade;
+
+    if (isset($grade->submissionid)) {
+        $row['submissiondate'] = userdate($submissions[$grade->submissionid]->timemodified);
+    }
     
     $table1[] = $row;
 }
