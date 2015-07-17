@@ -150,7 +150,7 @@ $csv->add_data(array("\xEF\xBB\xBF"));
 // First we need an array of headers.
 
 $headers = array();
-$h = $teammode ? array("name", "submissiontitle", "submissiongrade", "submissiondate") : array("idnumber", "name", "submissiontitle", "submissiongrade", "submissiondate", "gradinggrade");
+$h = $teammode ? array("name", "submissiontitle", "submissiondate", "submissiongrade") : array("idnumber", "name", "submissiontitle", "submissiondate", "submissiongrade", "gradinggrade");
 foreach($h as $i) {
     $headers[$i] = get_string($i, 'workshop');
 }
