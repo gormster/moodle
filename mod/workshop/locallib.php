@@ -4520,6 +4520,9 @@ class workshop_example_assessment extends workshop_assessment implements rendera
 
     /** @var stdClass if set, the assessment will also show the reference assessment for comparison */
     public $reference_form;
+    
+    /** @var stdClass if set, the assessment will also show the reference assessment's overall feedback */
+    public $reference_assessment;
 
     /**
      * @see parent::validate_raw_record()

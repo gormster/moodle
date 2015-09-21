@@ -94,6 +94,7 @@ foreach($assessments as $k => $v) {
     
         $exassessment = $workshop->prepare_example_assessment($assessment, $mformassessment, $options);
         $exassessment->reference_form = $mformreference;
+        $exassessment->reference_assessment = new workshop_assessment($workshop, $reference);
     
         echo $output->render($exassessment);
     }

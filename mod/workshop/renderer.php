@@ -1005,6 +1005,51 @@ HTML;
      */
     protected function overall_feedback(workshop_assessment $assessment) {
 
+        $o = '';
+
+        if ($assessment instanceof workshop_example_assessment) {
+            
+            $yours = $this->inner_overall_feedback($assessment);
+            $ref = $this->inner_overall_feedback($assessment->reference_assessment);
+            
+            if (( $yours === '' ) && ( $ref === '' )) {
+                $o = '';
+            } else {
+            
+                $o .= $this->output->container_start('center');
+
+                $o .= $this->output->container_start('inline-block');
+                $o .= $this->output->heading(get_string('assessmentreference','workshop'), 2, 'reference-assessment');
+            
+                $o .= $this->inner_overall_feedback($assessment);
+            
+                $o .= $this->output->container_end();
+
+                $o .= $this->output->container_start('inline-block');
+                $o .= $this->output->heading(get_string('assessmentbyfullname','workshop', fullname($assessment->reviewer)), 2, 'example-assessment');
+            
+                $o .= $this->inner_overall_feedback($assessment->reference_assessment);
+            
+                $o .= $this->output->container_end();
+                $o .= $this->output->container_end();
+            }
+            
+        } else {
+            $o = $this->inner_overall_feedback($assessment);
+        }
+        
+        if ($o === '') {
+            return '';
+        }
+
+        $o = $this->output->box($o, 'overallfeedback');
+        $o = print_collapsible_region($o, 'overall-feedback-wrapper', uniqid('workshop-overall-feedback'),
+            get_string('overallfeedback', 'workshop'), '', false, true);
+
+        return $o;
+    }
+    
+    protected function inner_overall_feedback(workshop_assessment $assessment) {
         $content = $assessment->get_overall_feedback_content();
 
         if ($content === false) {
@@ -1050,11 +1095,7 @@ HTML;
         if ($o === '') {
             return '';
         }
-
-        $o = $this->output->box($o, 'overallfeedback');
-        $o = print_collapsible_region($o, 'overall-feedback-wrapper', uniqid('workshop-overall-feedback'),
-            get_string('overallfeedback', 'workshop'), '', false, true);
-
+        
         return $o;
     }
 
