@@ -1007,7 +1007,7 @@ HTML;
 
         $o = '';
 
-        if ($assessment instanceof workshop_example_assessment) {
+        if (($assessment instanceof workshop_example_assessment) && isset($assessment->reference_assessment)) {
             
             $yours = $this->inner_overall_feedback($assessment);
             $ref = $this->inner_overall_feedback($assessment->reference_assessment);
