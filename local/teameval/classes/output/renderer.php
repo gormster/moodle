@@ -3,7 +3,7 @@
 namespace local_teameval\output;
 
 use plugin_renderer_base;
-use local_teameval\team_evaluation_block;
+use local_teameval\output\team_evaluation_block;
 use context_module;
 
 class renderer extends plugin_renderer_base {
