@@ -60,6 +60,11 @@ class external extends external_api {
     }
 
     public static function update_settings($cmid, $settings) {
+        $settings = (object)$settings;
+
+        $settings->public = $settings->public ? true : false;
+        $settings->enabled = $settings->enabled ? true : false;
+
         $teameval = new team_evaluation($cmid);
         $teameval->update_settings($settings);
     }

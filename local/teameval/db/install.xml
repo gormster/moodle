@@ -6,7 +6,7 @@
   <TABLES>
     <TABLE NAME="teameval" COMMENT="Settings for teameval instances. No ID because teamevals are 1 to 1 with coursemodules.">
       <FIELDS>
-        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="If evaluation is enabled for this course module"/>
         <FIELD NAME="public" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If the questionnaire for this puppy is public. Otherwise it is only available within the course or course category depending on site-wide settings."/>
         <FIELD NAME="fraction" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="50" SEQUENCE="false" DECIMALS="2" COMMENT="The percentage of the evaluation score that is used to calculate a user's final score."/>
@@ -14,7 +14,7 @@
         <FIELD NAME="deadline" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last possible date for submission of the questionnaire by users."/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="cmid"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="teameval_questions" COMMENT="Questions for teameval instances.">
@@ -27,7 +27,7 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="teameval" REFFIELDS="cmid"/>
+        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="teameval" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="teameval_responses" COMMENT="Responses to teameval questionnaires. Why the backwards normalisation? It's more efficient than asking every subplugin for its responses, plus this way we're not relying on subplugins to store this information correctly; they only have their own data to worry about.">

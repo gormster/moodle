@@ -46,11 +46,11 @@ class team_evaluation {
         // initialise settings if they're not already
         if (!isset($this->settings)) {
 
-            $this->settings = $DB->get_record('teameval', array('cmid' => $this->cm->id));
+            $this->settings = $DB->get_record('teameval', array('id' => $this->cm->id));
             
             if ($this->settings === false) {
                 $settings = team_evaluation::default_settings();
-                $settings->cmid = $cmid;
+                $settings->id = $cmid;
                 $DB->insert_record('teameval', $settings, false);
 
                 $this->settings = $settings;
@@ -61,7 +61,7 @@ class team_evaluation {
                 $this->settings->public = (bool)$this->settings->public;
             }
 
-            unset($this->settings->cmid);
+            unset($this->settings->id);
         }
 
         // don't return our actual settings object, else it could be updated behind our back
@@ -71,7 +71,10 @@ class team_evaluation {
 
     public function update_settings($settings) {
         global $DB;
-        
+
+        //fetch settings if they're not set
+        $this->get_settings();
+
         //todo: validate
         foreach(['enabled', 'public', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
             if (isset($settings->$i)) {
@@ -79,7 +82,9 @@ class team_evaluation {
             }
         }
 
-        $DB->update_record('teameval', array('cmid' => $this->cm->id), $this->settings);
+        $record = clone $this->settings;
+        $record->id = $this->cm->id;
+        $DB->update_record('teameval', $record);
     }
 
 }
