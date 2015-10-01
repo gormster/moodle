@@ -4289,6 +4289,16 @@ class assign {
             $o .= $this->view_student_summary($USER, true);
         }
 
+        // Include teameval
+        // TODO: better way of determing if plugin is installed
+        
+        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
+        if ($teameval_plugin) {
+            $teameval_renderer = $PAGE->get_renderer('local_teameval');
+            $teameval = new \local_teameval\team_evaluation_block($this->coursemodule->id);
+            $o .= $teameval_renderer->render($teameval);
+        }
+        
         $o .= $this->view_footer();
 
         \mod_assign\event\submission_status_viewed::create_from_assign($this)->trigger();

@@ -1,0 +1,23 @@
+.local-teameval-containerbox {
+    border: 1px solid gray;
+    border-radius: 10px;
+    background-color: #EEE;
+    margin:10px;
+    padding:10px;
+}
+
+#local-teameval-settings-button {
+	float:right;
+	padding: 2px;
+    background-image:url([[pix:core|i/settings]]);
+    width:20px;
+    height:20px;
+    background-size: 16px 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+#local-teameval-settings-button:hover {
+	background-color:#DDD;
+}
