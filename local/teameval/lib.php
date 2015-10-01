@@ -20,15 +20,8 @@ class team_evaluation {
 
     public function __construct($cmid) {
 
-        global $DB;
-
         $this->cm = get_coursemodule_from_id(null, $cmid);
-        $this->settings = $DB->get_record('teameval', array('cmid' => $cmid));
-        if ($this->settings === false) {
-            $this->settings = team_evaluation::default_settings;
-            $this->settings->cmid = $cmid;
-        }
-
+    
     }
 
     protected static function default_settings() {
@@ -36,6 +29,7 @@ class team_evaluation {
         //todo: these should probably be site-wide settings
 
         $settings = new stdClass;
+        $settings->enabled = true;
         $settings->public = false;
         $settings->fraction = 0.5;
         $settings->noncompletionpenalty = 0.1;
@@ -46,9 +40,46 @@ class team_evaluation {
 
     public function get_settings()
     {
-        // don't return our actual settings object, then it could be updated behind our back
-        $s = clone $settings;
+    
+        global $DB;
+
+        // initialise settings if they're not already
+        if (!isset($this->settings)) {
+
+            $this->settings = $DB->get_record('teameval', array('cmid' => $this->cm->id));
+            
+            if ($this->settings === false) {
+                $settings = team_evaluation::default_settings();
+                $settings->cmid = $cmid;
+                $DB->insert_record('teameval', $settings, false);
+
+                $this->settings = $settings;
+            } else {
+                // when fetching the record from the DB these are ints
+                // we need them to be bools
+                $this->settings->enabled = (bool)$this->settings->enabled;
+                $this->settings->public = (bool)$this->settings->public;
+            }
+
+            unset($this->settings->cmid);
+        }
+
+        // don't return our actual settings object, else it could be updated behind our back
+        $s = clone $this->settings;
         return $s;
+    }
+
+    public function update_settings($settings) {
+        global $DB;
+        
+        //todo: validate
+        foreach(['enabled', 'public', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
+            if (isset($settings->$i)) {
+                $this->settings->$i = $settings->$i;
+            }
+        }
+
+        $DB->update_record('teameval', array('cmid' => $this->cm->id), $this->settings);
     }
 
 }
