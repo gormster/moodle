@@ -4295,7 +4295,7 @@ class assign {
         $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
         if ($teameval_plugin) {
             $teameval_renderer = $PAGE->get_renderer('local_teameval');
-            $teameval = new \local_teameval\team_evaluation_block($this->coursemodule->id);
+            $teameval = new \local_teameval\output\team_evaluation_block($this->coursemodule->id);
             $o .= $teameval_renderer->render($teameval);
         }
         
