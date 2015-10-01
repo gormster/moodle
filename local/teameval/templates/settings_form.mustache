@@ -1,0 +1,29 @@
+This is a settings form!
+<form>
+	<table>
+		<tr>
+			<th><label for="local-teameval-settings-enabled">Enabled</label></th>
+			<td><input id="local-teameval-settings-enabled" type="checkbox" {{#enabled}} checked="checked" {{/enabled}} /></td>
+		</tr>
+		<tr>
+			<th><label for="local-teameval-settings-public">Public</label></th>
+			<td><input id="local-teameval-settings-public" type="checkbox" {{#public}} checked="checked" {{/public}} /></td>
+		</tr>
+		<tr>
+			<th><label for="local-teameval-settings-fraction">Fraction</label></th>
+			<td><input id="local-teameval-settings-fraction" type="number" value="{{fraction}}" min="0.00" max="1.00" step="0.01"/></td>
+		</tr>
+		<tr>
+			<th><label for="local-teameval-settings-noncompletionpenalty">Non-Completion Penalty</label></th>
+			<td><input id="local-teameval-settings-noncompletionpenalty" type="number" value="{{noncompletionpenalty}}" min="0" max="1" step="0.01" /></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="local-teameval-settings-save-button">Save</button>
+				<button type="button" id="local-teameval-settings-cancel-button">Cancel</button>
+			</td>
+		</tr>
+	</table>
+</form>
+				
