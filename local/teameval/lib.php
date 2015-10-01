@@ -8,25 +8,9 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
  * This is about all you have to call from your mod plugin to show teameval
  */
 
-use renderable, core_plugin_manager;
-
-class team_evaluation_block implements renderable {
-
-    public $cm;
-    
-    public $subplugins;
-
-    /**
-     * @param int $cmid This is the cmid of the activity module this teameval belongs to
-     */
-    public function __construct($cmid) {
-        $this->cm = get_coursemodule_from_id(null, $cmid);
-        
-        $this->subplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
-        
-    }
-
-}
+use renderable;
+use core_plugin_manager;
+use stdClass;
 
 class team_evaluation {
 
