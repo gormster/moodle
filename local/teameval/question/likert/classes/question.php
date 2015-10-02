@@ -1,6 +1,6 @@
 <?php
 
-namespace local_teameval\teamevalquestion_likert;
+namespace teamevalquestion_likert;
     
 class question implements \local_teameval\question {
     
@@ -23,15 +23,4 @@ class question implements \local_teameval\question {
     
 }
 
-class response implements \local_teameval\response {
-    public function __construct($questionid, $userid, $responseid = null) {
-        //todo
-    }
-    
-    public function update_response($formdata) {
-        //todo
-    }
-}
-
-    
 ?>
