@@ -34,3 +34,7 @@
         text-align: right;
         font-weight: bold;
     }
+
+#local-teameval-add-question a::before {
+    content: url([[pix:core|t/add]]);
+}

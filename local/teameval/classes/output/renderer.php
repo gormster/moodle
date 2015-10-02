@@ -25,6 +25,10 @@ class renderer extends plugin_renderer_base {
         if (has_capability('local/teameval:changesettings', $context)) {
             $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
         }
+
+        if (has_capability('local/teameval:createquestionnaire', $context)) {
+            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->subplugins]);
+        }
         
         return $this->render_from_template('local_teameval/questionnaire_submission', ["subtemplates" => $templates]);
         
