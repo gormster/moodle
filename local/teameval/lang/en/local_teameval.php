@@ -8,4 +8,6 @@
     $string['subplugintype_teamevalevaluator'] = 'Evaluator';
     $string['subplugintype_teamevalevaluator_plural'] = 'Evaluators';
 
+    $string['addquestion'] = 'Add Question';
+
 ?>
