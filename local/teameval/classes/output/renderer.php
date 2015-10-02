@@ -16,7 +16,7 @@ class renderer extends plugin_renderer_base {
 
         $templates = [];
         foreach($block->subplugins as $subplugin) {
-            $t = "{$subplugin->type}_{$subplugin->name}/question_submission";
+            $t = "{$subplugin->type}_{$subplugin->name}/submission_view";
             $cls = $subplugin->get_question_class();
             $c = new $cls($block->cm->id);
             $templates[] = [ "test" => $this->render_from_template($t, $c->submission_view($USER->id))];
