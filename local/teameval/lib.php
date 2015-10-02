@@ -97,8 +97,16 @@ interface question {
      */
     public function __construct($cmid, $questionid = null);
     
+    /**
+     * The view that a submitting user should see. Rendered with submission_view.mustache
+     * @return stdClass|array template data. @see templatable
+     */
     public function submission_view($userid);
     
+    /**
+     * The view that an editing user should see. Rendered with editing_view.mustache
+     * @return stdClass|array template data. @see templatable
+     */
     public function editing_view();
     
     /**
