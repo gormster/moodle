@@ -8,7 +8,7 @@
   * Add question button for teameval blocks
   * @module local_teameval/addquestion
   */
-define(['jquery', 'core/str'], function($, str) {
+define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 	var _subplugins;
 
@@ -47,7 +47,14 @@ define(['jquery', 'core/str'], function($, str) {
 		},
 
 		addQuestion: function(type) {
+			templates.render('teamevalquestion_'+type+'/editing_view', {'_newquestion' : true}).done(function(html, js) {
+				var question = $('<li class="local-teameval-question" data-justadded="justadded" />');
+				question.html(html);
 
+				$('#local-teameval-questions').append(question);
+				templates.runTemplateJS(js);
+				question.removeAttr("data-justadded");
+			});
 		},
 
 		initialise: function(subplugins) {

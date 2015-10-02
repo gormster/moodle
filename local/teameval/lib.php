@@ -109,6 +109,12 @@ interface question {
     Keep that in mind - it will be run EVERY TIME YOUR VIEW IS RENDERED. Be performant,
     and make sure not to install event handlers twice.
 
+    When the view is added to the DOM hierarchy, its container will have an attribute 
+    "data-justadded". You can use this to find your question in the hierarcy from your
+    javascript. This attribute is removed as soon as your javascript has run - so if
+    you are doing anything asynchronous, grab a handle before you start, because you 
+    will never find it again.
+
     */
 
     /**
@@ -119,6 +125,9 @@ interface question {
     
     /**
      * The view that an editing user should see. Rendered with editing_view.mustache
+     * When being created for the first time, a question's editing view will be rendered
+     * with a context consisting of just one key-value pair: _newquestion: true. This
+     * template must render properly without any context.
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();
