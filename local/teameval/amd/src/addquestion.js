@@ -10,15 +10,61 @@
   */
 define(['jquery', 'core/str'], function($, str) {
 
+	var _subplugins;
+
+	var _addButton;
+
 	return {
 
+		// Ask the user what kind of question they want to add
+		preAddQuestion: function() {
+
+			//todo: check that you CAN add a question right now
+
+			//todo: if there's only one question subplugin skip this step and assume they mean that
+
+			//todo: mustache this
+			var dropdown = $('<ul class="local-teameval-question-dropdown" />');
+			$.each(_subplugins, function(name, subplugin) {
+				var li = $("<li />");
+				li.html('<a>' + subplugin.displayname + '</a>');
+				li.data('type',subplugin.name);
+				dropdown.append(li);
+			});
+
+			$(".local-teameval-containerbox").append(dropdown);
+			coords = _addButton.position();
+
+			dropdown.css('top', coords.top + 'px');
+			dropdown.css('right', '0px');
+
+			var _this = this;
+			dropdown.on('click', 'li', function(evt) {
+				_this.addQuestion($(this).data('type'));
+				dropdown.remove();
+			});
+
+		},
+
+		addQuestion: function(type) {
+
+		},
+
 		initialise: function(subplugins) {
+
+			_subplugins = subplugins;
+
+			// We need some strings before we can render the button
 
 			var stringsNeeded = ['addquestion'];
 
 			var promise = str.get_strings(stringsNeeded.map(function (v) {
 				return {key: v, component: 'local_teameval'};
 			}));
+
+			var _this = this;
+
+			console.log($.ui);
 
 			// we can't continue until we have some text!
 			promise.done(function(_strings) {
@@ -32,8 +78,12 @@ define(['jquery', 'core/str'], function($, str) {
 				// Find the question container and add the button after it
 				var questionContainer = $('#local-teameval-questions');
 				var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
-				addQuestionButton.html('<a href="#">' + _['addquestion'] + '</a>');
+				addQuestionButton.html('<a>' + _['addquestion'] + '</a>');
 				questionContainer.after(addQuestionButton);
+
+				addQuestionButton.click(_this.preAddQuestion.bind(_this));
+
+				_addButton = addQuestionButton;
 				
 			});
 
