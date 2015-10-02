@@ -97,6 +97,20 @@ interface question {
      */
     public function __construct($cmid, $questionid = null);
     
+    /*
+
+    These next two things are templatables, not renderables. There is a good reason for
+    this! Simply put, these are virtually always rendered client-side, via a webservice.
+    Teameval can't guarantee that your custom rendering code will run, and indeed it
+    almost always won't be. If you need to run code in your view that can't be handled
+    by Mustache, include it as Javascript in a {{#js}}{{/js}} block and it will be run
+    every time your view is rendered.
+
+    Keep that in mind - it will be run EVERY TIME YOUR VIEW IS RENDERED. Be performant,
+    and make sure not to install event handlers twice.
+
+    */
+
     /**
      * The view that a submitting user should see. Rendered with submission_view.mustache
      * @return stdClass|array template data. @see templatable
