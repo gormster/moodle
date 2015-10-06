@@ -57,3 +57,18 @@
     .local-teameval-question-dropdown li:hover {
         background-color:#CCC;
     }
+
+#local-teameval-questions {
+    margin:0;
+    margin-right:26px;
+}
+
+#local-teameval-questions li {
+    list-style: none;
+    padding: 10px;
+    margin-bottom: 5px;
+}
+
+    #local-teameval-questions li:hover {
+        background-color:#F9F9F9;
+    }
