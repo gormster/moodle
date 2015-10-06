@@ -17,7 +17,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 	return {
 
 		// Ask the user what kind of question they want to add
-		preAddQuestion: function() {
+		preAddQuestion: function(evt) {
 
 			//todo: check that you CAN add a question right now
 
@@ -38,9 +38,15 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			dropdown.css('top', coords.top + 'px');
 			dropdown.css('right', '0px');
 
+			// If we don't do this, we'll accidentally trigger our click-outside handler
+			evt.stopPropagation();
+
 			var _this = this;
-			dropdown.on('click', 'li', function(evt) {
-				_this.addQuestion($(this).data('type'));
+			$(document).one('click', function(evt) {
+				if ($(evt.target).closest('.local-teameval-question-dropdown').length > 0) {
+					var type = $(evt.target).closest('li').data('type');
+					_this.addQuestion(type);
+				}
 				dropdown.remove();
 			});
 
