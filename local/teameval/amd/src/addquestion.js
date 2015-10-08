@@ -12,6 +12,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 	"use strict";
 
+	var _cmid;
+
 	var _subplugins;
 
 	var _addButton;
@@ -56,7 +58,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 		addQuestion: function(type) {
 			var _this = this;
-			templates.render('teamevalquestion_'+type+'/editing_view', {'_newquestion' : true}).done(function(html, js) {
+			var context = {'_newquestion' : true, '_cmid': _cmid};
+			templates.render('teamevalquestion_'+type+'/editing_view', context).done(function(html, js) {
 				var question = $('<li class="local-teameval-question editing" />');
 				question.data('questiontype', type);
 
@@ -104,8 +107,10 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 		editQuestion: function(question) {
 
-			editingContext = question.data('editingcontext') || {};
-			questionType = question.data('questiontype');
+			var editingContext = question.data('editingcontext') || {};
+			var questionType = question.data('questiontype');
+
+			editingContext._cmid = _cmid;
 
 			question.find('.local-teameval-question-actions .edit').hide();
 
@@ -133,7 +138,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			// todo: do save
 
 			var questionContainer = question.find('.question-container');
-			questionContainer.triggerHandler("save").done(function(editingContext, submissionContext) {
+			questionContainer.triggerHandler("save").done(function(submissionContext, editingContext) {
 				question.data('editingcontext', editingContext);
 				question.data('submissioncontext', submissionContext);
 				this.showQuestion(question);
@@ -145,6 +150,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 			var submissionContext = question.data('submissioncontext') || {};
 			var questionType = question.data('questiontype');
+
+			submissionContext._cmid = _cmid;
 
 			templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
 
@@ -163,15 +170,15 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 		},
 
 		deleteQuestion: function(question) {
-			//todo
 			var questionContainer = question.find('.question-container');
 			questionContainer.triggerHandler("delete").done(function() {
 				question.remove();
 			});
 		},
 
-		initialise: function(subplugins) {
+		initialise: function(cmid, subplugins) {
 
+			_cmid = cmid;
 			_subplugins = subplugins;
 
 			// We need some strings before we can render the button
