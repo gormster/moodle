@@ -9,6 +9,11 @@ require(['jquery'], function($) {
 
 	questionContainer.on("save", function() {
 		var deferred = $.Deferred();
+		return deferred;
+	});
+
+	questionContainer.on("delete", function () {
+		var deferred = $.Deferred();
 		deferred.resolve();
 		return deferred;
 	});

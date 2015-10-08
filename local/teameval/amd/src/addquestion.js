@@ -164,6 +164,10 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 		deleteQuestion: function(question) {
 			//todo
+			var questionContainer = question.find('.question-container');
+			questionContainer.triggerHandler("delete").done(function() {
+				question.remove();
+			});
 		},
 
 		initialise: function(subplugins) {

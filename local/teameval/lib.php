@@ -133,6 +133,9 @@ interface question {
      * "data-script-marker". This event must return a $.Deferred which will resolve with the new 
      * question data which will be returned from $this->submission_view.
      *
+     * You MUST also attach an event handler for the "delete" event. This handler must return
+     * a $.Deferred which will resolve with no arguments.
+     *
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();
