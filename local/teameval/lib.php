@@ -130,8 +130,8 @@ interface question {
      * template must render properly without any context.
      *
      * You MUST attach an event handler for the "save" event to the question element marked with
-     * "data-script-marker". This marker must set the 'questiondata' data attribute on the
-     * question element in order for the save to work.
+     * "data-script-marker". This event must return a $.Deferred which will resolve with the new 
+     * question data which will be returned from $this->submission_view.
      *
      * @return stdClass|array template data. @see templatable
      */

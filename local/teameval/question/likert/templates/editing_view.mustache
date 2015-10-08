@@ -2,10 +2,15 @@
 {{#js}}
 // This is necessary because require.js will NOT run synchronously
 var questionContainer = document.querySelector('*[data-script-marker]');
+
 require(['jquery'], function($) {
+	
 	questionContainer = $(questionContainer);
+
 	questionContainer.on("save", function() {
-		alert("save handler called");
+		var deferred = $.Deferred();
+		deferred.resolve();
+		return deferred;
 	});
 });
 {{/js}}

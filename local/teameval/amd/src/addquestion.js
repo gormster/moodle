@@ -104,12 +104,12 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 		editQuestion: function(question) {
 
-			questionData = question.data('questiondata') || {};
+			editingContext = question.data('editingcontext') || {};
 			questionType = question.data('questiontype');
 
 			question.find('.local-teameval-question-actions .edit').hide();
 
-			templates.render('teamevalquestion_'+questionType+'/editing_view', questionData).done(function(html, js) {
+			templates.render('teamevalquestion_'+questionType+'/editing_view', editingContext).done(function(html, js) {
 
 				var questionContainer = question.find('.question-container');
 				question.addClass('editing');
@@ -133,18 +133,20 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			// todo: do save
 
 			var questionContainer = question.find('.question-container');
-			questionContainer.trigger("save");
-
-			this.showQuestion(question);
+			questionContainer.triggerHandler("save").done(function(editingContext, submissionContext) {
+				question.data('editingcontext', editingContext);
+				question.data('submissioncontext', submissionContext);
+				this.showQuestion(question);
+			}.bind(this));
 
 		},
 
 		showQuestion: function(question) {
 
-			var questionData = question.data('questiondata') || {};
+			var submissionContext = question.data('submissioncontext') || {};
 			var questionType = question.data('questiontype');
 
-			templates.render('teamevalquestion_'+questionType+'/submission_view', questionData).done(function(html, js) {
+			templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
 
 				question.removeClass('editing');
 				question.find('.question-container').html(html);
