@@ -1,14 +1,31 @@
-<div>This is a editing test {{{test}}}</div>
+<div>This is a editing test <input type="text" value="{{{test}}}" /></div>
 {{#js}}
 // This is necessary because require.js will NOT run synchronously
 var questionContainer = document.querySelector('*[data-script-marker]');
 
-require(['jquery'], function($) {
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 	
 	questionContainer = $(questionContainer);
 
 	questionContainer.on("save", function() {
 		var deferred = $.Deferred();
+		var data = { cmid: {{_cmid}}, id: 0 };
+		{{#id?}}
+		data.id = {{id}};
+		{{/id?}}
+		data.test = questionContainer.find('input').val();
+		var promises = ajax.call([{
+			methodname: 'teamevalquestion_likert_update_question',
+			args: data
+		}]);
+
+		console.log(data);
+
+		promises[0].done(function(result) {
+			data.id = result;
+			deferred.resolve(data, data);
+		}).fail(notification.exception);
+		
 		return deferred;
 	});
 
@@ -17,5 +34,6 @@ require(['jquery'], function($) {
 		deferred.resolve();
 		return deferred;
 	});
+
 });
 {{/js}}
