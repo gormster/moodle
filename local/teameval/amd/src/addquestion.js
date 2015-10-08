@@ -194,10 +194,10 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				// Find the question container and add the button after it
 				var questionContainer = $('#local-teameval-questions');
 				var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
-				addQuestionButton.html('<a>' + _['addquestion'] + '</a>');
+				addQuestionButton.html('<a href="javascript:void(0);">' + _['addquestion'] + '</a>');
 				questionContainer.after(addQuestionButton);
 
-				addQuestionButton.click(_this.preAddQuestion.bind(_this));
+				addQuestionButton.find('a').click(_this.preAddQuestion.bind(_this));
 
 				_addButton = addQuestionButton;
 				
