@@ -10,6 +10,8 @@
   */
 define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
+	"use strict";
+
 	var _subplugins;
 
 	var _addButton;
@@ -33,7 +35,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			});
 
 			$(".local-teameval-containerbox").append(dropdown);
-			coords = _addButton.position();
+			var coords = _addButton.position();
 
 			dropdown.css('top', coords.top + 'px');
 			dropdown.css('right', '0px');
@@ -87,7 +89,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				// and our Save and Cancel buttons for editing
 
 				templates.render('local_teameval/save_cancel_buttons', {}).done(function(html, js) {
-					buttonArea = $(html);
+					var buttonArea = $(html);
 					buttonArea.find(".save").click(function() {
 						_this.saveQuestion(question);
 					});
@@ -131,7 +133,6 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			// todo: do save
 
 			var questionContainer = question.find('.question-container');
-			alert(questionContainer.html());
 			questionContainer.trigger("save");
 
 			this.showQuestion(question);
@@ -140,8 +141,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 		showQuestion: function(question) {
 
-			questionData = question.data('questiondata') || {};
-			questionType = question.data('questiontype');
+			var questionData = question.data('questiondata') || {};
+			var questionType = question.data('questiontype');
 
 			templates.render('teamevalquestion_'+questionType+'/submission_view', questionData).done(function(html, js) {
 
