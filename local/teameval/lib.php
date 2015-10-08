@@ -110,7 +110,7 @@ interface question {
     and make sure not to install event handlers twice.
 
     When the view is added to the DOM hierarchy, its container will have an attribute 
-    "data-justadded". You can use this to find your question in the hierarcy from your
+    "data-script-marker". You can use this to find your question in the hierarchy from your
     javascript. This attribute is removed as soon as your javascript has run - so if
     you are doing anything asynchronous, grab a handle before you start, because you 
     will never find it again.
@@ -128,6 +128,11 @@ interface question {
      * When being created for the first time, a question's editing view will be rendered
      * with a context consisting of just one key-value pair: _newquestion: true. This
      * template must render properly without any context.
+     *
+     * You MUST attach an event handler for the "save" event to the question element marked with
+     * "data-script-marker". This marker must set the 'questiondata' data attribute on the
+     * question element in order for the save to work.
+     *
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();

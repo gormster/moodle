@@ -72,3 +72,21 @@
     #local-teameval-questions li:hover {
         background-color:#F9F9F9;
     }
+
+    #local-teameval-questions li.editing {
+        background-color:#F9F9F9;
+        border: 1px solid #2E4B87;
+        border-radius: 5px;
+    }
+
+.local-teameval-question-actions {
+    float:right;
+}
+
+    .local-teameval-question-actions img {
+        cursor:pointer;
+    }
+
+.local-teameval-save-cancel-buttons {
+    margin-top:10px;
+}

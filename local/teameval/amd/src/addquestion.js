@@ -53,14 +53,114 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 		},
 
 		addQuestion: function(type) {
+			var _this = this;
 			templates.render('teamevalquestion_'+type+'/editing_view', {'_newquestion' : true}).done(function(html, js) {
-				var question = $('<li class="local-teameval-question" data-justadded="justadded" />');
-				question.html(html);
+				var question = $('<li class="local-teameval-question editing" />');
+				question.data('questiontype', type);
 
+				var questionContainer = $('<div class="question-container" data-script-marker="add-question" />');
+				questionContainer.html(html);
+
+				question.append(questionContainer);
 				$('#local-teameval-questions').append(question);
 				templates.runTemplateJS(js);
-				question.removeAttr("data-justadded");
+				questionContainer.removeAttr("data-script-marker");
+
+				// after we've run JS we can add our edit and delete buttons
+
+				templates.render('local_teameval/question_actions', {}).done(function(html, js) {
+
+					var actionBar = $(html);
+					question.prepend(actionBar);
+					actionBar.find('.edit').click(function() {
+						_this.editQuestion(question);
+					});
+					actionBar.find('.delete').click(function() {
+						_this.deleteQuestion(question);
+					})
+
+					// because we're already in editing view, we hide the editing button
+					actionBar.find('.edit').hide();
+
+				})
+
+				// and our Save and Cancel buttons for editing
+
+				templates.render('local_teameval/save_cancel_buttons', {}).done(function(html, js) {
+					buttonArea = $(html);
+					buttonArea.find(".save").click(function() {
+						_this.saveQuestion(question);
+					});
+					buttonArea.find(".cancel").click(function() {
+						_this.showQuestion(question);
+					});
+					question.append(buttonArea);
+				});
+
 			});
+		},
+
+		editQuestion: function(question) {
+
+			questionData = question.data('questiondata') || {};
+			questionType = question.data('questiontype');
+
+			question.find('.local-teameval-question-actions .edit').hide();
+
+			templates.render('teamevalquestion_'+questionType+'/editing_view', questionData).done(function(html, js) {
+
+				var questionContainer = question.find('.question-container');
+				question.addClass('editing');
+				questionContainer.html(html)
+					.attr('data-script-marker', 'edit-question');
+				templates.runTemplateJS(js);
+				questionContainer.removeAttr('data-script-marker');
+				question.find('.local-teameval-save-cancel-buttons').show();
+
+			}).fail(function () {
+
+				alert('wat');
+				question.find('.local-teameval-question-actions .edit').show();
+
+			});
+
+		},
+
+		saveQuestion: function(question) {
+
+			// todo: do save
+
+			var questionContainer = question.find('.question-container');
+			alert(questionContainer.html());
+			questionContainer.trigger("save");
+
+			this.showQuestion(question);
+
+		},
+
+		showQuestion: function(question) {
+
+			questionData = question.data('questiondata') || {};
+			questionType = question.data('questiontype');
+
+			templates.render('teamevalquestion_'+questionType+'/submission_view', questionData).done(function(html, js) {
+
+				question.removeClass('editing');
+				question.find('.question-container').html(html);
+				question.find('.local-teameval-save-cancel-buttons').hide();
+				question.find('.local-teameval-question-actions .edit').show();
+
+			}).fail(function(err) {
+
+				alert("fail");
+				console.log(err);
+
+			});
+
+		},
+
+		deleteQuestion: function(question) {
+			//todo
 		},
 
 		initialise: function(subplugins) {

@@ -1,1 +1,9 @@
 <div>This is a editing test {{{test}}}</div>
+{{#js}}
+require(['jquery'], function($) {
+	alert($(['data-script-marker']).length);
+	$('[data-script-marker]').on("save", function() {
+		alert("save handler called");
+	});
+});
+{{/js}}
