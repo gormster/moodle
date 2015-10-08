@@ -73,6 +73,10 @@
         background-color:#F9F9F9;
     }
 
+        #local-teameval-questions li:hover .local-teameval-question-actions {
+            visibility: visible;
+        }
+
     #local-teameval-questions li.editing {
         background-color:#F9F9F9;
         border: 1px solid #2E4B87;
@@ -81,6 +85,7 @@
 
 .local-teameval-question-actions {
     float:right;
+    visibility: hidden;
 }
 
     .local-teameval-question-actions img {
