@@ -1,8 +1,10 @@
 <div>This is a editing test {{{test}}}</div>
 {{#js}}
+// This is necessary because require.js will NOT run synchronously
+var questionContainer = document.querySelector('*[data-script-marker]');
 require(['jquery'], function($) {
-	alert($(['data-script-marker']).length);
-	$('[data-script-marker]').on("save", function() {
+	questionContainer = $(questionContainer);
+	questionContainer.on("save", function() {
 		alert("save handler called");
 	});
 });
