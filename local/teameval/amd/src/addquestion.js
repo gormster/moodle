@@ -63,13 +63,12 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				var question = $('<li class="local-teameval-question editing" />');
 				question.data('questiontype', type);
 
-				var questionContainer = $('<div class="question-container" data-script-marker="add-question" />');
+				var questionContainer = $('<div class="question-container" />');
 				questionContainer.html(html);
 
 				question.append(questionContainer);
 				$('#local-teameval-questions').append(question);
 				templates.runTemplateJS(js);
-				questionContainer.removeAttr("data-script-marker");
 
 				// after we've run JS we can add our edit and delete buttons
 
@@ -118,10 +117,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 				var questionContainer = question.find('.question-container');
 				question.addClass('editing');
-				questionContainer.html(html)
-					.attr('data-script-marker', 'edit-question');
+				questionContainer.html(html);
 				templates.runTemplateJS(js);
-				questionContainer.removeAttr('data-script-marker');
 				question.find('.local-teameval-save-cancel-buttons').show();
 
 			}).fail(function () {
