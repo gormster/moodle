@@ -1,7 +1,11 @@
 <div class="local-teameval-containerbox">
 <ol id="local-teameval-questions">
-{{#subtemplates}}
-    <li>{{{test}}}</li>
-{{/subtemplates}}
+{{#questions}}
+    <li class="local-teameval-question" data-questiontype="{{type}}" data-submissioncontext="{{submissioncontext}}" data-editingcontext="{{editingcontext}}">
+    	<div class="question-container">
+	    	{{{content}}}
+    	</div>
+    </li>
+{{/questions}}
 </ol>
 </div>

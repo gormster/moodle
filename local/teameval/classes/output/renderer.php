@@ -14,23 +14,27 @@ class renderer extends plugin_renderer_base {
 
         $context = context_module::instance($block->cm->id);
 
-        $templates = [];
-        foreach($block->subplugins as $subplugin) {
-            $t = "{$subplugin->type}_{$subplugin->name}/submission_view";
-            $cls = $subplugin->get_question_class();
-            $c = new $cls($block->cm->id);
-            $templates[] = [ "test" => $this->render_from_template($t, $c->submission_view($USER->id))];
-        }
-
         if (has_capability('local/teameval:changesettings', $context)) {
             $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
         }
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
-            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->subplugins]);
+            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->questiontypes]);
+        }
+
+        $questions = [];
+        foreach($block->questions as $q) {
+            $submissionview = $q->question->submission_view($USER->id);
+            $editingview = $q->question->editing_view($USER->id);
+            $questions[] = [
+                "content" => $this->render_from_template($q->submissiontemplate, $submissionview),
+                "type" => $q->plugininfo->name,
+                "submissioncontext" => json_encode($submissionview),
+                "editingcontext" => json_encode($editingview)
+                ];
         }
         
-        return $this->render_from_template('local_teameval/questionnaire_submission', ["subtemplates" => $templates]);
+        return $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
         
     }
 

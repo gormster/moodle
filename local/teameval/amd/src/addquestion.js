@@ -72,34 +72,47 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 				// after we've run JS we can add our edit and delete buttons
 
-				templates.render('local_teameval/question_actions', {}).done(function(html, js) {
+				_this.addEditingControls(question);
 
-					var actionBar = $(html);
-					question.prepend(actionBar);
-					actionBar.find('.edit').click(function() {
-						_this.editQuestion(question);
-					});
-					actionBar.find('.delete').click(function() {
-						_this.deleteQuestion(question);
-					})
+			});
+		},
 
-					// because we're already in editing view, we hide the editing button
-					actionBar.find('.edit').hide();
+		addEditingControls: function(question) {
+			var _this = this;
 
+			templates.render('local_teameval/question_actions', {}).done(function(html, js) {
+
+				var actionBar = $(html);
+				question.prepend(actionBar);
+				actionBar.find('.edit').click(function() {
+					_this.editQuestion(question);
+				});
+				actionBar.find('.delete').click(function() {
+					_this.deleteQuestion(question);
 				})
 
-				// and our Save and Cancel buttons for editing
+				//if we're in editing mode, hide the edit button
+				if (question.hasClass('editing')) {
+					actionBar.find('.edit').hide();
+				}
 
-				templates.render('local_teameval/save_cancel_buttons', {}).done(function(html, js) {
-					var buttonArea = $(html);
-					buttonArea.find(".save").click(function() {
-						_this.saveQuestion(question);
-					});
-					buttonArea.find(".cancel").click(function() {
-						_this.showQuestion(question);
-					});
-					question.append(buttonArea);
+			});
+
+			// and our Save and Cancel buttons for editing
+
+			templates.render('local_teameval/save_cancel_buttons', {}).done(function(html, js) {
+				var buttonArea = $(html);
+				buttonArea.find(".save").click(function() {
+					_this.saveQuestion(question);
 				});
+				buttonArea.find(".cancel").click(function() {
+					_this.showQuestion(question);
+				});
+				question.append(buttonArea);
+
+				if (!question.hasClass('editing')) {
+					buttonArea.hide();
+				}
 
 			});
 		},
@@ -178,6 +191,26 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			_cmid = cmid;
 			_subplugins = subplugins;
 
+			// stupid javascript scoping
+
+			var _this = this;
+
+			// add the controls to the questions already in the block
+
+			$('#local-teameval-questions .local-teameval-question').each(function() {
+
+				//decode JSON-encoded data attributes
+				$.each(['submissioncontext', 'editingcontext'], function(idx, val) {
+					if (typeof $(this).data(val) === 'string') {
+						ctx = JSON.parse($(this).data(val));
+						$(this).data(val, ctx);
+					}
+				}.bind(this))
+
+				
+				_this.addEditingControls($(this));
+			});
+
 			// We need some strings before we can render the button
 
 			var stringsNeeded = ['addquestion'];
@@ -185,10 +218,6 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			var promise = str.get_strings(stringsNeeded.map(function (v) {
 				return {key: v, component: 'local_teameval'};
 			}));
-
-			var _this = this;
-
-			console.log($.ui);
 
 			// we can't continue until we have some text!
 			promise.done(function(_strings) {
