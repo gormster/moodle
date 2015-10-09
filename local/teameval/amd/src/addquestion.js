@@ -148,7 +148,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 			// todo: do save
 
 			var questionContainer = question.find('.question-container');
-			questionContainer.triggerHandler("save").done(function(submissionContext, editingContext) {
+			var ordinal = question.index('.local-teameval-question');
+			questionContainer.triggerHandler("save", ordinal).done(function(submissionContext, editingContext) {
 				question.data('editingcontext', editingContext);
 				question.data('submissioncontext', submissionContext);
 				this.showQuestion(question);
