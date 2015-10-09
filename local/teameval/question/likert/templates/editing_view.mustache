@@ -9,10 +9,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
 	questionContainer.on("save", function() {
 		var deferred = $.Deferred();
-		var data = { cmid: {{_cmid}}, id: 0 };
+		var data = { cmid: {{_cmid}} };
 		{{#id?}}
 		data.id = {{id}};
 		{{/id?}}
+		data.ordinal = ordinal;
 		data.test = questionContainer.find('input').val();
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_update_question',

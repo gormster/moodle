@@ -3,6 +3,7 @@
 namespace teamevalquestion_likert;
 
 require_once("$CFG->libdir/externallib.php");
+require_once("$CFG->dirroot/local/teameval/lib.php");
 
 use external_api;
 use external_function_parameters;
@@ -14,6 +15,8 @@ use invalid_parameter_exception;
 use context_module;
 use stdClass;
 
+use local_teameval\team_evaluation;
+
 use question;
 use response;
 
@@ -24,7 +27,8 @@ class external extends external_api {
 	public static function update_question_parameters() {
 		return new external_function_parameters([
 			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
-			'id' => new external_value(PARAM_INT, 'id of question', VALUE_OPTIONAL),
+			'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
+			'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
 			'test' => new external_value(PARAM_TEXT, 'test string')
 		]);
 	}
@@ -33,7 +37,7 @@ class external extends external_api {
 		return new external_value(PARAM_INT, 'id of question');
 	}
 
-	public static function update_question($cmid, $id, $test) {
+	public static function update_question($cmid, $ordinal, $id, $test) {
 		global $DB, $USER;
 
 		$context = context_module::instance($cmid);
@@ -49,6 +53,9 @@ class external extends external_api {
 			$record->test = $test;
 			$id = $DB->insert_record('teamevalquestion_likert', $record);
 		}
+
+		$teameval = new team_evaluation($cmid);
+		$teameval->update_question("likert", $id, $ordinal);
 
 		return $id;
 
