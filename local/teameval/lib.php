@@ -87,6 +87,60 @@ class team_evaluation {
         $DB->update_record('teameval', $record);
     }
 
+    // These functions are designed to be called from question subplugins
+
+    public function update_question($type, $id, $ordinal) {
+        global $DB;
+
+        $record = $DB->get_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        if ($record) {
+            $record->ordinal = $ordinal;
+            $DB->update_record("teameval_questions", $record);
+        } else {
+            $record = new stdClass;
+            $record->cmid = $this->cm->id;
+            $record->qtype = $type;
+            $record->questionid = $id;
+            $record->ordinal = $ordinal;
+            $DB->insert_record("teameval_questions", $record);
+        }
+    }
+
+    public function delete_question($type, $id) {
+        global $DB;
+        $DB->delete_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+    }
+
+    protected function get_bare_questions() {
+        global $DB;
+        return $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), "ordinal ASC");
+    }
+
+    /**
+     * Gets all the questions in this teameval questionnaire, along with some helpful context
+     * @return stdClass ->question, ->plugininfo, ->submissiontemplate, ->editingtemplate
+     */
+    public function get_questions() {
+        global $DB;
+        $barequestions = $this->get_bare_questions();
+        
+        $questions = [];
+        $questionplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+        foreach($barequestions as $bareq) {
+            $questioninfo = new stdClass;
+
+            $questioninfo->plugininfo = $questionplugins[$bareq->qtype];
+            $cls = $questioninfo->plugininfo->get_question_class();
+            $questioninfo->question = new $cls($this->cm->id, $bareq->questionid);
+            $questioninfo->submissiontemplate = "teamevalquestion_{$bareq->qtype}/submission_view";
+            $questioninfo->editingtemplate = "teamevalquestion_{$bareq->qtype}/editing_view";
+
+            $questions[] = $questioninfo;
+        }
+
+        return $questions;
+    }
+
 }
 
 interface question {
