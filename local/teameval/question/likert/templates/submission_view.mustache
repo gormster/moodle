@@ -1,1 +1,18 @@
-<div>This is a test {{{test}}}</div>
+<div id="question-content-{{uniqid}}">This is a test {{{test}}}</div>
+{{#js}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
+	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+	questionContainer.on("delete", function () {
+		var promises = ajax.call([{
+			methodname: 'teamevalquestion_likert_delete_question',
+			args: {
+				cmid: {{_cmid}},
+				id: {{id}}
+			}
+		}]);
+
+		return promises[0];
+	});
+});
+{{/js}}

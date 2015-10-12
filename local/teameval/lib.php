@@ -113,7 +113,7 @@ class team_evaluation {
 
     public function delete_question($type, $id) {
         global $DB;
-        $DB->delete_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $DB->delete_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
     }
 
     protected function get_bare_questions() {

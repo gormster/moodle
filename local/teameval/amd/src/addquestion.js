@@ -194,9 +194,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			} else {
 				// actually delete it from the database
 				var questionContainer = question.find('.question-container');
+				console.log(questionContainer);
 				questionContainer.triggerHandler("delete").done(function() {
 					question.remove();
-				});
+				}).fail(notification.exception);
 			}
 		},
 

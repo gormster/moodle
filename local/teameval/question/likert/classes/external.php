@@ -22,7 +22,7 @@ use response;
 
 class external extends external_api {
 
-	/* update */
+	/* update_question */
 
 	public static function update_question_parameters() {
 		return new external_function_parameters([
@@ -62,6 +62,34 @@ class external extends external_api {
 	}
 
 	public static function update_question_is_allowed_from_ajax() { return true; }
+
+	/* delete_question */
+
+	public static function delete_question_parameters() {
+		return new external_function_parameters([
+			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'id' => new external_value(PARAM_INT, 'id of question')
+		]);
+	}
+
+	public static function delete_question_returns() {
+		return null;
+	}
+
+	public static function delete_question($cmid, $id) {
+		global $DB, $USER;
+
+		$context = context_module::instance($cmid);
+        self::validate_context($context);
+		require_capability('local/teameval:createquestionnaire', $context);
+
+		$DB->delete_records('teamevalquestion_likert', array('id' => $id));
+
+		$teameval = new team_evaluation($cmid);
+		$teameval->delete_question("likert", $id);
+	}
+
+	public static function delete_question_is_allowed_from_ajax() { return true; }
 
 }
 
