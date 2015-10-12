@@ -5,7 +5,6 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
 
 	questionContainer.on("save", function(evt, ordinal) {
-		console.log(ordinal);
 		var deferred = $.Deferred();
 		var data = { cmid: {{_cmid}} };
 		{{#id?}}
@@ -17,8 +16,6 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			methodname: 'teamevalquestion_likert_update_question',
 			args: data
 		}]);
-
-		console.log(data);
 
 		promises[0].done(function(result) {
 			data.id = result;

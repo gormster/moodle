@@ -91,9 +91,9 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 					_this.deleteQuestion(question);
 				})
 
-				//if we're in editing mode, hide the edit button
+				//if we're in editing mode, hide the edit and delete buttons
 				if (question.hasClass('editing')) {
-					actionBar.find('.edit').hide();
+					actionBar.hide();
 				}
 
 			});
@@ -106,7 +106,12 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 					_this.saveQuestion(question);
 				});
 				buttonArea.find(".cancel").click(function() {
-					_this.showQuestion(question);
+					// The cancel button should delete a question if it isn't saved
+					if (question.data('editingcontext') === undefined) {
+						_this.deleteQuestion(question);
+					} else {
+						_this.showQuestion(question);
+					}
 				});
 				question.append(buttonArea);
 
@@ -124,7 +129,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 			editingContext._cmid = _cmid;
 
-			question.find('.local-teameval-question-actions .edit').hide();
+			// hide the action bar
+			question.find('.local-teameval-question-actions').hide();
 
 			templates.render('teamevalquestion_'+questionType+'/editing_view', editingContext).done(function(html, js) {
 
@@ -136,8 +142,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 			}).fail(function () {
 
-				alert('wat');
-				question.find('.local-teameval-question-actions .edit').show();
+				question.find('.local-teameval-question-actions').show();
 
 			});
 
@@ -169,7 +174,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				question.removeClass('editing');
 				question.find('.question-container').html(html);
 				question.find('.local-teameval-save-cancel-buttons').hide();
-				question.find('.local-teameval-question-actions .edit').show();
+				question.find('.local-teameval-question-actions').show();
 
 			}).fail(function(err) {
 
@@ -181,10 +186,16 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 		},
 
 		deleteQuestion: function(question) {
-			var questionContainer = question.find('.question-container');
-			questionContainer.triggerHandler("delete").done(function() {
+			if (question.data('editingcontext') === undefined) {
+				// just pull it out of the DOM
 				question.remove();
-			});
+			} else {
+				// actually delete it from the database
+				var questionContainer = question.find('.question-container');
+				questionContainer.triggerHandler("delete").done(function() {
+					question.remove();
+				});
+			}
 		},
 
 		initialise: function(cmid, subplugins) {
