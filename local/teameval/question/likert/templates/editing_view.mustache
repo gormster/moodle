@@ -1,8 +1,5 @@
 <div id="question-content-{{uniqid}}">This is a editing test <input type="text" value="{{{test}}}" /></div>
 {{#js}}
-// This is necessary because require.js will NOT run synchronously
-//var questionContainer = document.querySelector('*[data-script-marker]');
-
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
