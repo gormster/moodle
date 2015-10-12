@@ -16,6 +16,14 @@ $functions = [
         'methodname'    => 'update_settings',
         'type'          => 'write'
         
+    ],
+
+    'local_teameval_questionnaire_set_order' => [
+
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'questionnaire_set_order',
+        'type'          => 'write'
+
     ]
     
 ]

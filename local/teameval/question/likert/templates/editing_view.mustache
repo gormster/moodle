@@ -19,7 +19,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
 		promises[0].done(function(result) {
 			data.id = result;
-			deferred.resolve(data, data);
+			deferred.resolve(result, data, data);
 		}).fail(notification.exception);
 		
 		return deferred;

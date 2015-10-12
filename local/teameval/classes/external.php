@@ -71,6 +71,28 @@ class external extends external_api {
 
     public static function update_settings_is_allowed_from_ajax() { return true; }
 
+    /* questionnaire_set_order */
+
+    public static function questionnaire_set_order_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
+            'order' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'list of question IDs')
+            )
+        ]);
+    }
+
+    public static function questionnaire_set_order_returns() {
+        return null;
+    }
+
+    public static function questionnaire_set_order($cmid, $order) {
+        $teameval = new team_evaluation($cmid);
+        $teameval->questionnaire_set_order($order);
+    }
+
+    public static function questionnaire_set_order_is_allowed_from_ajax() { return true; }
+
 }
 
 ?>

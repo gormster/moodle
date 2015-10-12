@@ -8,7 +8,7 @@
   * Add question button for teameval blocks
   * @module local_teameval/addquestion
   */
-define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
+define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'], function($, ui, str, templates, ajax, notification) {
 
 	"use strict";
 
@@ -89,7 +89,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				});
 				actionBar.find('.delete').click(function() {
 					_this.deleteQuestion(question);
-				})
+				});
+
 
 				//if we're in editing mode, hide the edit and delete buttons
 				if (question.hasClass('editing')) {
@@ -107,7 +108,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 				});
 				buttonArea.find(".cancel").click(function() {
 					// The cancel button should delete a question if it isn't saved
-					if (question.data('editingcontext') === undefined) {
+					if (question.data('questionid') === undefined) {
 						_this.deleteQuestion(question);
 					} else {
 						_this.showQuestion(question);
@@ -154,7 +155,8 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 			var questionContainer = question.find('.question-container');
 			var ordinal = question.index('.local-teameval-question');
-			questionContainer.triggerHandler("save", ordinal).done(function(submissionContext, editingContext) {
+			questionContainer.triggerHandler("save", ordinal).done(function(questionID, submissionContext, editingContext) {
+				question.data('questionid', questionID);
 				question.data('editingcontext', editingContext);
 				question.data('submissioncontext', submissionContext);
 				this.showQuestion(question);
@@ -186,7 +188,7 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 		},
 
 		deleteQuestion: function(question) {
-			if (question.data('editingcontext') === undefined) {
+			if (question.data('questionid') === undefined) {
 				// just pull it out of the DOM
 				question.remove();
 			} else {
@@ -196,6 +198,26 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 					question.remove();
 				});
 			}
+		},
+
+		setOrder: function() {
+			var order = $("#local-teameval-questions li").map(function() {
+				return $(this).data('questionid');
+			}).filter(function() {
+				return this !== undefined;
+			}).get();
+
+			var promises = ajax.call([{
+				methodname: 'local_teameval_questionnaire_set_order',
+				args: {
+					cmid: _cmid,
+					order: order
+				}
+			}]);
+
+			promises[0].done(function() {
+				console.log("order saved");
+			}).fail(notification.exception);
 		},
 
 		initialise: function(cmid, subplugins) {
@@ -221,6 +243,13 @@ define(['jquery', 'core/str', 'core/templates'], function($, str, templates) {
 
 				
 				_this.addEditingControls($(this));
+			});
+
+			$('#local-teameval-questions').sortable({
+				handle: '.local-teameval-question-actions .move',
+				update: function() {
+					_this.setOrder();
+				}
 			});
 
 			// We need some strings before we can render the button

@@ -11,16 +11,21 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 use renderable;
 use core_plugin_manager;
 use stdClass;
+use context_module;
 
 class team_evaluation {
 
     protected $cm;
+
+    protected $context;
 
     protected $settings;
 
     public function __construct($cmid) {
 
         $this->cm = get_coursemodule_from_id(null, $cmid);
+
+        $this->context = context_module::instance($cmid);
     
     }
 
@@ -132,6 +137,7 @@ class team_evaluation {
             $questioninfo->plugininfo = $questionplugins[$bareq->qtype];
             $cls = $questioninfo->plugininfo->get_question_class();
             $questioninfo->question = new $cls($this->cm->id, $bareq->questionid);
+            $questioninfo->questionid = $bareq->questionid;
             $questioninfo->submissiontemplate = "teamevalquestion_{$bareq->qtype}/submission_view";
             $questioninfo->editingtemplate = "teamevalquestion_{$bareq->qtype}/editing_view";
 
@@ -139,6 +145,40 @@ class team_evaluation {
         }
 
         return $questions;
+    }
+
+    public function questionnaire_set_order($order) {
+
+        global $DB, $USER;
+
+        require_capability('local/teameval:createquestionnaire', $this->context);
+
+        //first assert that $order contains ALL the question IDs and ONLY the question IDs of this teameval
+        $records = $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), '', 'id, questionid');
+        $ids = array_map(function($record) {
+            return $record->questionid;
+        }, $records);
+
+        if (count(array_diff($order, $ids)) > 0) {
+            throw new moodle_error('questionidsoutofsync', 'teameval');
+        }
+
+        // flip the records so that we've got questionids => ids
+
+        $questionids = [];
+        foreach($records as $r) {
+            $questionids[$r->questionid] = $r;
+        }
+
+        // set the ordinals according to $order
+
+        foreach($order as $i => $qid) {
+            $r = $questionids[$qid];
+            $r->ordinal = $i;
+            $bulk = $i == count($order) - 1;
+            $DB->update_record('teameval_questions', $r, $bulk);
+        }
+
     }
 
 }

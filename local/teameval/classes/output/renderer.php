@@ -29,6 +29,7 @@ class renderer extends plugin_renderer_base {
             $questions[] = [
                 "content" => $this->render_from_template($q->submissiontemplate, $submissionview),
                 "type" => $q->plugininfo->name,
+                "questionid" => $q->questionid,
                 "submissioncontext" => json_encode($submissionview),
                 "editingcontext" => json_encode($editingview)
                 ];

@@ -92,6 +92,10 @@
         cursor:pointer;
     }
 
+        .local-teameval-question-actions .move img {
+            cursor:move;
+        }
+
 .local-teameval-save-cancel-buttons {
     margin-top:10px;
 }
