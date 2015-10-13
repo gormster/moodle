@@ -40,9 +40,12 @@ class external extends external_api {
 	public static function update_question($cmid, $ordinal, $id, $test) {
 		global $DB, $USER;
 
-		$context = context_module::instance($cmid);
-        self::validate_context($context);
-		require_capability('local/teameval:createquestionnaire', $context);
+		$teameval = new team_evaluation($cmid);
+		$transaction = $teameval->should_update_question("likert", $id, $USER->id);
+
+		if ($transaction == null) {
+			throw new moodle_exception("cannotupdatequestion", "local_teameval");
+		}
 
 		if ($id > 0) {
 			$record = $DB->get_record('teamevalquestion_likert', array('id' => $id));
@@ -53,9 +56,8 @@ class external extends external_api {
 			$record->test = $test;
 			$id = $DB->insert_record('teamevalquestion_likert', $record);
 		}
-
-		$teameval = new team_evaluation($cmid);
-		$teameval->update_question("likert", $id, $ordinal);
+		
+		$teameval->update_question($transaction, "likert", $id, $ordinal);
 
 		return $id;
 
@@ -79,14 +81,16 @@ class external extends external_api {
 	public static function delete_question($cmid, $id) {
 		global $DB, $USER;
 
-		$context = context_module::instance($cmid);
-        self::validate_context($context);
-		require_capability('local/teameval:createquestionnaire', $context);
+		$teameval = new team_evaluation($cmid);
+
+		$transaction = $teameval->should_delete_question("likert", $id, $USER->id);
+		if ($transaction == null) {
+			throw new moodle_exception("cannotupdatequestion", "local_teameval");
+		}
 
 		$DB->delete_records('teamevalquestion_likert', array('id' => $id));
 
-		$teameval = new team_evaluation($cmid);
-		$teameval->delete_question("likert", $id);
+		$teameval->delete_question($transaction, "likert", $id);
 	}
 
 	public static function delete_question_is_allowed_from_ajax() { return true; }

@@ -94,7 +94,37 @@ class team_evaluation {
 
     // These functions are designed to be called from question subplugins
 
-    public function update_question($type, $id, $ordinal) {
+    /**
+     * Ask teameval if a user should be allowed to update a question. Must be called before
+     * update_question as the transaction returned from this function must be passed to
+     * update_question.
+     * 
+     * @param string $type The question subplugin type 
+     * @param int $id The question ID. 0 if new question.
+     * @param int $userid The ID of the user trying to update this question
+     * @return moodle_transaction|null Transaction if allowed, or null if not allowed
+     */
+    public function should_update_question($type, $id, $userid) {
+        global $DB;
+
+        if (has_capability('local/teameval:createquestionnaire', $this->context, $userid)) {
+            $transaction = $DB->start_delegated_transaction();
+            return $transaction;    
+        }
+
+        return null;
+    }
+
+    /**
+     * Update teameval's internal question table. You must pass a transaction returned from
+     * should_update_question.
+     * 
+     * @param moodle_transaction $transaction The transaction returned from should_update_question
+     * @param string $type The question subplugin type
+     * @param int $id The question ID
+     * @param int $ordinal The position of the question in order. This is passed to the save handler.
+     */
+    public function update_question($transaction, $type, $id, $ordinal) {
         global $DB;
 
         $record = $DB->get_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
@@ -109,11 +139,41 @@ class team_evaluation {
             $record->ordinal = $ordinal;
             $DB->insert_record("teameval_questions", $record);
         }
+
+        $transaction->allow_commit();
     }
 
-    public function delete_question($type, $id) {
+    /**
+     * Ask teameval if a user should be allowed to delete a question. Must be called before
+     * delete_question. The transaction returned from this funciton must be passed to delete_question.
+     * @param string $type The question subplugin type
+     * @param int $id The question ID
+     * @param int $userid The user ID
+     * @return moodle_transaction|null A transaction if allowed, else null
+     */
+    public function should_delete_question($type, $id, $userid) {
+        global $DB;
+
+        if (has_capability('local/teameval:createquestionnaire', $this->context, $userid)) {
+            $transaction = $DB->start_delegated_transaction();
+            return $transaction;    
+        }
+
+        return null;
+    }
+
+    /**
+     * Delete the question from teameval's internal question table. Must be passed a transaction
+     * started in should_delete_question.
+     * @param moodle_transaction $transaction The transaction from should_delete_question
+     * @param string $type The question subplugin type
+     * @param int $id The question ID
+     */
+    public function delete_question($transaction, $type, $id) {
         global $DB;
         $DB->delete_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        
+        $transaction->allow_commit();
     }
 
     protected function get_bare_questions() {
