@@ -19,6 +19,8 @@ class team_evaluation {
 
     protected $context;
 
+    protected $evalcontext;
+
     protected $settings;
 
     public function __construct($cmid) {
@@ -26,7 +28,24 @@ class team_evaluation {
         $this->cm = get_coursemodule_from_id(null, $cmid);
 
         $this->context = context_module::instance($cmid);
+
+        $this->evalcontext = $this->get_evaluation_context();
     
+    }
+
+    protected function get_evaluation_context() {
+        global $CFG;
+
+        $modname = $this->cm->modname;
+        include_once("$CFG->dirroot/mod/$modname/lib.php");
+
+        $function = "{$modname}_get_evaluation_context";
+        if (!function_exists($function)) {
+            // throw something
+            print_error("noevaluationcontext");
+        }
+
+        return $function($this->cm);
     }
 
     protected static function default_settings() {
@@ -196,7 +215,7 @@ class team_evaluation {
 
             $questioninfo->plugininfo = $questionplugins[$bareq->qtype];
             $cls = $questioninfo->plugininfo->get_question_class();
-            $questioninfo->question = new $cls($this->cm->id, $bareq->questionid);
+            $questioninfo->question = new $cls($this, $bareq->questionid);
             $questioninfo->questionid = $bareq->questionid;
             $questioninfo->submissiontemplate = "teamevalquestion_{$bareq->qtype}/submission_view";
             $questioninfo->editingtemplate = "teamevalquestion_{$bareq->qtype}/editing_view";
@@ -241,6 +260,12 @@ class team_evaluation {
 
     }
 
+    // interface to evalcontext
+
+    public function group_for_user($userid) {
+        return $this->evalcontext->group_for_user($userid);
+    }
+
 }
 
 interface question {
@@ -249,7 +274,7 @@ interface question {
      * @param int $cmid the ID of the coursemodule for this teameval instance
      * @param int $questionid the ID of the question. may be null if this is a new question.
      */
-    public function __construct($cmid, $questionid = null);
+    public function __construct(team_evaluation $teameval, $questionid = null);
     
     /*
 

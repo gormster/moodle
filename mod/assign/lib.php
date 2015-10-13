@@ -1379,3 +1379,8 @@ function assign_pluginfile($course,
     }
     send_stored_file($file, 0, 0, $forcedownload, $options);
 }
+
+function assign_get_evaluation_context($cm) {
+    $assign = new assign(context_module::instance($cm->id), $cm, null);
+    return new \mod_assign\evaluation_context($assign);
+}
