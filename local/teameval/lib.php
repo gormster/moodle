@@ -19,6 +19,8 @@ class team_evaluation {
 
     protected $context;
 
+    protected $evalcontext;
+
     protected $settings;
 
     public function __construct($cmid) {
@@ -26,7 +28,24 @@ class team_evaluation {
         $this->cm = get_coursemodule_from_id(null, $cmid);
 
         $this->context = context_module::instance($cmid);
+
+        $this->evalcontext = $this->get_evaluation_context();
     
+    }
+
+    protected function get_evaluation_context() {
+        global $CFG;
+
+        $modname = $this->cm->modname;
+        include_once("$CFG->dirroot/mod/$modname/lib.php");
+
+        $function = "{$modname}_get_evaluation_context";
+        if (!function_exists($function)) {
+            // throw something
+            print_error("noevaluationcontext");
+        }
+
+        return $function($this->cm);
     }
 
     protected static function default_settings() {
