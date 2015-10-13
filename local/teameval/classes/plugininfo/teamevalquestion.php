@@ -13,6 +13,10 @@ class teamevalquestion extends \core\plugininfo\base {
     public function get_response_class() {
         return "\\teamevalquestion_{$this->name}\\response";
     }
+
+    public function is_uninstall_allowed() {
+    	return true;
+    }
     
 }
 
