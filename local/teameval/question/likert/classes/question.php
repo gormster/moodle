@@ -5,21 +5,26 @@ namespace teamevalquestion_likert;
 class question implements \local_teameval\question {
     
     protected $id;
-    protected $cm;
+    protected $teameval;
     protected $title;
     protected $description;
     protected $minval;
     protected $maxval;
 
-    public function __construct($cmid, $questionid = null) {
+    public function __construct(\local_teameval\team_evaluation $teameval, $questionid = null) {
         global $DB;
-        $record = $DB->get_record('teamevalquestion_likert', array("id" => $questionid));
 
         $this->id               = $questionid;
-        $this->title            = $record->title;
-        $this->description      = $record->description;
-        $this->minval           = $record->minval;
-        $this->maxval           = $record->maxval;
+        $this->teameval         = $teameval;
+
+        if ($questionid > 0) {
+            $record = $DB->get_record('teamevalquestion_likert', array("id" => $questionid));
+
+            $this->title            = $record->title;
+            $this->description      = $record->description;
+            $this->minval           = $record->minval;
+            $this->maxval           = $record->maxval;
+        }
     }
     
     public function submission_view($userid) {
