@@ -29,7 +29,10 @@ class external extends external_api {
 			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
 			'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
 			'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
-			'test' => new external_value(PARAM_TEXT, 'test string')
+			'title' => new external_value(PARAM_TEXT, 'title of question'),
+			'description' => new external_value(PARAM_RAW, 'description of question'),
+			'minval' => new external_value(PARAM_INT, 'minimum value'),
+			'maxval' => new external_value(PARAM_INT, 'maximum value')
 		]);
 	}
 
@@ -37,7 +40,7 @@ class external extends external_api {
 		return new external_value(PARAM_INT, 'id of question');
 	}
 
-	public static function update_question($cmid, $ordinal, $id, $test) {
+	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval) {
 		global $DB, $USER;
 
 		$teameval = new team_evaluation($cmid);
@@ -47,16 +50,23 @@ class external extends external_api {
 			throw new moodle_exception("cannotupdatequestion", "local_teameval");
 		}
 
+		//get or create the record
+		$record = ($id > 0) ? $DB->get_record('teamevalquestion_likert', array('id' => $id)) : new stdClass;
+		
+		//update the values
+		$record->title = $title;
+		$record->description = $description;
+		$record->minval = min(max(0, $minval), 1); //between 0 and 1
+		$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+
+		//save the record back to the DB
 		if ($id > 0) {
-			$record = $DB->get_record('teamevalquestion_likert', array('id' => $id));
-			$record->test = $test;
 			$DB->update_record('teamevalquestion_likert', $record);
 		} else {
-			$record = new stdClass;
-			$record->test = $test;
 			$id = $DB->insert_record('teamevalquestion_likert', $record);
 		}
 		
+		//finally tell the teameval we're done
 		$teameval->update_question($transaction, "likert", $id, $ordinal);
 
 		return $id;

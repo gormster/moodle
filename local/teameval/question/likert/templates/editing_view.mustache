@@ -1,8 +1,48 @@
-<div id="question-content-{{uniqid}}">This is a editing test <input type="text" value="{{{test}}}" /></div>
+<div id="question-content-{{uniqid}}">
+<form class="form-horizontal">
+	<div class="control-group">
+	    <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_likert{{/str}}</label>
+	    <div class="controls">
+	    	<input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
+	    </div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_likert{{/str}}</label>
+		<div class="controls">
+			<textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+		</div>
+	</div>
+	<div class="control-group">
+		<span class="control-label">{{#str}}scorerange, teamevalquestion_likert{{/str}}</span>
+		<div class="controls">
+			From
+				<select id="question-minval-{{uniqid}}" aria-label="question range minimum" {{#minval}}data-selected="{{minval}}"{{/minval}}>
+					<option value="0">0</option>
+					<option value="1" selected>1</option>
+				</select>
+			to
+				<select id="question-maxval-{{uniqid}}" aria-label="question range maximum" {{#maxval}}data-selected="{{maxval}}"{{/maxval}}>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5" selected>5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+				</select>
+		</div>
+	</div>
+</form>
+</div>
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+	questionContainer.find('select[data-selected]').each(function() {
+		$(this).val($(this).data('selected'));
+	});
 
 	questionContainer.on("save", function(evt, ordinal) {
 		var deferred = $.Deferred();
@@ -11,7 +51,10 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		data.id = {{id}};
 		{{/id}}
 		data.ordinal = ordinal;
-		data.test = questionContainer.find('input').val();
+		data.title = $('#question-title-{{uniqid}}').val();
+		data.description = $('#question-description-{{uniqid}}').val();
+		data.minval = $('#question-minval-{{uniqid}}').val();
+		data.maxval = $('#question-maxval-{{uniqid}}').val();
 
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_update_question',
