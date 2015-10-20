@@ -111,6 +111,10 @@ class team_evaluation {
         $DB->update_record('teameval', $record);
     }
 
+    public function get_context() {
+        return $this->context;
+    }
+
     // These functions are designed to be called from question subplugins
 
     /**

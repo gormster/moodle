@@ -16,7 +16,7 @@ class evaluation_context extends \local_teameval\evaluation_context {
 
 	public function group_for_user($userid) {
 		$grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
-		$groups = groups_get_all_groups($this->assign->course, $userid, $grouping);
+		$groups = groups_get_all_groups($this->assign->get_course()->id, $userid, $grouping);
 		if(count($groups) == 1) {
 			return $groups[0];
 		}

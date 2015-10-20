@@ -1381,6 +1381,8 @@ function assign_pluginfile($course,
 }
 
 function assign_get_evaluation_context($cm) {
+    global $CFG;
+    require_once($CFG->dirroot . '/mod/assign/locallib.php');
     $assign = new assign(context_module::instance($cm->id), $cm, null);
     return new \mod_assign\evaluation_context($assign);
 }
