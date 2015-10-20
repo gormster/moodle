@@ -137,7 +137,9 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 				var questionContainer = question.find('.question-container');
 				question.addClass('editing');
-				questionContainer.html(html);
+
+				//disable the events that are registered in submission_view
+				questionContainer.html(html).off("delete");
 				templates.runTemplateJS(js);
 				question.find('.local-teameval-save-cancel-buttons').show();
 
@@ -174,7 +176,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
 
 				question.removeClass('editing');
-				question.find('.question-container').html(html);
+				//disable the events that are registered in editing_view
+				question.find('.question-container').html(html).off("save");
 				question.find('.local-teameval-save-cancel-buttons').hide();
 				question.find('.local-teameval-question-actions').show();
 
