@@ -1,0 +1,30 @@
+.teamevalquestion-likert-question-submission h3 {
+	font-size: 1.5em;
+	margin:0;
+}
+
+.teamevalquestion-likert-question-submission .responses {
+	width: 100%;
+	border: 1px solid #CCC;
+	margin-top: 5px;
+}
+
+.teamevalquestion-likert-question-submission .responses thead {
+	border-bottom: 1px solid #CCC;
+}
+
+.teamevalquestion-likert-question-submission .responses th, 
+.teamevalquestion-likert-question-submission .responses td {
+	text-align: center;
+	padding: 5px;
+}
+
+.teamevalquestion-likert-question-submission .responses th.first {
+	width: 1px;
+	white-space: nowrap;
+	text-align: left;
+}
+
+.teamevalquestion-likert-question-submission .responses td input {
+	margin:0;
+}

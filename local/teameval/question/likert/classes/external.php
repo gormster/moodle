@@ -32,7 +32,13 @@ class external extends external_api {
 			'title' => new external_value(PARAM_TEXT, 'title of question'),
 			'description' => new external_value(PARAM_RAW, 'description of question'),
 			'minval' => new external_value(PARAM_INT, 'minimum value'),
-			'maxval' => new external_value(PARAM_INT, 'maximum value')
+			'maxval' => new external_value(PARAM_INT, 'maximum value'),
+			'meanings' => new external_multiple_structure(
+				new external_single_structure([
+					'value' => new external_value(PARAM_INT, 'value meaning represents'),
+					'meaning' => new external_value(PARAM_TEXT, 'meaning of value')
+				])
+			)
 		]);
 	}
 
@@ -40,7 +46,7 @@ class external extends external_api {
 		return new external_value(PARAM_INT, 'id of question');
 	}
 
-	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval) {
+	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
 		global $DB, $USER;
 
 		$teameval = new team_evaluation($cmid);
@@ -58,6 +64,15 @@ class external extends external_api {
 		$record->description = $description;
 		$record->minval = min(max(0, $minval), 1); //between 0 and 1
 		$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+
+		$record->meanings = [];
+		foreach ($meanings as $m) {
+			$record->meanings[$m['value']] = $m['meaning'];
+		}
+
+		$record->meanings = json_encode($record->meanings);
+
+		error_log(print_r($record->meanings,true));
 
 		//save the record back to the DB
 		if ($id > 0) {

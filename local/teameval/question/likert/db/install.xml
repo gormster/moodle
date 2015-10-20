@@ -10,7 +10,8 @@
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The title of the question"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Description of the criterion"/>
         <FIELD NAME="minval" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="The lowest value allowed in the Likert scale. Either 0 or 1."/>
-        <FIELD NAME="maxval" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="5" SEQUENCE="false" COMMENT="The highest number in the Likert scale."/>
+        <FIELD NAME="maxval" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="5" SEQUENCE="false" COMMENT="The highest number in the Likert scale."/>
+        <FIELD NAME="meanings" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON-encoded meanings for some or all of the allowed values in the Likert scale."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

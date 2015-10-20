@@ -24,6 +24,7 @@ class question implements \local_teameval\question {
             $this->description      = $record->description;
             $this->minval           = $record->minval;
             $this->maxval           = $record->maxval;
+            $this->meanings         = json_decode($record->meanings);
         }
     }
     
@@ -31,16 +32,59 @@ class question implements \local_teameval\question {
         global $DB;
 
         $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description];
-        
-        // get any response this user has given already
-        $response = response($this->id, $userid);
-        $marks = $response->raw_marks();
+
+        // if the user can respond to this teameval
+
+        $options = [];
+        for ($i=$this->minval; $i <= $this->maxval; $i++) { 
+            $o = ["value" => $i];
+            if (isset($this->meanings->$i)) {
+                $o["meaning"] = $this->meanings->$i;
+            }
+            $options[] = $o;
+        }
+
+        $context['options'] = $options;
+        $context['optionswidth'] = 100 / ($this->maxval - $this->minval + 1);
+
+        if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
+            // get any response this user has given already
+            $response = new response($this->id, $userid);
+            $marks = $response->raw_marks();
+
+            $group = $this->teameval->group_for_user($userid);
+            print_r($group);
+        } else {
+            $context['demo'] = true;
+            $context['users'] = [
+                [
+                    "name" => "Example user",
+                    "userid" => 0,
+                    "options" => $options
+                ]
+            ];
+        }
 
         return $context;
     }
     
     public function editing_view() {
-        return array("id" => $this->id, "test" => $this->test);
+        global $DB;
+
+        $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description];
+
+        $meanings = [];
+        for ($i=$this->minval; $i <= $this->maxval; $i++) { 
+            $o = ["value" => $i];
+            if (isset($this->meanings->$i)) {
+                $o["meaning"] = $this->meanings->$i;
+            }
+            $meanings[] = $o;
+        }
+
+        $context['meanings'] = $meanings;
+
+        return $context;
     }
     
     public function update($formdata) {

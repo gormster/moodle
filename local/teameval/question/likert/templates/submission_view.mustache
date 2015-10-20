@@ -1,4 +1,26 @@
-<div id="question-content-{{uniqid}}">This is a test {{{test}}}</div>
+<div id="question-content-{{uniqid}}" class="teamevalquestion-likert-question-submission">
+	<h3>{{title}}</h3>
+	{{description}}
+	<table class="responses">
+		<thead>
+			<tr>
+				<th class="first">Name</th>
+				{{#options}}
+				<th style="width:{{optionswidth}}%">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
+				{{/options}}
+			</tr>
+		</thead>
+		<tbody>
+			{{#users}}
+			<tr>
+				<th class="first">{{name}}</th>
+				{{#options}}
+					<td><input type="radio" name="question-{{uniqid}}-marks-for-{{userid}}" /></td>
+				{{/options}}
+			{{/users}}
+		</tbody>
+	</table>
+</div>
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');

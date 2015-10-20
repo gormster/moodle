@@ -33,6 +33,16 @@
 				</select>
 		</div>
 	</div>
+	<div class="control-group">
+		<span class="control-label">{{#str}}meanings, teamevalquestion_likert{{/str}}</span>
+		<div class="controls">
+			<ol id="question-meanings-{{uniqid}}">
+			{{#meanings}}
+				<li value="{{value}}"><input type="text" value="{{meaning}}" /></li>
+			{{/meanings}}
+			</ol>
+		</div>
+	</div>
 </form>
 </div>
 {{#js}}
@@ -40,11 +50,43 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
 
+	var _meanings = {};
+
 	questionContainer.find('select[data-selected]').each(function() {
 		$(this).val($(this).data('selected'));
 	});
 
+	function updateMeanings() {
+		var minval = $('#question-minval-{{uniqid}}').val();
+		var maxval = $('#question-maxval-{{uniqid}}').val();
+
+		// fetch our current meanings
+		$('#question-meanings-{{uniqid}} li').each( function(idx) {
+			_meanings[this.value] = $(this).find('input').val();
+		});
+
+		// make new textboxes
+
+		$('#question-meanings-{{uniqid}}').empty();
+
+		for(var i = minval; i <= maxval; i++) {
+			var li = $('<li />');
+			var textbox = $('<input type="text">');
+			if(_meanings[i]) {
+				textbox.val(_meanings[i]);
+			}
+			li.append(textbox);
+			li.prop('value', i);
+			$('#question-meanings-{{uniqid}}').append(li);
+		}		
+	}
+
+	{{#_newquestion}} updateMeanings(); {{/_newquestion}}
+	questionContainer.find('#question-minval-{{uniqid}}, #question-maxval-{{uniqid}}').change(updateMeanings);
+
 	questionContainer.on("save", function(evt, ordinal) {
+		updateMeanings();
+
 		var deferred = $.Deferred();
 		var data = { cmid: {{_cmid}} };
 		{{#id}}
@@ -55,15 +97,31 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		data.description = $('#question-description-{{uniqid}}').val();
 		data.minval = $('#question-minval-{{uniqid}}').val();
 		data.maxval = $('#question-maxval-{{uniqid}}').val();
+		data.meanings = $.map(_meanings, function(v, k) { 
+			return {'value': k, 'meaning':v}; 
+		});
 
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_update_question',
 			args: data
 		}]);
 
+		//submission context needs an example student, as well
+		var submissionContext = $.extend({}, data, {
+			users: {
+				userid: 0,
+				name: "Example User"
+			},
+			optionswidth: (100 / data.maxval - data.minval + 1)
+		});
+
+		submissionContext.options = $.map(_meanings, function (v, k) {
+			return {'value': k, 'meaning':v}; 
+		});
+
 		promises[0].done(function(result) {
 			data.id = result;
-			deferred.resolve(result, data, data);
+			deferred.resolve(result, submissionContext, data);
 		}).fail(notification.exception);
 		
 		return deferred;
