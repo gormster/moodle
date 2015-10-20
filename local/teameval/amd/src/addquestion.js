@@ -248,6 +248,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 			$('#local-teameval-questions').sortable({
 				handle: '.local-teameval-question-actions .move',
+				axis: "y",
 				update: function() {
 					_this.setOrder();
 				}
