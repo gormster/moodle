@@ -63,21 +63,21 @@
     margin-right:26px;
 }
 
-#local-teameval-questions li {
+#local-teameval-questions .local-teameval-question {
     list-style: none;
     padding: 10px;
     margin-bottom: 5px;
 }
 
-    #local-teameval-questions li:hover {
+    #local-teameval-questions .local-teameval-question:hover {
         background-color:#F9F9F9;
     }
 
-        #local-teameval-questions li:hover .local-teameval-question-actions {
+        #local-teameval-questions .local-teameval-question:hover .local-teameval-question-actions {
             visibility: visible;
         }
 
-    #local-teameval-questions li.editing {
+    #local-teameval-questions .local-teameval-question.editing {
         background-color:#F9F9F9;
         border: 1px solid #2E4B87;
         border-radius: 5px;
