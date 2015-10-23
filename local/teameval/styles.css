@@ -67,6 +67,7 @@
     list-style: none;
     padding: 10px;
     margin-bottom: 5px;
+    position: relative;
 }
 
     #local-teameval-questions .local-teameval-question:hover {
@@ -81,6 +82,15 @@
         background-color:#F9F9F9;
         border: 1px solid #2E4B87;
         border-radius: 5px;
+    }
+
+    #local-teameval-questions .local-teameval-question .ui-blocker {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background-color: hsla(0, 0%, 70%, 0.3);
     }
 
 .local-teameval-question-actions {
