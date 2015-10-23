@@ -53,7 +53,25 @@ class question implements \local_teameval\question {
             $marks = $response->raw_marks();
 
             $group = $this->teameval->group_for_user($userid);
-            print_r($group);
+            
+            $members = groups_get_members($group->id);
+            foreach ($members as $user) {
+                $opts = $options;
+
+                if (isset($marks[$user->id])) {
+                    $mark = $marks[$user->id];
+                    foreach($opts as $o) {
+                        if ($o['value'] == $mark) { $o['checked'] = true; break; }
+                    }
+                }
+
+                $context['users'][] = [
+                    "name" => fullname($user),
+                    "userid" => $user->id,
+                    "options" => $opts
+                ];
+            }
+
         } else {
             $context['demo'] = true;
             $context['users'] = [
