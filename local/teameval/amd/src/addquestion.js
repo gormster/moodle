@@ -181,6 +181,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				question.find('.local-teameval-save-cancel-buttons').hide();
 				question.find('.local-teameval-question-actions').show();
 
+				templates.runTemplateJS(js);
+
 			}).fail(function(err) {
 
 				alert("fail");
