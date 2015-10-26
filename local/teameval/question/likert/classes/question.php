@@ -56,13 +56,14 @@ class question implements \local_teameval\question {
             
             $members = groups_get_members($group->id);
             foreach ($members as $user) {
-                $opts = $options;
+                $opts = [];
 
-                if (isset($marks[$user->id])) {
-                    $mark = $marks[$user->id];
-                    foreach($opts as $o) {
-                        if ($o['value'] == $mark) { $o['checked'] = true; break; }
+                foreach($options as $o) {
+                    if (isset($marks[$user->id])) {
+                        $mark = $marks[$user->id];
+                        if ($o['value'] == $mark) { $o['checked'] = true; }
                     }
+                    $opts[] = $o;
                 }
 
                 $context['users'][] = [

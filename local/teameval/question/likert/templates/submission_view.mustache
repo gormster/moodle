@@ -15,7 +15,7 @@
 			<tr>
 				<th class="first">{{name}}</th>
 				{{#options}}
-					<td><input type="radio" name="question-{{uniqid}}-marks-for-{{userid}}" data-touser="{{userid}}" value="{{value}}" /></td>
+					<td><input type="radio" name="question-{{uniqid}}-marks-for-{{userid}}" data-touser="{{userid}}" value="{{value}}" {{#checked}}checked{{/checked}} /></td>
 				{{/options}}
 			{{/users}}
 		</tbody>
@@ -38,16 +38,19 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 	});
 
 	questionContainer.on("submit", function () {
-		var marks = {};
-		$('responses tbody input[type="radio"]').each(function(v, k) {
-			if (this.checked) {
-				var toUser = $(this).data('touser');
-				marks[toUser] = this.value;
-			}
+		var marks = [];
+		$('#question-content-{{uniqid}} .responses tbody input[type="radio"]:checked').each(function(v, k) {
+			var toUser = $(this).data('touser');
+			var m = {};
+			m.touser = toUser;
+			m.value = this.value;
+			marks.push(m);
 		});
 
+		console.log(marks);
+
 		var promises = ajax.call([{
-			methodname: 'teamevalquestion_likert_submit_question',
+			methodname: 'teamevalquestion_likert_submit_response',
 			args: {
 				cmid: {{_cmid}},
 				id: {{id}},
