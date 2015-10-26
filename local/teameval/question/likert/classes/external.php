@@ -17,9 +17,6 @@ use stdClass;
 
 use local_teameval\team_evaluation;
 
-use question;
-use response;
-
 class external extends external_api {
 
 	/* update_question */
@@ -119,6 +116,46 @@ class external extends external_api {
 	}
 
 	public static function delete_question_is_allowed_from_ajax() { return true; }
+
+	/* submit_response */
+
+	public static function submit_response_parameters() {
+		return new external_function_parameters([
+			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'id' => new external_value(PARAM_INT, 'id of question'),
+			'marks' => new external_multiple_structure(
+				new external_single_structure([
+					'touser' => new external_value(PARAM_INT, 'userid of user being rated'),
+					'value' => new external_value(PARAM_INT, 'selected value')	
+				])
+			)
+		]);
+	}
+
+	public static function submit_response_returns() {
+		return null;
+	}
+
+	public static function submit_response($cmid, $id, $marks) {
+		global $DB, $USER;
+
+		$teameval = new team_evaluation($cmid);
+
+		if ($teameval->can_submit_response('likert', $id, $USER->id)) {
+			$formdata = [];
+			
+			foreach($marks as $m) {
+				$touser = $m['touser'];
+				$value = $m['value'];
+				$formdata[$touser] = $value;
+			}
+
+			$response = new response($id, $USER->id);
+			$response->update_response($formdata);
+		}
+	}
+
+	public static function submit_response_is_allowed_from_ajax() { return true; }
 
 }
 

@@ -2,6 +2,8 @@
 
 namespace teamevalquestion_likert;
 
+use stdClass;
+
 class response implements \local_teameval\response {
 
 	protected $questionid;
@@ -18,11 +20,39 @@ class response implements \local_teameval\response {
     	foreach($records as $r) {
     		$this->responses[$r->touser] = $r;
     	}
+
+        $this->userid = $userid;
+        $this->questionid = $questionid;
     	
     }
     
+    /**
+     * Update responses from given user data
+     * @param array $formdata userid => mark
+     * @return null
+     */
     public function update_response($formdata) {
-        //todo
+        global $DB;
+
+        foreach($formdata as $userid => $mark) {
+            if (isset($this->responses[$userid])) {
+                $record = $this->responses[$userid];
+                $record->mark = $mark;
+                $record->markdate = time();
+                $DB->update_record("teamevalquestion_likert_resp", $record);
+                $this->responses[$userid] = $record;
+            } else {
+                $record = new stdClass;
+                $record->fromuser = $this->userid;
+                $record->questionid = $this->questionid;
+                $record->touser = $userid;
+                $record->mark = $mark;
+                $record->markdate = time();
+                $id = $DB->insert_record("teamevalquestion_likert_resp", $record);
+                $record->id = $id;
+                $this->responses[$userid] = $record;
+            }
+        }
     }
 
     public function raw_marks() {

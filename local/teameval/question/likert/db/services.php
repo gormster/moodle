@@ -16,6 +16,14 @@ $functions = [
         'methodname'    => 'delete_question',
         'type'          => 'write'
 
+    ],
+
+    'teamevalquestion_likert_submit_response' => [
+
+        'classname'     => 'teamevalquestion_likert\external',
+        'methodname'    => 'submit_response',
+        'type'          => 'write'
+
     ]
     
 ]
