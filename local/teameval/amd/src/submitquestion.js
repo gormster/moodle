@@ -30,7 +30,12 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function(
 
 			});
 
-		}
+			var allPromises  = $.when.apply($, promises);
+			allPromises.done(function() {
+				$('.local-teameval-submit-buttons .results.saved').show('fast').delay(5000).hide('fast');
+			}).fail(notification.exception);
+
+		},
 
 		initialise: function(cmid) {
 			

@@ -199,6 +199,19 @@ class team_evaluation {
         $transaction->allow_commit();
     }
 
+    public function can_submit_response($type, $id, $userid) {
+        global $DB;
+
+        //first verify that the quesiton is in this teameval
+        $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+
+        if ($isquestion > 0) {
+            return has_capability('local/teameval:submitquestionnaire', $this->context, $userid);
+        }
+
+        return false;
+    }
+
     protected function get_bare_questions() {
         global $DB;
         return $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), "ordinal ASC");
