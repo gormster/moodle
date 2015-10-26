@@ -109,3 +109,8 @@
 .local-teameval-save-cancel-buttons {
     margin-top:10px;
 }
+
+.local-teameval-submit-buttons .results {
+    display:none;
+    color:red;
+}

@@ -9,5 +9,6 @@
     $string['subplugintype_teamevalevaluator_plural'] = 'Evaluators';
 
     $string['addquestion'] = 'Add Question';
+    $string['saved'] = 'Saved!';
 
 ?>
