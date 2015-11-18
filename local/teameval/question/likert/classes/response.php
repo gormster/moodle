@@ -65,6 +65,33 @@ class response implements \local_teameval\response {
     	return $context;
     }
 
+    public function marks_given() {
+        //TODO: Should I make sure the number of responses == the number of people in the group?
+        return count($this->responses) > 0 ? true : false;
+    }
+
+    public function opinion_of($userid) {
+        $this->fix_responses();
+
+        $total = array_sum($this->responses);
+        return $this->responses[$userid] / (float)$total;
+    }
+
+    /**
+     * Constrains the given responses to the actual teammates of this user
+     */
+    protected function fix_responses() {
+        if ($this->marks_given()) {
+            $self = $this->teameval->get_settings()->self;
+            $teammates = $this->teameval->teammates($this->userid, $self);
+            foreach($this->responses as $k => $v) {
+                if (!isset($teammates[$k])) {
+                    unset($this->responses[$k]);
+                }
+            }
+        }
+    }
+
 }
 
 ?>
