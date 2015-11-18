@@ -97,7 +97,8 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		data.description = $('#question-description-{{uniqid}}').val();
 		data.minval = $('#question-minval-{{uniqid}}').val();
 		data.maxval = $('#question-maxval-{{uniqid}}').val();
-		data.meanings = $.map(_meanings, function(v, k) { 
+		data.meanings = $.map(_meanings, function(v, k) {
+		 	if ((k < data.minval) || (k > data.maxval)) return;
 			return {'value': k, 'meaning':v}; 
 		});
 
@@ -115,9 +116,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			optionswidth: (100 / data.maxval - data.minval + 1)
 		});
 
-		submissionContext.options = $.map(_meanings, function (v, k) {
-			return {'value': k, 'meaning':v}; 
-		});
+		submissionContext.options = [];
+		for(var i  = data.minval; i <= data.maxval; i++) {
+			var meaning = _meanings[i];
+			submissionContext.options.push({'value': i, 'meaning':meaning});
+		}
 
 		promises[0].done(function(result) {
 			data.id = result;
