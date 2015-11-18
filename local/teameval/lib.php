@@ -373,16 +373,28 @@ interface question {
 interface response {
     
     /**
-     * @param int $questionid the ID of the question this is a response to
+     * @param team_evaluation $teameval the teamevaluation object this response belongs to
+     * @param question $question the question object of the question this is a response to
      * @param int $userid the ID of the user responding to this question
-     * @param int $responseid the ID of the response. may be null if this is a new response.
      */
-    public function __construct($questionid, $userid, $responseid = null);
+    public function __construct(team_evaluation $teameval, question $question, $userid);
     
     /**
      * @return int Response ID
      */
     public function update_response($formdata);
+
+    /**
+     * @return bool Has a response been given by this user?
+     */
+    public function marks_given();
+
+    /**
+     * What is this user's opinion of a particular teammate? All opinions add to 1.0.
+     * @param type $userid Team mate's user ID
+     * @return type
+     */
+    public function opinion_of($userid);
     
 }
 
