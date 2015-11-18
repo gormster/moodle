@@ -55,6 +55,7 @@ class team_evaluation {
         $settings = new stdClass;
         $settings->enabled = true;
         $settings->public = false;
+        $settings->self = true;
         $settings->fraction = 0.5;
         $settings->noncompletionpenalty = 0.1;
         $settings->deadline = null;
@@ -100,7 +101,7 @@ class team_evaluation {
         $this->get_settings();
 
         //todo: validate
-        foreach(['enabled', 'public', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
+        foreach(['enabled', 'public', 'self', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
             if (isset($settings->$i)) {
                 $this->settings->$i = $settings->$i;
             }
@@ -283,6 +284,32 @@ class team_evaluation {
         return $this->evalcontext->group_for_user($userid);
     }
 
+    // convenience functions
+
+    /**
+     * Gets the teammates in a user's team. Called a lot, so the results are cached.
+     * @param type $userid User to get the teammates for
+     * @return type
+     */
+    public function teammates($userid, $include_self=false) {
+        static $groupcache = [];
+
+        $group = $this->group_for_user($userid);
+
+        if (!isset($groupcache[$group->id])) {
+            $members = groups_get_members($group->id);   
+            $groupcache[$group->id] = $members; 
+        } else {
+            $members = $groupcache[$group->id];
+        }
+        
+        if($include_self == false) {
+            unset($members[$userid]);
+        }
+
+        return $members;
+    }
+
 }
 
 interface question {
@@ -346,16 +373,28 @@ interface question {
 interface response {
     
     /**
-     * @param int $questionid the ID of the question this is a response to
+     * @param team_evaluation $teameval the teamevaluation object this response belongs to
+     * @param question $question the question object of the question this is a response to
      * @param int $userid the ID of the user responding to this question
-     * @param int $responseid the ID of the response. may be null if this is a new response.
      */
-    public function __construct($questionid, $userid, $responseid = null);
+    public function __construct(team_evaluation $teameval, question $question, $userid);
     
     /**
      * @return int Response ID
      */
     public function update_response($formdata);
+
+    /**
+     * @return bool Has a response been given by this user?
+     */
+    public function marks_given();
+
+    /**
+     * What is this user's opinion of a particular teammate? All opinions add to 1.0.
+     * @param type $userid Team mate's user ID
+     * @return type
+     */
+    public function opinion_of($userid);
     
 }
 

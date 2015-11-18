@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/teameval/db" VERSION="20150925" COMMENT="XMLDB file for Moodle local/teameval"
+<XMLDB PATH="local/teameval/db" VERSION="20151118" COMMENT="XMLDB file for Moodle local/teameval"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -9,6 +9,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="If evaluation is enabled for this course module"/>
         <FIELD NAME="public" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If the questionnaire for this puppy is public. Otherwise it is only available within the course or course category depending on site-wide settings."/>
+        <FIELD NAME="self" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="True if self-assessment is enabled for this team evaluation"/>
         <FIELD NAME="fraction" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="50" SEQUENCE="false" DECIMALS="2" COMMENT="The percentage of the evaluation score that is used to calculate a user's final score."/>
         <FIELD NAME="noncompletionpenalty" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="10" SEQUENCE="false" DECIMALS="2" COMMENT="The penalty for non-completion of the evaluation form."/>
         <FIELD NAME="deadline" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last possible date for submission of the questionnaire by users."/>
