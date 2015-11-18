@@ -150,7 +150,8 @@ class external extends external_api {
 				$formdata[$touser] = $value;
 			}
 
-			$response = new response($id, $USER->id);
+			$question = new question($teameval, $id);
+			$response = new response($teameval, $question, $USER->id);
 			$response->update_response($formdata);
 		}
 	}

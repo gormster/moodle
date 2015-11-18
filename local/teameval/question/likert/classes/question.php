@@ -49,7 +49,7 @@ class question implements \local_teameval\question {
 
         if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
             // get any response this user has given already
-            $response = new response($this->id, $userid);
+            $response = new response($this->teameval, $this, $userid);
             $marks = $response->raw_marks();
 
             $group = $this->teameval->group_for_user($userid);

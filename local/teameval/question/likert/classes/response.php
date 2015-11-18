@@ -6,14 +6,19 @@ use stdClass;
 
 class response implements \local_teameval\response {
 
-	protected $questionid;
+    protected $teameval;
+	protected $question;
 	protected $userid;
 	protected $responses;
 
-    public function __construct($questionid, $userid, $responseid = null) {
+    public function __construct($teameval, $question, $userid, $responseid = null) {
         global $DB;
 
-    	$records = $DB->get_records("teamevalquestion_likert_resp", array("questionid" => $questionid, "fromuser" => $userid), '', 'id,touser,mark,markdate');
+        $this->teameval = $teameval;
+        $this->question = $question;
+        $this->userid = $userid;
+
+    	$records = $DB->get_records("teamevalquestion_likert_resp", array("questionid" => $question->id, "fromuser" => $userid), '', 'id,touser,mark,markdate');
 
     	//rearrange responses to be keyed by touser
     	$this->responses = [];
@@ -21,9 +26,6 @@ class response implements \local_teameval\response {
     		$this->responses[$r->touser] = $r;
     	}
 
-        $this->userid = $userid;
-        $this->questionid = $questionid;
-    	
     }
     
     /**
