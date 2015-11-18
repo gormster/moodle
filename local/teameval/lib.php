@@ -23,6 +23,8 @@ class team_evaluation {
 
     protected $settings;
 
+    private static $groupcache = [];
+
     public function __construct($cmid) {
 
         $this->cm = get_coursemodule_from_id(null, $cmid);
@@ -278,6 +280,91 @@ class team_evaluation {
 
     }
 
+    /**
+     * Is this group ready to receive their adjusted marks?
+     * @param int $groupid The group in question
+     * @return bool If the group is ready
+     */ 
+    public function group_ready($groupid) {
+
+        //todo: has deadline passed
+
+        //todo: are marks released
+
+        $members = $this->_groups_get_members($groupid);
+        $questions = $this->get_questions();
+
+        $ready = true;
+
+        foreach($questions as $q) {
+            $response_cls = $q->plugininfo->get_response_class();
+
+            foreach($members as $m) {
+                $response = new $response_cls($this, $q->question, $m->id);
+                if( $respnse->marks_given() == false ) {
+                    $ready = false;
+                    break;
+                }
+            }
+
+            if ($ready == false) break;
+        }
+
+        return $ready;
+
+    }
+
+    /**
+     * Returns the score multipliers for a particular group
+     * @param int $groupid The ID of the group in question
+     * @return array(int => float) User ID to score multiplier
+     */
+    public function multipliers_for_group($groupid) {
+        $members = $this->_groups_get_members($groupid);
+        $questions = $this->get_questions();
+
+        $opinion_totals = [];
+
+        // initialise the totals array
+        foreach($members as $userid => $user) {
+            $opinion_totals[$userid] = 0.0;
+        }
+
+        foreach($questions as $q) {
+            $response_cls = $q->plugininfo->get_response_class();
+
+            // The "fudge factor" is a multiplier to ensure consistency
+            // in the case that one or more team members does not complete
+            // every question
+
+            // We start by counting the number of members who gave marks
+            $marks_given = 0;
+
+            $opinions = [];
+
+            foreach($members as $m) {
+                $response = new $response_cls($this, $q->question, $m->id);
+
+                if ($response->marks_given()) {
+                    foreach($members as $teammate) {
+                        $opinions[$teammate->id] += $response->opinion_of($teammate->id);
+                    }
+                    $marks_given++;
+                }
+            }
+
+            // The fudge factor. E.g. 5 members, 4 submitted = 1.25.
+            $fudge = count($members) / $marks_given;
+
+            foreach($opinions as $userid => $mark) {
+                $opinion_totals[$userid] += $mark * $fudge;
+            }
+        }
+
+        return $opinion_totals;
+    }
+
+
     // interface to evalcontext
 
     public function group_for_user($userid) {
@@ -287,26 +374,35 @@ class team_evaluation {
     // convenience functions
 
     /**
-     * Gets the teammates in a user's team. Called a lot, so the results are cached.
+     * Gets the teammates in a user's team.
      * @param type $userid User to get the teammates for
      * @return type
      */
     public function teammates($userid, $include_self=false) {
-        static $groupcache = [];
-
         $group = $this->group_for_user($userid);
 
+        $members = $this->_groups_get_members($group->id);
+        
+        if($include_self == false) {
+            unset($members[$userid]);
+        }
+
+        return $members;
+    }
+
+    /**
+     * Cached version of groups_get_members.
+     * @param type $groupid 
+     * @return type
+     */
+    private function _groups_get_members($groupid) {
+        $groupcache = self::groupcache;
         if (!isset($groupcache[$group->id])) {
             $members = groups_get_members($group->id);   
             $groupcache[$group->id] = $members; 
         } else {
             $members = $groupcache[$group->id];
         }
-        
-        if($include_self == false) {
-            unset($members[$userid]);
-        }
-
         return $members;
     }
 
