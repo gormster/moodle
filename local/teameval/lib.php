@@ -284,6 +284,32 @@ class team_evaluation {
         return $this->evalcontext->group_for_user($userid);
     }
 
+    // convenience functions
+
+    /**
+     * Gets the teammates in a user's team. Called a lot, so the results are cached.
+     * @param type $userid User to get the teammates for
+     * @return type
+     */
+    public function teammates($userid, $include_self=false) {
+        static $groupcache = [];
+
+        $group = $this->group_for_user($userid);
+
+        if (!isset($groupcache[$group->id])) {
+            $members = groups_get_members($group->id);   
+            $groupcache[$group->id] = $members; 
+        } else {
+            $members = $groupcache[$group->id];
+        }
+        
+        if($include_self == false) {
+            unset($members[$userid]);
+        }
+
+        return $members;
+    }
+
 }
 
 interface question {
