@@ -55,6 +55,7 @@ class team_evaluation {
         $settings = new stdClass;
         $settings->enabled = true;
         $settings->public = false;
+        $settings->self = true;
         $settings->fraction = 0.5;
         $settings->noncompletionpenalty = 0.1;
         $settings->deadline = null;
@@ -100,7 +101,7 @@ class team_evaluation {
         $this->get_settings();
 
         //todo: validate
-        foreach(['enabled', 'public', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
+        foreach(['enabled', 'public', 'self', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
             if (isset($settings->$i)) {
                 $this->settings->$i = $settings->$i;
             }
