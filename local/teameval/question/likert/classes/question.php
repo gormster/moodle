@@ -4,7 +4,8 @@ namespace teamevalquestion_likert;
     
 class question implements \local_teameval\question {
     
-    protected $id;
+    public $id;
+    
     protected $teameval;
     protected $title;
     protected $description;

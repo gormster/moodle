@@ -3,6 +3,7 @@
 namespace teamevalquestion_likert;
 
 use stdClass;
+use local_teameval\team_evaluation;
 
 class response implements \local_teameval\response {
 
@@ -11,7 +12,7 @@ class response implements \local_teameval\response {
 	protected $userid;
 	protected $responses;
 
-    public function __construct($teameval, $question, $userid, $responseid = null) {
+    public function __construct(team_evaluation $teameval, $question, $userid, $responseid = null) {
         global $DB;
 
         $this->teameval = $teameval;
@@ -46,7 +47,7 @@ class response implements \local_teameval\response {
             } else {
                 $record = new stdClass;
                 $record->fromuser = $this->userid;
-                $record->questionid = $this->questionid;
+                $record->questionid = $this->question->id;
                 $record->touser = $userid;
                 $record->mark = $mark;
                 $record->markdate = time();
@@ -73,8 +74,11 @@ class response implements \local_teameval\response {
     public function opinion_of($userid) {
         $this->fix_responses();
 
-        $total = array_sum($this->responses);
-        return $this->responses[$userid] / (float)$total;
+
+        $total = array_sum(array_map(function($v) {
+            return $v->mark;
+        }, $this->responses));
+        return $this->responses[$userid]->mark / (float)$total;
     }
 
     /**
