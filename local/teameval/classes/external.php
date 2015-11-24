@@ -43,13 +43,18 @@ class external extends external_api {
     /* update_settings */
 
     public static function update_settings_parameters() {
+        $settingsform = new \local_teameval\forms\settings_form;
+        error_log(print_r($settingsform->external_parameters(), true));
+        return $settingsform->external_parameters();
+        
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
             'settings' => new external_single_structure([
                 'enabled' => new external_value(PARAM_BOOL, 'is teameval enabled for this module'),
+                'selfassessment' => new external_value(PARAM_BOOL, 'is self assessment enabled for this module'),
                 'public' => new external_value(PARAM_BOOL, 'is the questionnaire for this teameval publicly available'),
-                'fraction' => new external_value(PARAM_FLOAT, 'how much does evaluation affect the final grade'),
-                'noncompletionpenalty' => new external_value(PARAM_FLOAT, 'how much does non completion of the questionnaire reduce final grade'),
+                'fraction' => new external_value(PARAM_INT, 'how much does evaluation affect the final grade'),
+                'noncompletionpenalty' => new external_value(PARAM_INT, 'how much does non completion of the questionnaire reduce final grade'),
                 'deadline' => new external_value(PARAM_INT, 'timestamp - datetime of questionnaire deadline')
             ])
         ]);
@@ -59,13 +64,19 @@ class external extends external_api {
         return null;
     }
 
-    public static function update_settings($cmid, $settings) {
-        $settings = (object)$settings;
+    public static function update_settings($form) {
+
+        $settingsform = new \local_teameval\forms\settings_form();
+        $settingsform->process_data($form);
+        $settings = $settingsform->get_data();
 
         $settings->public = $settings->public ? true : false;
         $settings->enabled = $settings->enabled ? true : false;
 
-        $teameval = new team_evaluation($cmid);
+        $settings->fraction = $settings->fraction / 100.0;
+        $settings->noncompletionpenalty = $settings->noncompletionpenalty / 100.0;
+
+        $teameval = new team_evaluation($settings->cmid);
         $teameval->update_settings($settings);
     }
 
