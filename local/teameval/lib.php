@@ -301,7 +301,7 @@ class team_evaluation {
 
             foreach($members as $m) {
                 $response = new $response_cls($this, $q->question, $m->id);
-                if( $respnse->marks_given() == false ) {
+                if( $response->marks_given() == false ) {
                     $ready = false;
                     break;
                 }
@@ -323,6 +323,7 @@ class team_evaluation {
         $members = $this->_groups_get_members($groupid);
         $questions = $this->get_questions();
 
+        $responses_given = 0;
         $opinion_totals = [];
 
         // initialise the totals array
@@ -341,6 +342,9 @@ class team_evaluation {
             $marks_given = 0;
 
             $opinions = [];
+            foreach($members as $userid => $user) {
+                $opinions[$userid] = 0.0;
+            }
 
             foreach($members as $m) {
                 $response = new $response_cls($this, $q->question, $m->id);
@@ -353,15 +357,30 @@ class team_evaluation {
                 }
             }
 
+            // no-one responded to this question.
+            if ($marks_given == 0) {
+                continue;
+            }
+
             // The fudge factor. E.g. 5 members, 4 submitted = 1.25.
             $fudge = count($members) / $marks_given;
 
             foreach($opinions as $userid => $mark) {
                 $opinion_totals[$userid] += $mark * $fudge;
             }
+
+            $responses_given++;
+        }
+
+        if ($responses_given > 1) {
+            //divide every member of $opinion_totals by $responses_given
+            foreach ($opinion_totals as $key => $value) {
+                $opinion_totals[$key] = $value / $responses_given;
+            }
         }
 
         return $opinion_totals;
+
     }
 
 
@@ -396,12 +415,12 @@ class team_evaluation {
      * @return type
      */
     private function _groups_get_members($groupid) {
-        $groupcache = self::groupcache;
-        if (!isset($groupcache[$group->id])) {
-            $members = groups_get_members($group->id);   
-            $groupcache[$group->id] = $members; 
+        $groupcache = self::$groupcache;
+        if (!isset($groupcache[$groupid])) {
+            $members = groups_get_members($groupid);   
+            $groupcache[$groupid] = $members; 
         } else {
-            $members = $groupcache[$group->id];
+            $members = $groupcache[$groupid];
         }
         return $members;
     }
@@ -415,7 +434,7 @@ interface question {
      * @param int $questionid the ID of the question. may be null if this is a new question.
      */
     public function __construct(team_evaluation $teameval, $questionid = null);
-    
+
     /*
 
     These next two things are templatables, not renderables. There is a good reason for
@@ -473,7 +492,7 @@ interface response {
      * @param question $question the question object of the question this is a response to
      * @param int $userid the ID of the user responding to this question
      */
-    public function __construct(team_evaluation $teameval, question $question, $userid);
+    public function __construct(team_evaluation $teameval, $question, $userid);
     
     /**
      * @return int Response ID
