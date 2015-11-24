@@ -5,6 +5,7 @@ namespace local_teameval\output;
 use plugin_renderer_base;
 use local_teameval\output\team_evaluation_block;
 use context_module;
+use stdClass;
 
 class renderer extends plugin_renderer_base {
 
@@ -13,6 +14,7 @@ class renderer extends plugin_renderer_base {
         global $PAGE, $USER;
 
         $context = context_module::instance($block->cm->id);
+        $c = new stdClass; // template context
 
         if (has_capability('local/teameval:changesettings', $context)) {
             $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
@@ -39,7 +41,10 @@ class renderer extends plugin_renderer_base {
                 ];
         }
         
-        return $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+
+        $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
+        return $this->render_from_template('local_teameval/block', $c);
         
     }
 

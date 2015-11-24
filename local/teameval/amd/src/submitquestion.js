@@ -42,7 +42,7 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function(
 			_cmid = cmid;
 
 			templates.render('local_teameval/submit_buttons', {}).done(function(html, js) {
-				var questionContainer = $('#local-teameval-questions');
+				var questionContainer = $('.local-teameval-containerbox');
 				questionContainer.append(html);
 				templates.runTemplateJS(js);
 

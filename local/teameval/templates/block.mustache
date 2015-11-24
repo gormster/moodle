@@ -1,0 +1,25 @@
+<div class="local-teameval-containerbox">
+{{{settings}}}
+<nav class="tabs">
+<ul>
+{{#questionnaire}}
+    <li class="tab" data-tab-content-id="questionnaire-{{uniqid}}"><a href="#">{{#str}}questionnaire, local_teameval{{/str}}</a></li>
+{{/questionnaire}}
+{{#results}}
+    <li class="tab" data-tab-content-id="results-{{uniqid}}"><a href="#">{{#str}}results, local_teameval{{/str}}</a></li>
+{{/results}}
+</ul>
+</nav>
+<div class="tabs-content">
+    {{#questionnaire}}
+    <div class="tab-content" id="questionnaire-{{uniqid}}">
+    {{{questionnaire}}}
+    </div>
+    {{/questionnaire}}
+    {{#results}}
+    <div class="tab-content" id="results-{{uniqid}}">
+    {{{results}}}
+    </div>
+    {{/results}}
+</div>
+</div>
