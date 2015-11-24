@@ -513,4 +513,24 @@ interface response {
     
 }
 
+
+//copied from core_component. why this is not a global function...
+function is_developer() {
+    global $CFG;
+
+    // Note we can not rely on $CFG->debug here because DB is not initialised yet.
+    if (isset($CFG->config_php_settings['debug'])) {
+        $debug = (int)$CFG->config_php_settings['debug'];
+    } else {
+        $debug = $CFG->debug;
+    }
+
+    if ($debug & E_ALL and $debug & E_STRICT) {
+        return true;
+    }
+
+    return false;
+}
+
+
 ?>

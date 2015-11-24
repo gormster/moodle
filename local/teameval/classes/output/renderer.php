@@ -28,6 +28,10 @@ class renderer extends plugin_renderer_base {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
         }
 
+        if (\local_teameval\is_developer()) {
+            $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
+        }
+
         $questions = [];
         foreach($block->questions as $q) {
             $submissionview = $q->question->submission_view($USER->id);
