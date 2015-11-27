@@ -5,6 +5,8 @@ namespace local_teameval\output;
 use plugin_renderer_base;
 use local_teameval\output\team_evaluation_block;
 use context_module;
+use local_teameval\forms;
+use stdClass;
 
 class renderer extends plugin_renderer_base {
 
@@ -13,9 +15,14 @@ class renderer extends plugin_renderer_base {
         global $PAGE, $USER;
 
         $context = context_module::instance($block->cm->id);
+        $c = new stdClass; // template context
 
         if (has_capability('local/teameval:changesettings', $context)) {
-            $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
+            // $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
+            $settingsform = new forms\settings_form();
+            $settingsform->set_data($block->settings);
+            
+            $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $settingsform->render()]);
         }
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
@@ -24,6 +31,10 @@ class renderer extends plugin_renderer_base {
 
         if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
+        }
+
+        if (\local_teameval\is_developer()) {
+            $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
         }
 
         $questions = [];
@@ -39,7 +50,10 @@ class renderer extends plugin_renderer_base {
                 ];
         }
         
-        return $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+
+        $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
+        return $this->render_from_template('local_teameval/block', $c);
         
     }
 
