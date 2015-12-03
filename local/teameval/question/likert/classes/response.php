@@ -7,9 +7,10 @@ use local_teameval\team_evaluation;
 
 class response implements \local_teameval\response {
 
+    public $question;
+
     protected $teameval;
-	protected $question;
-	protected $userid;
+    protected $userid;
 	protected $responses;
 
     public function __construct(team_evaluation $teameval, $question, $userid, $responseid = null) {
@@ -75,10 +76,12 @@ class response implements \local_teameval\response {
         $this->fix_responses();
 
 
-        $total = array_sum(array_map(function($v) {
-            return $v->mark;
-        }, $this->responses));
-        return $this->responses[$userid]->mark / (float)$total;
+        // $total = array_sum(array_map(function($v) {
+        //     return $v->mark;
+        // }, $this->responses));
+        $minval = $this->question->minimum_value();
+        $maxval = $this->question->maximum_value();
+        return ($this->responses[$userid]->mark - $minval) / ($maxval - $minval);
     }
 
     /**
@@ -86,8 +89,7 @@ class response implements \local_teameval\response {
      */
     protected function fix_responses() {
         if ($this->marks_given()) {
-            $self = $this->teameval->get_settings()->self;
-            $teammates = $this->teameval->teammates($this->userid, $self);
+            $teammates = $this->teameval->teammates($this->userid);
             foreach($this->responses as $k => $v) {
                 if (!isset($teammates[$k])) {
                     unset($this->responses[$k]);

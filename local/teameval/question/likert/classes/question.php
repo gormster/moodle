@@ -110,6 +110,22 @@ class question implements \local_teameval\question {
     public function update($formdata) {
         //todo
     }
+
+    public function plugin_name() {
+        return 'likert';
+    }
+
+    public function has_value() {
+        return true;
+    }
+
+    public function minimum_value() {
+        return 0; // even if $minval == 1, return 0; it's what users expect
+    }
+
+    public function maximum_value() {
+        return $this->maxval;
+    }
     
     
 }

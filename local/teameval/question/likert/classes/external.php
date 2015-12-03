@@ -69,8 +69,6 @@ class external extends external_api {
 
 		$record->meanings = json_encode($record->meanings);
 
-		error_log(print_r($record->meanings,true));
-
 		//save the record back to the DB
 		if ($id > 0) {
 			$DB->update_record('teamevalquestion_likert', $record);
