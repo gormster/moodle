@@ -12,7 +12,7 @@ return {
     put: function(form) {
 
         // The webservice callback to issue is stored as data-ajaxfroms-callback on the form element
-        var call = $(form).data('ajaxforms-callback');
+        var call = $(form).data('ajaxforms-methodname');
 
         // We need to collect the form data. Because it might be nested, we can't just use FormData objects.
         var params = {};
@@ -62,7 +62,10 @@ return {
         }]);
 
         promises[0].done(function() {
-            alert('holy crap it workd');
+            var callback = $(form).data('ajaxforms-callback');
+            if(window[callback]) {
+                window[callback]();
+            }
         });
 
         promises[0].fail(notification.exception);
