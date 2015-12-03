@@ -1,0 +1,53 @@
+{{!
+    @template teamevalreport_responses/report
+
+    Starting point for an awesome template.
+
+    Example context: {
+        "groups" : [
+            {
+                "markers": [
+                    "Alice",
+                    "Bob",
+                    "Carol"
+                ],
+                "marks": [
+                    {
+                        "marked" : "Alice",
+                        "scores" : [3, 2, 1]
+                    },
+                    {
+                        "marked" : "Bob",
+                        "scores" : [1, 3, 2]
+                    },
+                    {
+                        "marked" : "Carol",
+                        "scores" : [1, 2, 3]
+                    },
+                ]
+            }
+        ]
+    }
+
+}}
+{{#groups}}
+<table>
+    <thead>
+        <tr>
+        {{#markers}}
+            <th>{{fullname}}</th>
+        {{/markers}}
+        </tr>
+    </thead>
+    <tbody>
+        {{#marks}}
+        <tr>
+            <th scope="row">{{marked}}</th>
+            {{#scores}}
+            <td>{{score}}</td>
+            {{/scores}}
+        </tr>
+        {{/marks}}
+    </tbody>
+</table>
+{{/groups}}

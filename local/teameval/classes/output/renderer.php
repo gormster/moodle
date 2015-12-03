@@ -27,6 +27,20 @@ class renderer extends plugin_renderer_base {
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
             $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->questiontypes]);
+
+            $current_plugin = $block->teameval->get_report_plugin();
+            $report_renderer = $PAGE->get_renderer("teamevalreport_{$current_plugin->name}");
+            $report = $report_renderer->render($block->report);
+
+            $types = [];
+            foreach($block->reporttypes as $plugininfo) {
+                $type = ['name' => $plugininfo->displayname, 'plugin' => $plugininfo->name];
+                if ($plugininfo->name == $current_plugin->name) {
+                    $type['selected'] = true;
+                }
+                $types[] = $type;
+            }
+            $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
         }
 
         if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {

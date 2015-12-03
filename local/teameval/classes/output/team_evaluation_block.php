@@ -24,17 +24,18 @@ class team_evaluation_block implements renderable {
     public function __construct($cmid) {
         $this->cm = get_coursemodule_from_id(null, $cmid);
         $this->teameval = new team_evaluation($cmid);
-        $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
 
+        $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
         $this->questions = $this->teameval->get_questions();
+
+        $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
+        $this->report = $this->teameval->get_report();
 
         $settings = $this->teameval->get_settings();
         $settings->fraction *= 100;
         $settings->noncompletionpenalty *= 100;
         $settings->cmid = $cmid;
         $this->settings = $settings;
-
-        print_r($this->teameval->multipliers_for_group(8));
 
     }
 

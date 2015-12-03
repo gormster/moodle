@@ -2,7 +2,8 @@
 
 $subplugins = array(
     'teamevalquestion'      => 'local/teameval/question',
-    'teamevalevaluator'     => 'local/teameval/evaluator'
+    'teamevaluator'         => 'local/teameval/evaluator',
+    'teamevalreport'        => 'local/teameval/report'
 );
 
 ?>

@@ -44,7 +44,6 @@ class external extends external_api {
 
     public static function update_settings_parameters() {
         $settingsform = new \local_teameval\forms\settings_form;
-        error_log(print_r($settingsform->external_parameters(), true));
         return $settingsform->external_parameters();
         
         return new external_function_parameters([
@@ -103,6 +102,51 @@ class external extends external_api {
     }
 
     public static function questionnaire_set_order_is_allowed_from_ajax() { return true; }
+
+    /* report */
+
+    public static function report_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
+            'plugin' => new external_value(PARAM_PLUGIN, 'report plugin name')
+        ]);
+    }
+
+    public static function report_returns() {
+        return new external_single_structure([
+            'html' => new external_value(PARAM_RAW, 'rendered HTML code for the report', VALUE_OPTIONAL),
+            'template' => new external_value(PARAM_PATH, 'template name to be used for rendering report', VALUE_OPTIONAL),
+            'data' => new external_value(PARAM_RAW, 'JSON encoded data to be used for rendering report', VALUE_OPTIONAL)
+        ]);
+    }
+
+    public static function report($cmid, $plugin) {
+        global $USER, $PAGE;
+
+        $teameval = new team_evaluation($cmid);
+        $teameval->set_report_plugin($plugin);
+        $report = $teameval->get_report();
+
+        $renderer = $PAGE->get_renderer("teamevalreport_$plugin");
+
+        // Reports can optionally be templatable. If they are, return just the template and context data.
+        if ($report instanceof \templatable) {
+            $data = json_encode( $report->export_for_template($renderer) );
+            if (method_exists($report, "template_name")) {
+                $template = $report->template_name();
+            } else {
+                $template = "teamevalreport_$plugin/report";
+            }
+
+            return ['template' => $template, 'data' => $data];
+        } else {
+            $html = $renderer->render($report);
+            return ['html' => $html];
+        }
+
+    }
+
+    public static function report_is_allowed_from_ajax() { return true; }
 
 }
 
