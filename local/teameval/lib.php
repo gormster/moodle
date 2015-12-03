@@ -314,72 +314,36 @@ class team_evaluation {
 
     }
 
+
+
+
+        foreach($questions as $q) {
+            $response_cls = $q->plugininfo->get_response_class();
+
+
+
+    public function multipliers() {
+        $eval = $this->get_evaluator();
+
+        return $eval->scores();
+    }
+
     /**
      * Returns the score multipliers for a particular group
      * @param int $groupid The ID of the group in question
      * @return array(int => float) User ID to score multiplier
      */
     public function multipliers_for_group($groupid) {
-        $members = $this->_groups_get_members($groupid);
-        $questions = $this->get_questions();
 
-        $responses_given = 0;
-        $opinion_totals = [];
+        // TODO
 
-        // initialise the totals array
-        foreach($members as $userid => $user) {
-            $opinion_totals[$userid] = 0.0;
-        }
+        $eval = $this->get_evaluator();
 
-        foreach($questions as $q) {
-            $response_cls = $q->plugininfo->get_response_class();
+        return $eval->scores();
 
-            // The "fudge factor" is a multiplier to ensure consistency
-            // in the case that one or more team members does not complete
-            // every question
+    }
 
-            // We start by counting the number of members who gave marks
-            $marks_given = 0;
 
-            $opinions = [];
-            foreach($members as $userid => $user) {
-                $opinions[$userid] = 0.0;
-            }
-
-            foreach($members as $m) {
-                $response = new $response_cls($this, $q->question, $m->id);
-
-                if ($response->marks_given()) {
-                    foreach($members as $teammate) {
-                        $opinions[$teammate->id] += $response->opinion_of($teammate->id);
-                    }
-                    $marks_given++;
-                }
-            }
-
-            // no-one responded to this question.
-            if ($marks_given == 0) {
-                continue;
-            }
-
-            // The fudge factor. E.g. 5 members, 4 submitted = 1.25.
-            $fudge = count($members) / $marks_given;
-
-            foreach($opinions as $userid => $mark) {
-                $opinion_totals[$userid] += $mark * $fudge;
-            }
-
-            $responses_given++;
-        }
-
-        if ($responses_given > 1) {
-            //divide every member of $opinion_totals by $responses_given
-            foreach ($opinion_totals as $key => $value) {
-                $opinion_totals[$key] = $value / $responses_given;
-            }
-        }
-
-        return $opinion_totals;
 
     }
 
@@ -394,10 +358,16 @@ class team_evaluation {
 
     /**
      * Gets the teammates in a user's team.
-     * @param type $userid User to get the teammates for
+     * @param int $userid User to get the teammates for
+     * @param bool $include_self Include user in teammates. Defaults to $this->settings->self.
      * @return type
      */
-    public function teammates($userid, $include_self=false) {
+    public function teammates($userid, $include_self=null) {
+
+        if (is_null($include_self)) {
+            $include_self = $this->get_settings()->self;
+        }
+
         $group = $this->group_for_user($userid);
 
         $members = $this->_groups_get_members($group->id);
@@ -482,6 +452,18 @@ interface question {
      * @return int Question ID
      */
     public function update($formdata);
+
+    /**
+     * Return the name of this teamevalquestion subplugin
+     * @return type
+     */
+    public function plugin_name();
+
+    public function has_value();
+
+    public function minimum_value();
+
+    public function maximum_value();
     
 }
 
@@ -505,12 +487,41 @@ interface response {
     public function marks_given();
 
     /**
-     * What is this user's opinion of a particular teammate? All opinions add to 1.0.
+     * What is this user's opinion of a particular teammate? Scaled from 0.0 to 1.0
      * @param type $userid Team mate's user ID
      * @return type
      */
     public function opinion_of($userid);
     
+}
+
+interface evaluator {
+
+    /**
+     * Constructor.
+     * @param team_evaluation $teameval The team evaluation object this evaluator is evaluating
+     * @param array $responses [userid => [response object]]
+     */
+    public function __construct(team_evaluation $teameval, $responses);
+
+    /**
+     * The team evaluator scores, which are the basis for adjusting marks.
+     * @return array [userid => float]
+     */
+    public function scores();
+
+}
+
+interface report {
+
+    public function __construct(team_evaluation $teameval);
+
+    /**
+     * Generate and return a renderable report.
+     * @return type
+     */
+    public function generate_report();
+
 }
 
 

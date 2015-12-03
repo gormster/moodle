@@ -28,4 +28,17 @@ class evaluation_context extends \local_teameval\evaluation_context {
 		}
 	}
 
+	public function marking_users($fields = 'u.id') {
+		$grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
+		
+		$groups = groups_get_all_groups($this->assign->get_course()->id, 0, $grouping, 'g.id');
+
+		// we want only group IDs
+		$groups = array_keys($groups);
+
+		$ctx = $this->assign->get_context();
+
+		return get_users_by_capability($ctx, 'local/teameval:submitquestionnaire', $fields, '', '', '', $groups);
+	}
+
 }
