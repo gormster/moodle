@@ -314,13 +314,29 @@ class team_evaluation {
 
     }
 
+    public function get_evaluator() {
+        // TODO
 
+        $evaluators = core_plugin_manager::instance()->get_plugins_of_type("teamevaluator");
 
+        $plugininfo = current( $evaluators );
+        $evaluator_cls = $plugininfo->get_evaluator_class();
 
+        $markable_users = $this->evalcontext->marking_users();
+
+        $questions = $this->get_questions();
+        $responses = [];
         foreach($questions as $q) {
             $response_cls = $q->plugininfo->get_response_class();
+            foreach($markable_users as $m) {
+                $response = new $response_cls($this, $q->question, $m->id);
+                $responses[$m->id][] = $response;
+            }
+        }
 
+        return new $evaluator_cls($this, $responses);
 
+    }
 
     public function multipliers() {
         $eval = $this->get_evaluator();
