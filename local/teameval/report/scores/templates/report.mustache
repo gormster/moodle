@@ -1,0 +1,16 @@
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Score</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#scores}}
+        <tr>
+            <th scope="row">{{{userpic}}} {{fullname}}</th>
+            <td>{{score}}</td>
+        </tr>
+        {{/scores}}
+    </tbody>
+</table>

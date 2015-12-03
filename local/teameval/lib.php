@@ -13,6 +13,8 @@ use core_plugin_manager;
 use stdClass;
 use context_module;
 
+define('REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
+
 class team_evaluation {
 
     protected $id;
@@ -368,8 +370,23 @@ class team_evaluation {
 
     }
 
+    public function set_report_plugin($plugin) {
+        set_user_preference(REPORT_PLUGIN_PREFERENCE, $plugin);
+    }
 
+    public function get_report_plugin() {
+        $plugin = get_user_preferences(REPORT_PLUGIN_PREFERENCE, 'scores');
+        return core_plugin_manager::instance()->get_plugin_info("teamevalreport_$plugin");
+    }
 
+    public function get_report() {
+        // TODO: site-wide default report
+        $plugininfo = $this->get_report_plugin();
+        $cls = $plugininfo->get_report_class();
+
+        $report = new $cls($this);
+
+        return $report->generate_report();
     }
 
 

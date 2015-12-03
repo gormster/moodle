@@ -24,6 +24,14 @@ $functions = [
         'methodname'    => 'questionnaire_set_order',
         'type'          => 'write'
 
+    ],
+
+    'local_teameval_report' => [
+    
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'report',
+        'type'          => 'read'
+
     ]
     
 ]

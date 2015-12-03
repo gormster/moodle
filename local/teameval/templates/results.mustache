@@ -1,0 +1,41 @@
+<select id="results-selector-{{uniqid}}">
+    {{#types}}
+    <option value="{{plugin}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+    {{/types}}
+</select>
+<div class="local-teameval-results-container" id="results-container-{{uniqid}}">
+    {{{report}}}
+</div>
+{{#js}}
+{{#nothere}}<script>{{/nothere}}
+require(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function($, ajax, templates, notification) {
+     $('#results-selector-{{uniqid}}').on('change', function() {
+        var plugin = $(this).val();
+
+        var promises = ajax.call([{
+            methodname: 'local_teameval_report',
+            args: {
+                'cmid' : {{cmid}},
+                'plugin': plugin
+            }
+        }]);
+
+        promises[0].done(function(rslt) {
+            if (typeof rslt.html !== 'undefined') {
+                $('#results-container-{{uniqid}}').html(rslt.html);
+            } else {
+                var promise = templates.render(rslt.template, JSON.parse(rslt.data));
+
+                promise.done(function(html, js) {
+                    $('#results-container-{{uniqid}}').html(html);
+                    templates.runTemplateJS(js);
+                });
+
+                promise.fail(notification.exception);
+            }
+        });
+
+        promises[0].fail(notification.exception);
+     });
+});
+{{/js}}
