@@ -27,6 +27,33 @@ function xmldb_local_teameval_upgrade($oldversion) {
 
     }
 
+    if ($oldversion < 2015120700) {
+
+        // Define table teameval_release to be created.
+        $table = new xmldb_table('teameval_release');
+
+        // Adding fields to table teameval_release.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('level', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('target', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table teameval_release.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('combo', XMLDB_KEY_UNIQUE, array('cmid', 'level', 'target'));
+
+        // Adding indexes to table teameval_release.
+        $table->add_index('cmid', XMLDB_INDEX_NOTUNIQUE, array('cmid'));
+
+        // Conditionally launch create table for teameval_release.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2015120700, 'local', 'teameval');
+    }
+
 
     return true;
 }
