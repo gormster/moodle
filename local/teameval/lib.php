@@ -13,7 +13,11 @@ use core_plugin_manager;
 use stdClass;
 use context_module;
 
-define('REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
+define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
+
+define(__NAMESPACE__ . '\RELEASE_ALL', 0);
+define(__NAMESPACE__ . '\RELEASE_GROUP', 1);
+define(__NAMESPACE__ . '\RELEASE_USER', 2);
 
 class team_evaluation {
 
@@ -28,6 +32,8 @@ class team_evaluation {
     protected $settings;
 
     private static $groupcache = [];
+
+    protected $releases;
 
     public function __construct($cmid) {
 
@@ -296,11 +302,7 @@ class team_evaluation {
      * @param int $groupid The group in question
      * @return bool If the group is ready
      */ 
-    public function group_ready($groupid) {
-
-        //todo: has deadline passed
-
-        //todo: are marks released
+    protected function group_ready($groupid) {
 
         $members = $this->_groups_get_members($groupid);
         $questions = $this->get_questions();
@@ -435,6 +437,90 @@ class team_evaluation {
             $members = $groupcache[$groupid];
         }
         return $members;
+    }
+
+    // MARK RELESE
+
+    protected function _release_marks_for($target, $level, $set) {
+        global $DB;
+
+        $release = new stdClass;
+        $release->cmid = $this->cm->id;
+        $release->target = $target;
+        $release->level = $level;
+
+        // try to get a record which matches this.
+        $record = $DB->get_record('teameval_release', $release);
+
+        if (($set == true) && ($record === false)) {
+            $DB->insert_record('teameval_release', $release);
+        }
+
+        if (($set == false) && ($record !== false)) {
+            $DB->delete_records('teameval_release', $record);
+        }
+
+        $releases[] = $release;
+    }
+
+    public function release_marks_for_all($set = true) {
+        $this->_release_marks_for(0, RELEASE_ALL, $set);
+    }
+
+    public function release_marks_for_group($groupid, $set = true) {
+        $this->_release_marks_for($groupid, RELEASE_GROUP, $set);
+    }
+
+    public function release_marks_for_user($userid, $set = true) {
+        $this->_release_marks_for($userid, RELEASE_USER, $set);
+    }
+
+    public function marks_available($userid) {
+
+        // First check if the marks are released.
+
+        $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+        $grp = $this->group_for_user($userid);
+
+        $is_released = false;
+
+        foreach($releases as $release) {
+            if ($release->level == RELEASE_ALL) {
+                $is_released = true;
+                break;
+            }
+
+            if ($release->level == RELEASE_GROUP) {
+                if ($release->target == $grp->id) {
+                    $is_released = true;
+                    break;
+                }
+            }
+
+            if ($release->level == RELEASE_USER) {
+                if ($release->target == $userid) {
+                    $is_released = true;
+                    break;
+                }
+            }
+        }
+
+        if ($is_released == false) {
+            return false;
+        }
+
+        // Next check if everyone in their group has submitted OR the deadline has passed
+
+        if ($this->deadline < time()) {
+            return true;
+        }
+
+        if ($this->group_ready($grp->id)) {
+            return true;
+        }
+
+        return false;
+
     }
 
 }
