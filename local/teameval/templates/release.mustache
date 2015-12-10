@@ -1,0 +1,114 @@
+{{!
+    @template: local_teameval/release
+
+    Example JSON: {
+        "all" : false,
+        "groups" : [
+            {
+                "released": true,
+                "id": 1,
+                "grade": 60,
+                "name": "Group A",
+                "users": [
+                    {
+                        "id": 1,
+                        "fullname": "Alice User",
+                        "userpic": "",
+                        "score": 0.87,
+                        "grade": 56.1,
+                        "released": false
+                    },
+                    {
+                        "id": 2,
+                        "fullname": "Bob User",
+                        "userpic": "",
+                        "score": 0.96,
+                        "grade": 58.8,
+                        "released": false
+                    },
+                    {
+                        "id": 3,
+                        "fullname": "Carol User",
+                        "userpic": "",
+                        "score": 1.17,
+                        "grade": 65.1,
+                        "released": false
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="local-teameval-release-container">
+    <div class="release-all">{{#str}}releaseallmarks, local_teameval{{/str}}
+        <div class="local-teameval-switch{{#all}} checked{{/all}}" data-level="0" data-target="0" id="switch-all-{{uniqid}}">
+        </div>
+    </div>
+    <div class="groups">
+        {{#groups}}
+        <div class="group">
+            <h3>{{name}} {{grade}} <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}">
+        </div></h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{#str}}name, core{{/str}}</th>
+                        <th>{{#str}}score, local_teameval{{/str}}</th>
+                        <th>{{#str}}grade, core{{/str}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#users}}
+                    <tr>
+                        <td>{{{userpic}}} {{name}}</td>
+                        <td>{{score}}</td>
+                        <td>{{grade}}</td>
+                        <td><div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="2" data-target="{{id}}" data-override="switch-group-{{gid}}-{{uniqid}}"></div></td>
+                    </tr>
+                    {{/users}}
+                </tbody>
+            </table>
+        </div>
+        {{/groups}}
+    </div>
+</div>
+{{#js}}
+
+{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, _switch, ajax, notification) {
+
+    
+
+    $('.local-teameval-switch').each( function() {
+        _switch.init($(this));
+
+        $(this).on('changed', function() {
+            var sw = $(this);
+            sw.trigger('showLoading');
+
+            var release = $(this).hasClass('checked');
+            var level = $(this).data('level');
+            var target = $(this).data('target');
+
+            var promises = ajax.call([{
+                methodname: 'local_teameval_release',
+                args: {
+                    cmid: {{cmid}},
+                    level: level,
+                    target: target,
+                    release: release
+                }
+            }]);
+
+            promises[0].always(function() {
+                console.log(sw);
+                sw.trigger('hideLoading');
+            });
+
+            promises[0].fail(notification.exception);
+
+        });
+    });
+});
+{{/js}}

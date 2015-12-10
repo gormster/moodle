@@ -41,6 +41,9 @@ class renderer extends plugin_renderer_base {
                 $types[] = $type;
             }
             $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
+
+
+            $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
         }
 
         if (has_capability('local/teameval:submitquestionnaire', $context)) {

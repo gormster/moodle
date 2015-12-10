@@ -10,6 +10,8 @@
 
     $string['questionnaire'] = 'Questionnaire';
     $string['results'] = 'Results';
+    $string['releasemarks'] = 'Release Marks';
+    $string['feedback'] = 'Feedback';
 
     $string['settings'] = 'Settings';
     $string['enabled'] = 'Enabled';
@@ -24,5 +26,8 @@
 
     $string['addquestion'] = 'Add Question';
     $string['saved'] = 'Saved!';
+
+    $string['releaseallmarks'] = 'Release All Marks';
+    $string['score'] = 'Score';
 
 ?>
