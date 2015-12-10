@@ -381,6 +381,25 @@ class team_evaluation {
 
     }
 
+    public function multiplier_for_user($userid) {
+        $eval = $this->get_evaluator();
+        $scores = $eval->scores();
+
+        if (! isset($scores[$userid])) {
+            return null;
+        }
+        
+        $score = $eval->scores()[$userid];
+
+        $fraction = $this->get_settings()->fraction;
+
+        $score = (1 - $fraction) + ($score * $fraction);
+
+        //todo: noncompletion
+
+        return $score;
+    }
+
     public function set_report_plugin($plugin) {
         set_user_preference(REPORT_PLUGIN_PREFERENCE, $plugin);
     }
@@ -405,6 +424,14 @@ class team_evaluation {
 
     public function group_for_user($userid) {
         return $this->evalcontext->group_for_user($userid);
+    }
+
+    public function all_groups() {
+        return $this->evalcontext->all_groups();
+    }
+
+    public function marking_users() {
+        return $this->evalcontext->marking_users();
     }
 
     // convenience functions
