@@ -37,6 +37,10 @@ class team_evaluation_block implements renderable {
         $settings->cmid = $cmid;
         $this->settings = $settings;
 
+        global $DB;
+        $releases = $DB->get_records('teameval_release', ['cmid' => $cmid]);
+        $this->release = new release($this->teameval, $releases);
+
     }
 
 }

@@ -3,7 +3,7 @@ define(['jquery'], function($) { return {
     initialise: function() {
 
         var developerButtons = $('<div class="local-teameval-developer-buttons" />');
-        $('.local-teameval-containerbox').append(developerButtons);
+        $('.local-teameval-questionnaire').append(developerButtons);
 
         // Add a randomise button
         var randomiseButton = $('<button type="button">Randomise</button>');

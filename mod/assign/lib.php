@@ -1027,6 +1027,11 @@ function assign_grade_item_update($assign, $grades=null) {
 
     $params = array('itemname'=>$assign->name, 'idnumber'=>$assign->cmidnumber);
 
+    require_once($CFG->dirroot . '/mod/assign/locallib.php');
+    $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
+    $cm = context_module::instance($mod->id);
+    $assignment = new assign($cm, null, null);
+
     // Check if feedback plugin for gradebook is enabled, if yes then
     // gradetype = GRADE_TYPE_TEXT else GRADE_TYPE_NONE.
     $gradefeedbackenabled = false;
@@ -1034,10 +1039,6 @@ function assign_grade_item_update($assign, $grades=null) {
     if (isset($assign->gradefeedbackenabled)) {
         $gradefeedbackenabled = $assign->gradefeedbackenabled;
     } else if ($assign->grade == 0) { // Grade feedback is needed only when grade == 0.
-        require_once($CFG->dirroot . '/mod/assign/locallib.php');
-        $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
-        $cm = context_module::instance($mod->id);
-        $assignment = new assign($cm, null, null);
         $gradefeedbackenabled = $assignment->is_gradebook_feedback_enabled();
     }
 
@@ -1061,6 +1062,11 @@ function assign_grade_item_update($assign, $grades=null) {
     if ($grades  === 'reset') {
         $params['reset'] = true;
         $grades = null;
+    }
+
+    $evalcontext = new \mod_assign\evaluation_context($assignment);
+    if ($evalcontext->evaluation_enabled()) {
+        $grades = $evalcontext->update_grades($grades);
     }
 
     return grade_update('mod/assign',

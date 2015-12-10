@@ -144,3 +144,62 @@
     display:none;
     color:red;
 }
+
+.local-teameval-release-container .release-all {
+    font-size: 150%;
+    font-weight: bold;
+    text-align: center;
+}
+
+.local-teameval-switch {
+    display: inline-block;
+    vertical-align: middle;
+    width: 50px;
+    height: 20px;
+    border-radius: 20px;
+    border: 1px dotted #666;
+    box-sizing: border-box;
+    position: relative;
+    transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+    -webkit-transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+}
+    
+    .local-teameval-switch.checked {
+        border: 1px solid #333;
+        background-color: #eee;
+        box-shadow: inset 0px 1px #ccc;
+    }
+
+    .local-teameval-switch.overridden {
+        background-color:rgba(59, 235, 59, 0.1);
+    }
+
+.local-teameval-switch .toggle {
+    background-color: rgb(255, 235, 59);
+    width: 13px;
+    height: 13px;
+    border-radius: 14px;
+    box-shadow: 0 1px #ccc;
+    top: 2px;
+    left: 2px;
+    position: absolute;
+    transition: left 0.2s, background-color 0.4s;
+    -webkit-transition: left 0.2s, background-color 0.4s;
+    font-size: 18px;
+    line-height: 50%;
+    text-align: center;
+}
+
+    .local-teameval-switch.checked .toggle {
+        left: 31px;
+        background-color: rgb(59, 235, 59);
+    }
+
+    .local-teameval-switch.overridden .toggle {
+        background-color: #ccc;
+    }
+
+    .local-teameval-switch .toggle .loading-indicator {
+        display: none;
+    }
+

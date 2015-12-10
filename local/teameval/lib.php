@@ -41,23 +41,28 @@ class team_evaluation {
 
         $this->context = context_module::instance($cmid);
 
-        $this->evalcontext = $this->get_evaluation_context();
+        $this->get_evaluation_context();
     
     }
 
-    protected function get_evaluation_context() {
+    public function get_evaluation_context() {
         global $CFG;
 
-        $modname = $this->cm->modname;
-        include_once("$CFG->dirroot/mod/$modname/lib.php");
+        if (! isset($this->evalcontext)) {
+        
+            $modname = $this->cm->modname;
+            include_once("$CFG->dirroot/mod/$modname/lib.php");
 
-        $function = "{$modname}_get_evaluation_context";
-        if (!function_exists($function)) {
-            // throw something
-            print_error("noevaluationcontext");
+            $function = "{$modname}_get_evaluation_context";
+            if (!function_exists($function)) {
+                // throw something
+                print_error("noevaluationcontext");
+            }
+
+            $this->evalcontext =  $function($this->cm);
         }
 
-        return $function($this->cm);
+        return $this->evalcontext;
     }
 
     protected static function default_settings() {
@@ -133,6 +138,10 @@ class team_evaluation {
 
     public function get_context() {
         return $this->context;
+    }
+
+    public function get_coursemodule() {
+        return $this->cm;
     }
 
     // These functions are designed to be called from question subplugins
@@ -372,6 +381,25 @@ class team_evaluation {
 
     }
 
+    public function multiplier_for_user($userid) {
+        $eval = $this->get_evaluator();
+        $scores = $eval->scores();
+
+        if (! isset($scores[$userid])) {
+            return null;
+        }
+        
+        $score = $eval->scores()[$userid];
+
+        $fraction = $this->get_settings()->fraction;
+
+        $score = (1 - $fraction) + ($score * $fraction);
+
+        //todo: noncompletion
+
+        return $score;
+    }
+
     public function set_report_plugin($plugin) {
         set_user_preference(REPORT_PLUGIN_PREFERENCE, $plugin);
     }
@@ -396,6 +424,14 @@ class team_evaluation {
 
     public function group_for_user($userid) {
         return $this->evalcontext->group_for_user($userid);
+    }
+
+    public function all_groups() {
+        return $this->evalcontext->all_groups();
+    }
+
+    public function marking_users() {
+        return $this->evalcontext->marking_users();
     }
 
     // convenience functions
@@ -441,7 +477,7 @@ class team_evaluation {
 
     // MARK RELESE
 
-    protected function _release_marks_for($target, $level, $set) {
+    public function release_marks_for($target, $level, $set) {
         global $DB;
 
         $release = new stdClass;
@@ -450,14 +486,14 @@ class team_evaluation {
         $release->level = $level;
 
         // try to get a record which matches this.
-        $record = $DB->get_record('teameval_release', $release);
+        $record = $DB->get_record('teameval_release', (array)$release);
 
         if (($set == true) && ($record === false)) {
             $DB->insert_record('teameval_release', $release);
         }
 
         if (($set == false) && ($record !== false)) {
-            $DB->delete_records('teameval_release', $record);
+            $DB->delete_records('teameval_release', (array)$record);
         }
 
         $releases[] = $release;
