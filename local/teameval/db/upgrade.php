@@ -54,6 +54,13 @@ function xmldb_local_teameval_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2015120700, 'local', 'teameval');
     }
 
+    if ($oldversion < 2015120901) {
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2015120901, 'local', 'teameval');
+
+    }
+
 
     return true;
 }

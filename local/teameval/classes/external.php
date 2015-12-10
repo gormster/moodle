@@ -148,6 +148,31 @@ class external extends external_api {
 
     public static function report_is_allowed_from_ajax() { return true; }
 
+    /* release */
+
+    public static function release_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'cmid of this team eval'),
+            'level' => new external_value(PARAM_INT, 'release level'),
+            'target' => new external_value(PARAM_INT, 'target of release'),
+            'release' => new external_value(PARAM_BOOL, 'set or unset release')
+        ]);
+    }
+
+    public static function release_returns() {
+        return null;
+    }
+
+    public static function release($cmid, $level, $target, $release) {
+        $teameval = new team_evaluation($cmid);
+
+        // TODO: check permissions
+        
+        $teameval->release_marks_for($target, $level, $release);
+    }
+
+    public static function release_is_allowed_from_ajax() { return true; }
+
 }
 
 ?>
