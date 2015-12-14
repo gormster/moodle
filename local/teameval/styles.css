@@ -151,6 +151,14 @@
     text-align: center;
 }
 
+.local-teameval-release-container .group table {
+    width: 100%;
+}
+
+    .local-teameval-release-container .group tr:nth-child(even) td {
+        background-color: rgba(0,0,0,0.025);
+    }
+
 .local-teameval-switch {
     display: inline-block;
     vertical-align: middle;
@@ -166,8 +174,8 @@
     
     .local-teameval-switch.checked {
         border: 1px solid #333;
-        background-color: #eee;
-        box-shadow: inset 0px 1px #ccc;
+        background-color: rgb(59, 235, 59);
+        box-shadow: rgb(25, 201, 25);
     }
 
     .local-teameval-switch.overridden {
@@ -175,7 +183,8 @@
     }
 
 .local-teameval-switch .toggle {
-    background-color: rgb(255, 235, 59);
+    background-color: #fff;
+    border-color:#999;
     width: 13px;
     height: 13px;
     border-radius: 14px;
@@ -192,7 +201,6 @@
 
     .local-teameval-switch.checked .toggle {
         left: 31px;
-        background-color: rgb(59, 235, 59);
     }
 
     .local-teameval-switch.overridden .toggle {
