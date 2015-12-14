@@ -22,6 +22,7 @@ class release implements \renderable, \templatable {
         $evalcontext = $this->teameval->get_evaluation_context();
 
         $groups = $evalcontext->all_groups();
+        $scores = $this->teameval->get_evaluator()->scores();
 
         $released_all = false;
         $released_groups = [];
@@ -43,12 +44,15 @@ class release implements \renderable, \templatable {
         $c->groups = [];
 
         foreach($groups as $gid => $group) {
+            $ggrade = $evalcontext->grade_for_group($gid);
+
             $g = new stdClass;
             $g->gid = $gid;
-            $g->grade = $evalcontext->grade_for_group($gid);
+            $g->grade = is_null($ggrade) ? '' : round($ggrade, 2);
             $g->name = $group->name;
             $g->released = in_array($gid, $released_groups);
             $g->overridden = $released_all;
+            
             
 
             $g->users = [];
@@ -60,7 +64,8 @@ class release implements \renderable, \templatable {
                 $u->released = in_array($uid, $released_users);
                 $u->name = fullname($user);
                 $u->userpic = $output->render(new user_picture($user));
-                $u->grade = $g->grade * $this->teameval->multiplier_for_user($uid);
+                $u->score = isset($scores[$uid]) ? round($scores[$uid], 2) : '-';
+                $u->grade = is_null($ggrade) ? '-' : round($g->grade * $this->teameval->multiplier_for_user($uid), 2);
                 $u->overridden = ($g->overridden || $g->released);
 
                 $g->users[] = $u;

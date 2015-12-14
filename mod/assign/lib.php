@@ -1064,9 +1064,14 @@ function assign_grade_item_update($assign, $grades=null) {
         $grades = null;
     }
 
-    $evalcontext = new \mod_assign\evaluation_context($assignment);
-    if ($evalcontext->evaluation_enabled()) {
-        $grades = $evalcontext->update_grades($grades);
+    if (! is_null($grades)) {
+        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
+        if ($teameval_plugin && $teameval_plugin->is_enabled()) {
+            $evalcontext = new \mod_assign\evaluation_context($assignment);
+            if ($evalcontext->evaluation_enabled()) {
+                $grades = $evalcontext->update_grades($grades);
+            }
+        }
     }
 
     return grade_update('mod/assign',

@@ -41,6 +41,12 @@ abstract class evaluation_context {
      */
     abstract public function grade_for_group($groupid);
 
+    /**
+     * Called when teameval knows that adjusted grades will have changed
+     * @param [int] $users optional array of user ids whose grades have changed
+     */
+    abstract public function trigger_grade_update($users = null);
+
     public function evaluation_enabled() {
         // This can be called even when evaluation is not possible.
         // For this reason we don't use get_settings()
