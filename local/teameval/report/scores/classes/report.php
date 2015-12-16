@@ -15,7 +15,7 @@ class report implements \local_teameval\report {
     }
 
     public function generate_report() {
-        $scores = $this->teameval->multipliers_for_group(4);
+        $scores = $this->teameval->get_evaluator()->scores();
         return new output\scores_report($scores);
     }
 

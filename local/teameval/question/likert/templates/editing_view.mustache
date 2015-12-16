@@ -1,26 +1,130 @@
-<div id="question-content-{{uniqid}}">This is a editing test <input type="text" value="{{{test}}}" /></div>
+<div id="question-content-{{uniqid}}">
+<form class="form-horizontal">
+	<div class="control-group">
+	    <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_likert{{/str}}</label>
+	    <div class="controls">
+	    	<input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
+	    </div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_likert{{/str}}</label>
+		<div class="controls">
+			<textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+		</div>
+	</div>
+	<div class="control-group">
+		<span class="control-label">{{#str}}scorerange, teamevalquestion_likert{{/str}}</span>
+		<div class="controls">
+			From
+				<select id="question-minval-{{uniqid}}" aria-label="question range minimum" {{#minval}}data-selected="{{minval}}"{{/minval}}>
+					<option value="0">0</option>
+					<option value="1" selected>1</option>
+				</select>
+			to
+				<select id="question-maxval-{{uniqid}}" aria-label="question range maximum" {{#maxval}}data-selected="{{maxval}}"{{/maxval}}>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5" selected>5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+				</select>
+		</div>
+	</div>
+	<div class="control-group">
+		<span class="control-label">{{#str}}meanings, teamevalquestion_likert{{/str}}</span>
+		<div class="controls">
+			<ol id="question-meanings-{{uniqid}}">
+			{{#meanings}}
+				<li value="{{value}}"><input type="text" value="{{meaning}}" /></li>
+			{{/meanings}}
+			</ol>
+		</div>
+	</div>
+</form>
+</div>
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
 
+	var _meanings = {};
+
+	questionContainer.find('select[data-selected]').each(function() {
+		$(this).val($(this).data('selected'));
+	});
+
+	function updateMeanings() {
+		var minval = $('#question-minval-{{uniqid}}').val();
+		var maxval = $('#question-maxval-{{uniqid}}').val();
+
+		// fetch our current meanings
+		$('#question-meanings-{{uniqid}} li').each( function(idx) {
+			_meanings[this.value] = $(this).find('input').val();
+		});
+
+		// make new textboxes
+
+		$('#question-meanings-{{uniqid}}').empty();
+
+		for(var i = minval; i <= maxval; i++) {
+			var li = $('<li />');
+			var textbox = $('<input type="text">');
+			if(_meanings[i]) {
+				textbox.val(_meanings[i]);
+			}
+			li.append(textbox);
+			li.prop('value', i);
+			$('#question-meanings-{{uniqid}}').append(li);
+		}		
+	}
+
+	{{#_newquestion}} updateMeanings(); {{/_newquestion}}
+	questionContainer.find('#question-minval-{{uniqid}}, #question-maxval-{{uniqid}}').change(updateMeanings);
+
 	questionContainer.on("save", function(evt, ordinal) {
+		updateMeanings();
+
 		var deferred = $.Deferred();
 		var data = { cmid: {{_cmid}} };
 		{{#id}}
 		data.id = {{id}};
 		{{/id}}
 		data.ordinal = ordinal;
-		data.test = questionContainer.find('input').val();
+		data.title = $('#question-title-{{uniqid}}').val();
+		data.description = $('#question-description-{{uniqid}}').val();
+		data.minval = $('#question-minval-{{uniqid}}').val();
+		data.maxval = $('#question-maxval-{{uniqid}}').val();
+		data.meanings = $.map(_meanings, function(v, k) {
+		 	if ((k < data.minval) || (k > data.maxval)) return;
+			return {'value': k, 'meaning':v}; 
+		});
 
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_update_question',
 			args: data
 		}]);
 
+		//submission context needs an example student, as well
+		var submissionContext = $.extend({}, data, {
+			users: {
+				userid: 0,
+				name: "Example User"
+			},
+			optionswidth: (100 / data.maxval - data.minval + 1)
+		});
+
+		submissionContext.options = [];
+		for(var i  = data.minval; i <= data.maxval; i++) {
+			var meaning = _meanings[i];
+			submissionContext.options.push({'value': i, 'meaning':meaning});
+		}
+
 		promises[0].done(function(result) {
 			data.id = result;
-			deferred.resolve(result, data, data);
+			deferred.resolve(result, submissionContext, data);
 		}).fail(notification.exception);
 		
 		return deferred;

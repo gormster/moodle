@@ -47,15 +47,14 @@
     <div class="groups">
         {{#groups}}
         <div class="group">
-            <h3>{{name}} {{grade}} <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}">
-        </div></h3>
+            <h3>{{name}} {{grade}} <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}"></div></h3>
             <table>
                 <thead>
                     <tr>
                         <th>{{#str}}name, core{{/str}}</th>
                         <th>{{#str}}score, local_teameval{{/str}}</th>
                         <th>{{#str}}grade, core{{/str}}</th>
-                        <th></th>
+                        <th>{{#str}}releasemarks, local_teameval{{/str}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,6 +74,7 @@
 </div>
 {{#js}}
 
+{{! this exists purely to trigger syntax highlighting in sublime }}
 {{#_notset}}<script>{{/_notset}}
 require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, _switch, ajax, notification) {
 

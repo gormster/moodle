@@ -46,7 +46,7 @@ class renderer extends plugin_renderer_base {
             $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
         }
 
-        if (has_capability('local/teameval:submitquestionnaire', $context)) {
+        if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
         }
 

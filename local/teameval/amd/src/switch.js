@@ -33,7 +33,7 @@ define(['jquery'], function($) {
             o.html(
                 '<div class="toggle">' +
                 '<svg class="loading-indicator" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 1 1">' +
-                '    <g fill="white">' +
+                '    <g fill="black">' +
                 '       <rect x="0.45" y="0" width="0.1" height="0.37" rx="0.05" ry="0.05" />' +
                 '       <rect x="0.45" y="0" width="0.1" height="0.37" rx="0.05" ry="0.05" transform="rotate(-45 0.5 0.5)"  style="opacity: 1.0"/>' +
                 '       <rect x="0.45" y="0" width="0.1" height="0.37" rx="0.05" ry="0.05" transform="rotate(-90 0.5 0.5)"  style="opacity: 0.9"/>' +

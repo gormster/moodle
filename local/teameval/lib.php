@@ -35,6 +35,8 @@ class team_evaluation {
 
     protected $releases;
 
+    protected $evaluator;
+
     public function __construct($cmid) {
 
         $this->cm = get_coursemodule_from_id(null, $cmid);
@@ -336,34 +338,79 @@ class team_evaluation {
 
     }
 
-    public function get_evaluator() {
-        // TODO
-
-        $evaluators = core_plugin_manager::instance()->get_plugins_of_type("teamevaluator");
-
-        $plugininfo = current( $evaluators );
-        $evaluator_cls = $plugininfo->get_evaluator_class();
-
-        $markable_users = $this->evalcontext->marking_users();
-
+    /**
+     * Returns the percentage completion of a user as 0..1
+     * @param int $uid the id of the User
+     * @return float the completion index
+     */
+    public function user_completion($uid) {
         $questions = $this->get_questions();
-        $responses = [];
+        $marks_given = 0;
         foreach($questions as $q) {
             $response_cls = $q->plugininfo->get_response_class();
-            foreach($markable_users as $m) {
-                $response = new $response_cls($this, $q->question, $m->id);
-                $responses[$m->id][] = $response;
+            $response = new $response_cls($this, $q->question, $uid);
+            if ($response->marks_given()) {
+                $marks_given++;
             }
         }
 
-        return new $evaluator_cls($this, $responses);
+        return $marks_given / count($questions);
+    }
 
+    public function get_evaluator() {
+
+        if (! isset($this->evaluator)) {
+
+            $evaluators = core_plugin_manager::instance()->get_plugins_of_type("teamevaluator");
+
+            $plugininfo = current( $evaluators );
+            $evaluator_cls = $plugininfo->get_evaluator_class();
+
+            $markable_users = $this->evalcontext->marking_users();
+
+            $questions = $this->get_questions();
+            $responses = [];
+            foreach($questions as $q) {
+                $response_cls = $q->plugininfo->get_response_class();
+                foreach($markable_users as $m) {
+                    $response = new $response_cls($this, $q->question, $m->id);
+                    $responses[$m->id][] = $response;
+                }
+            }
+
+            $this->evaluator = new $evaluator_cls($this, $responses);
+
+        }
+
+        return $this->evaluator;
+
+    }
+
+    protected function score_to_multiplier($score, $uid) {
+        $fraction = $this->get_settings()->fraction;
+        $multiplier = (1 - $fraction) + ($score * $fraction);
+
+        $noncompletion = $this->get_settings()->noncompletionpenalty;
+        $completion = $this->user_completion($uid);
+        $penalty = $noncompletion * (1 - $completion);
+
+        $multiplier -= $penalty;
+
+        return $multiplier;
     }
 
     public function multipliers() {
         $eval = $this->get_evaluator();
 
-        return $eval->scores();
+        $scores = $eval->scores();
+
+        $multipliers = [];
+
+        foreach($scores as $uid => $score) {
+            $multipliers[$uid] = $this->score_to_multiplier($score, $uid);
+        }
+
+        return $multipliers;
     }
 
     /**
@@ -373,11 +420,16 @@ class team_evaluation {
      */
     public function multipliers_for_group($groupid) {
 
-        // TODO
+        $users = $this->_groups_get_members($groupid);
+        $scores = $eval->scores();
 
-        $eval = $this->get_evaluator();
+        $multipliers = [];
 
-        return $eval->scores();
+        foreach($users as $uid => $user) {
+            $multipliers[$uid] = $this->score_to_multiplier($scores[$uid]);
+        }
+
+        return $multipliers;
 
     }
 
@@ -391,13 +443,7 @@ class team_evaluation {
         
         $score = $eval->scores()[$userid];
 
-        $fraction = $this->get_settings()->fraction;
-
-        $score = (1 - $fraction) + ($score * $fraction);
-
-        //todo: noncompletion
-
-        return $score;
+        return $this->score_to_multiplier($score, $userid);
     }
 
     public function set_report_plugin($plugin) {
@@ -475,7 +521,7 @@ class team_evaluation {
         return $members;
     }
 
-    // MARK RELESE
+    // MARK RELEASE
 
     public function release_marks_for($target, $level, $set) {
         global $DB;
@@ -496,7 +542,17 @@ class team_evaluation {
             $DB->delete_records('teameval_release', (array)$record);
         }
 
-        $releases[] = $release;
+        $this->releases[] = $release;
+
+        // figure who we need to trigger grades for
+        if ($level == RELEASE_ALL) {
+            $this->evalcontext->trigger_grade_update();
+        } else if ($level == RELEASE_GROUP) {
+            $users = $this->_groups_get_members($target);
+            $this->evalcontext->trigger_grade_update(array_keys($users));
+        } else if ($level == RELEASE_USER) {
+            $this->evalcontext->trigger_grade_update([$target]);
+        }
     }
 
     public function release_marks_for_all($set = true) {
