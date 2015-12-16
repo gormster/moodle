@@ -544,7 +544,15 @@ class team_evaluation {
 
         $this->releases[] = $release;
 
-        $this->evalcontext->trigger_grade_update();
+        // figure who we need to trigger grades for
+        if ($level == RELEASE_ALL) {
+            $this->evalcontext->trigger_grade_update();
+        } else if ($level == RELEASE_GROUP) {
+            $users = $this->_groups_get_members($target);
+            $this->evalcontext->trigger_grade_update(array_keys($users));
+        } else if ($level == RELEASE_USER) {
+            $this->evalcontext->trigger_grade_update([$target]);
+        }
     }
 
     public function release_marks_for_all($set = true) {
