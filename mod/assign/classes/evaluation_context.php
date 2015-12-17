@@ -67,11 +67,16 @@ class evaluation_context extends \local_teameval\evaluation_context {
 	}
 
 	public function trigger_grade_update($users = null) {
+		global $DB;
+
 		if (is_null($users)) {
-			assign_update_grades($this->assign->get_instance());
-		} else {
-			foreach($users as $u) {
-				assign_update_grades($this->assign->get_instance(), $u);
+			$users = array_keys($this->assign->list_participants(0, true));
+		}
+
+		foreach($users as $u) {
+			$grade = $this->assign->get_user_grade($u, false);
+			if ($grade) {
+				$this->assign->update_grade($grade);
 			}
 		}
 	}

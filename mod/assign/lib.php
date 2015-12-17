@@ -1025,12 +1025,12 @@ function assign_grade_item_update($assign, $grades=null) {
         $assign->courseid = $assign->course;
     }
 
-    $params = array('itemname'=>$assign->name, 'idnumber'=>$assign->cmidnumber);
-
     require_once($CFG->dirroot . '/mod/assign/locallib.php');
     $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
     $cm = context_module::instance($mod->id);
     $assignment = new assign($cm, null, null);
+
+    $params = array('itemname'=>$assign->name, 'idnumber'=>$cm->id);
 
     // Check if feedback plugin for gradebook is enabled, if yes then
     // gradetype = GRADE_TYPE_TEXT else GRADE_TYPE_NONE.
@@ -1066,7 +1066,7 @@ function assign_grade_item_update($assign, $grades=null) {
 
     if (! is_null($grades)) {
         $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
-        if ($teameval_plugin && $teameval_plugin->is_enabled()) {
+        if ($teameval_plugin) {
             $evalcontext = new \mod_assign\evaluation_context($assignment);
             if ($evalcontext->evaluation_enabled()) {
                 $grades = $evalcontext->update_grades($grades);
