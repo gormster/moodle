@@ -568,7 +568,7 @@ class team_evaluation {
     }
 
     public function marks_available($userid) {
-
+        global $DB;
         // First check if the marks are released.
 
         $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
@@ -603,7 +603,7 @@ class team_evaluation {
 
         // Next check if everyone in their group has submitted OR the deadline has passed
 
-        if ($this->deadline < time()) {
+        if ($this->get_settings()->deadline < time()) {
             return true;
         }
 

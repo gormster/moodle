@@ -75,7 +75,16 @@ abstract class evaluation_context {
                 $grade = (object)$grade;
                 $grades[$userid] = $grade;
             }
-            $grade->rawgrade *= $teameval->multiplier_for_user($userid);
+
+            if (isset($grade->rawgrade) && !is_null($grade->rawgrade)) {
+
+                if ($this->marks_available($userid)) {
+                    $grade->rawgrade *= $teameval->multiplier_for_user($userid);
+                } else {
+                    $grade->rawgrade = null;
+                }
+
+            }
         }
 
         return $grades;
