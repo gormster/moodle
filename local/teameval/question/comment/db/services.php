@@ -1,0 +1,21 @@
+<?php
+
+$functions = [
+    
+    'teamevalquestion_comment_update_question' => [
+        
+        'classname'     => 'teamevalquestion_comment\external',
+        'methodname'    => 'update_question',
+        'type'          => 'write'
+        
+    ],
+
+    'teamevalquestion_comment_submit_response' => [
+
+        'classname'     => 'teamevalquestion_comment\external',
+        'methodname'    => 'submit_response',
+        'type'          => 'write'
+
+    ]
+
+];
