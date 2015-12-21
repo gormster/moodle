@@ -46,6 +46,7 @@
 </form>
 </div>
 {{#js}}
+{{#_notset}}<script type="text/javascript">{{/_notset}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');

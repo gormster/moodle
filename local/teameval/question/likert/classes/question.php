@@ -89,8 +89,6 @@ class question implements \local_teameval\question {
     }
     
     public function editing_view() {
-        global $DB;
-
         $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description];
 
         $meanings = [];
