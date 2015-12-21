@@ -24,7 +24,7 @@ class evaluator implements \local_teameval\evaluator {
         foreach ($this->responses as $userid => $responses) {
             $user_opinions[$userid] = [];
             foreach($responses as $response) {
-                if ($response->marks_given()) {
+                if ($response->question->has_value() && $response->marks_given()) {
                     $key = $response->question->plugin_name() . "/{$response->question->id}";
                     $user_opinions[$userid][$key] = [];
                     $teammates = $this->teameval->teammates($userid);
