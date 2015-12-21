@@ -648,6 +648,9 @@ interface question {
     /**
      * The view that a submitting user should see. Rendered with submission_view.mustache
      * @return stdClass|array template data. @see templatable
+     * 
+     * You MUST attach an event handler for the "delete" event. This handler must return
+     * a $.Deferred which will resolve with no arguments.
      */
     public function submission_view($userid);
     
@@ -657,21 +660,13 @@ interface question {
      * with a context consisting of just one key-value pair: _newquestion: true. This
      * template must render properly without any context.
      *
-     * You MUST attach an event handler for the "save" event to the question element marked with
-     * "data-script-marker". This event must return a $.Deferred which will resolve with the new 
+     * You MUST attach an event handler for the "save" event to the parent .question-container.
+     * This event must return a $.Deferred which will resolve with the new 
      * question data which will be returned from $this->submission_view.
-     *
-     * You MUST also attach an event handler for the "delete" event. This handler must return
-     * a $.Deferred which will resolve with no arguments.
      *
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();
-    
-    /**
-     * @return int Question ID
-     */
-    public function update($formdata);
 
     /**
      * Return the name of this teamevalquestion subplugin
@@ -695,11 +690,6 @@ interface response {
      * @param int $userid the ID of the user responding to this question
      */
     public function __construct(team_evaluation $teameval, $question, $userid);
-    
-    /**
-     * @return int Response ID
-     */
-    public function update_response($formdata);
 
     /**
      * @return bool Has a response been given by this user?
