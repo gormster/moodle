@@ -1,0 +1,49 @@
+<div class="teamevalquestion-comment-container" id="teamevalquestion-comment-{{uniqid}}">
+<h3>{{title}}</h3>
+<div class="description">{{description}}</div>
+<table class="comments">
+{{#users}}
+    <tr>
+        <th scope="row">{{name}}</th>
+        <td>
+            <textarea id="teamevalquestion-comment-for-{{userid}}-{{uniqid}}" rows="3" data-touser="{{userid}}">{{comment}}</textarea>
+        </td>
+    </tr>
+{{/users}}
+</table>
+</div>
+{{#js}}
+{{#_notset}}<script>{{/_notset}}
+
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
+
+    var questionContainer = $('#teamevalquestion-comment-{{uniqid}}').closest('.question-container');
+    var thisQuestion = $('#teamevalquestion-comment-{{uniqid}}');
+
+    questionContainer.on('submit', function () {
+
+        var comments = [];
+        thisQuestion.find('.comments textarea').each(function(v, k) {
+            var toUser = $(this).data('touser');
+            var m = {};
+            m.touser = toUser;
+            m.comment = $(this).val();
+            comments.push(m);
+        });
+
+        var promises = ajax.call([{
+            methodname: 'teamevalquestion_comment_submit_response',
+            args: {
+                cmid: {{_cmid}},
+                id: {{id}},
+                comments: comments
+            }
+        }]);
+
+        return promises[0];
+
+    });
+
+});
+
+{{/js}}

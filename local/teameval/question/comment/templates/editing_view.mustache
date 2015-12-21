@@ -1,0 +1,61 @@
+<div class="local-teamevalquestion-comment" id="question-content-{{uniqid}}">
+    <div class="control-group">
+        <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+        </div>
+    </div>
+</div>
+{{#js}}
+{{#_notset}}<script type="text/javascript">{{/_notset}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
+
+    var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+    questionContainer.on("save", function(evt, ordinal) {
+
+        var deferred = $.Deferred();
+
+        var data = { cmid: {{_cmid}} };
+        {{#id}}
+        data.id = {{id}};
+        {{/id}}
+        data.ordinal = ordinal;
+
+        data.title = $('#question-title-{{uniqid}}').val();
+        data.description = $('#question-description-{{uniqid}}').val();
+
+        var promises = ajax.call([{
+            methodname: 'teamevalquestion_comment_update_question',
+            args: data
+        }]);
+
+        var submissionContext = $.extend({}, data, {
+            users: {
+                userid: 0,
+                name: "Example User"
+            }
+        });
+
+        var editingContext = data;
+
+        promises[0].done(function(result) {
+            data.id = result;
+            deferred.resolve(data.id, submissionContext, editingContext);
+        });
+
+        promises[0].fail(notification.exception);
+
+        return deferred;
+
+    });
+
+});
+
+{{/js}}
