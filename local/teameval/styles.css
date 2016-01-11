@@ -151,6 +151,24 @@
     text-align: center;
 }
 
+.local-teameval-release-container .group header {
+    margin: 10px 0;
+}
+
+    .local-teameval-release-container .group header h3 {
+        margin: 0;
+        margin-right: 10px;
+        float: left;
+    }
+
+    .local-teameval-release-container .group header .group-grade {
+        font-style: italic;
+    }
+
+    .local-teameval-release-container .group header .group-release-switch {
+        font-weight: bold;
+    }
+
 .local-teameval-release-container .group table {
     width: 100%;
 }

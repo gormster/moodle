@@ -47,7 +47,13 @@
     <div class="groups">
         {{#groups}}
         <div class="group">
-            <h3>{{name}} {{grade}} <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}"></div></h3>
+            <header>
+                <h3>{{name}}</h3>
+                <div class="group-grade">{{#grade}}Group grade: {{grade}}{{/grade}}{{^grade}}Not yet graded{{/grade}}</div>
+                <div class="group-release-switch">Release marks for group 
+                    <div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="1" data-target="{{gid}}" data-override="switch-all-{{uniqid}}" id="switch-group-{{gid}}-{{uniqid}}"></div>
+                </div>
+            </header>
             <table>
                 <thead>
                     <tr>
@@ -76,12 +82,12 @@
 
 {{! this exists purely to trigger syntax highlighting in sublime }}
 {{#_notset}}<script>{{/_notset}}
-require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, _switch, ajax, notification) {
+require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
 
     
 
     $('.local-teameval-switch').each( function() {
-        _switch.init($(this));
+        Switch.init($(this));
 
         $(this).on('changed', function() {
             var sw = $(this);
@@ -91,7 +97,7 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
             var level = $(this).data('level');
             var target = $(this).data('target');
 
-            var promises = ajax.call([{
+            var promises = Ajax.call([{
                 methodname: 'local_teameval_release',
                 args: {
                     cmid: {{cmid}},
@@ -106,7 +112,7 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
                 sw.trigger('hideLoading');
             });
 
-            promises[0].fail(notification.exception);
+            promises[0].fail(Notification.exception);
 
         });
     });
