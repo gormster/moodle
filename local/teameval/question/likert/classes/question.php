@@ -125,6 +125,9 @@ class question implements \local_teameval\question {
         return $this->maxval;
     }
     
+    public function get_title() {
+        return $this->title;
+    }
     
 }
 

@@ -8,7 +8,7 @@ class question implements \local_teameval\question {
 
     protected $teameval;
 
-    protected $name;
+    protected $title;
 
     protected $description;
 
@@ -68,6 +68,10 @@ class question implements \local_teameval\question {
 
     public function maximum_value() {
         return 0;
+    }
+
+    public function get_title() {
+        return $this->title;
     }
 
 }

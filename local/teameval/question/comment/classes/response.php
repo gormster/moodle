@@ -66,6 +66,13 @@ class response implements \local_teameval\response {
         return null;
     }
 
+    public function opinion_of_readable($userid) {
+        if ($this->marks_given()) {
+            return $this->comments[$userid]->comment;
+        }
+        return "No comment";
+    }
+
 }
 
 ?>

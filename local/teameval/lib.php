@@ -679,6 +679,8 @@ interface question {
     public function minimum_value();
 
     public function maximum_value();
+
+    public function get_title();
     
 }
 
@@ -702,6 +704,12 @@ interface response {
      * @return type
      */
     public function opinion_of($userid);
+
+    /**
+     * Human readable of above; for reports plugins
+     * @return string
+     */
+    public function opinion_of_readable($userid);
     
 }
 

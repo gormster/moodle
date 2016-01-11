@@ -84,6 +84,13 @@ class response implements \local_teameval\response {
         return ($this->responses[$userid]->mark - $minval) / ($maxval - $minval);
     }
 
+    public function opinion_of_readable($userid) {
+        if ($this->marks_given()) {
+            return $this->responses[$userid]->mark . " / " . $this->question->maximum_value();
+        }
+        return "No mark";
+    }
+
     /**
      * Constrains the given responses to the actual teammates of this user
      */
