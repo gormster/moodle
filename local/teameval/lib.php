@@ -420,13 +420,16 @@ class team_evaluation {
      */
     public function multipliers_for_group($groupid) {
 
+        $eval = $this->get_evaluator();
         $users = $this->_groups_get_members($groupid);
         $scores = $eval->scores();
 
         $multipliers = [];
 
         foreach($users as $uid => $user) {
-            $multipliers[$uid] = $this->score_to_multiplier($scores[$uid]);
+            if (isset($scores[$uid])) {
+                $multipliers[$uid] = $this->score_to_multiplier($scores[$uid], $uid);
+            }
         }
 
         return $multipliers;
