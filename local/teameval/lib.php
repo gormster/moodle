@@ -386,13 +386,18 @@ class team_evaluation {
 
     }
 
+    public function non_completion_penalty($uid) {
+        $noncompletion = $this->get_settings()->noncompletionpenalty;
+        $completion = $this->user_completion($uid);
+        $penalty = $noncompletion * (1 - $completion);
+        return $penalty;
+    }
+
     protected function score_to_multiplier($score, $uid) {
         $fraction = $this->get_settings()->fraction;
         $multiplier = (1 - $fraction) + ($score * $fraction);
 
-        $noncompletion = $this->get_settings()->noncompletionpenalty;
-        $completion = $this->user_completion($uid);
-        $penalty = $noncompletion * (1 - $completion);
+        $penalty = $this->non_completion_penalty($uid);
 
         $multiplier -= $penalty;
 
