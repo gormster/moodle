@@ -10,13 +10,13 @@ class scores_report implements \renderable, \templatable {
 
     public $scores;
 
-    public function __construct($scores) {
+    public function __construct($data) {
         $display_scores = [];
-        foreach($scores as $userid => $score) {
+
+        foreach($data as $userid => $datum) {
             $user = core_user::get_user($userid, user_picture::fields());
-            $c = new stdClass;
+            $c = clone $datum;
             $c->user = $user;
-            $c->score = $score;
             $display_scores[] = $c;
         }
         $this->scores = $display_scores;
@@ -27,8 +27,11 @@ class scores_report implements \renderable, \templatable {
         foreach($this->scores as $score) {
             $userpic = $output->render(new user_picture($score->user));
             $fullname = fullname($score->user);
-            $score = round($score->score, 2);
-            $ctx[] = ['userpic' => $userpic, 'fullname' => $fullname, 'score' => $score];
+            $evalscore = round($score->score, 2);
+            $intergrade = round($score->intermediategrade, 2);
+            $noncomplete = round($score->noncompletionpenalty, 2);
+            $finalgrade = round($score->finalgrade, 2);
+            $ctx[] = ['userpic' => $userpic, 'fullname' => $fullname, 'score' => $evalscore, 'intermediategrade' => $intergrade, 'noncompletionpenalty' => $noncomplete, 'finalgrade' => $finalgrade];
         }
         return ['scores' => $ctx];
     }
