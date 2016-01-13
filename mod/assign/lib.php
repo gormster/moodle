@@ -1025,12 +1025,21 @@ function assign_grade_item_update($assign, $grades=null) {
         $assign->courseid = $assign->course;
     }
 
-    require_once($CFG->dirroot . '/mod/assign/locallib.php');
     $mod = get_coursemodule_from_instance('assign', $assign->id, $assign->courseid);
-    $cm = context_module::instance($mod->id);
-    $assignment = new assign($cm, null, null);
+    // the coursemodule might not yet be created.
+    if ($mod !== false) {
+        require_once($CFG->dirroot . '/mod/assign/locallib.php');
+        $cm = context_module::instance($mod->id);
+        $assignment = new assign($cm, null, null);
+    }
 
-    $params = array('itemname'=>$assign->name, 'idnumber'=>$cm->id);
+    $params = array('itemname'=>$assign->name);
+
+    if (isset($cm)) {
+        $params['idnumber'] = $cm->id;
+    } else {
+        $params['idnumber'] = $assign->cmidnumber;
+    }
 
     // Check if feedback plugin for gradebook is enabled, if yes then
     // gradetype = GRADE_TYPE_TEXT else GRADE_TYPE_NONE.
