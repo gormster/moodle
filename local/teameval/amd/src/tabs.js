@@ -15,4 +15,5 @@ define(['jquery'], function($) { return {
 
     }
 
-}});
+};
+});

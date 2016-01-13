@@ -8,7 +8,8 @@
   * Add question button for teameval blocks
   * @module local_teameval/addquestion
   */
-define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'], function($, ui, str, templates, ajax, notification) {
+define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'], 
+	function($, ui, str, templates, ajax, notification) {
 
 	"use strict";
 
@@ -80,7 +81,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 		addEditingControls: function(question) {
 			var _this = this;
 
-			templates.render('local_teameval/question_actions', {}).done(function(html, js) {
+			templates.render('local_teameval/question_actions', {}).done(function(html) {
 
 				var actionBar = $(html);
 				question.prepend(actionBar);
@@ -101,7 +102,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 			// and our Save and Cancel buttons for editing
 
-			templates.render('local_teameval/save_cancel_buttons', {}).done(function(html, js) {
+			templates.render('local_teameval/save_cancel_buttons', {}).done(function(html) {
 				var buttonArea = $(html);
 				buttonArea.find(".save").click(function() {
 					_this.saveQuestion(question);
@@ -183,12 +184,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 				templates.runTemplateJS(js);
 
-			}).fail(function(err) {
-
-				alert("fail");
-				console.log(err);
-
-			});
+			}).fail(notification.exception);
 
 		},
 
@@ -199,7 +195,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			} else {
 				// actually delete it from the database
 				var questionContainer = question.find('.question-container');
-				console.log(questionContainer);
+				
 				questionContainer.triggerHandler("delete").done(function() {
 					question.remove();
 				}).fail(notification.exception);
@@ -222,7 +218,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			}]);
 
 			promises[0].done(function() {
-				console.log("order saved");
+				
 			}).fail(notification.exception);
 		},
 
@@ -242,10 +238,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				//decode JSON-encoded data attributes
 				$.each(['submissioncontext', 'editingcontext'], function(idx, val) {
 					if (typeof $(this).data(val) === 'string') {
-						ctx = JSON.parse($(this).data(val));
+						var ctx = JSON.parse($(this).data(val));
 						$(this).data(val, ctx);
 					}
-				}.bind(this))
+				}.bind(this));
 
 				
 				_this.addEditingControls($(this));
@@ -274,12 +270,12 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				var _ = {};
 				for (var i = _strings.length - 1; i >= 0; i--) {
 					_[stringsNeeded[i]] = _strings[i];
-				};
+				}
 
 				// Find the question container and add the button after it
 				var questionContainer = $('#local-teameval-questions');
 				var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
-				addQuestionButton.html('<a href="javascript:void(0);">' + _['addquestion'] + '</a>');
+				addQuestionButton.html('<a href="javascript:void(0);">' + _.addquestion + '</a>');
 				questionContainer.after(addQuestionButton);
 
 				addQuestionButton.find('a').click(_this.preAddQuestion.bind(_this));
@@ -290,6 +286,6 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 		}
 
-	}
+	};
 
 });

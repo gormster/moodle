@@ -19,4 +19,5 @@ define(['jquery'], function($) { return {
         $('.local-teameval-developer-buttons').append(randomiseButton);
     }
 
-}});
+};
+});

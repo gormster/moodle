@@ -19,7 +19,7 @@ return {
 
         $(form).find('input, select, textarea').each(function() {
             var name = $(this).get(0).name;
-            if ((typeof name == 'undefined') || name.length == 0) {
+            if ((typeof name == 'undefined') || name.length === 0) {
                 // there are some input elements without names. these will not be submitted.
                 return;
             }
@@ -56,7 +56,7 @@ return {
 
         });
 
-        promises = ajax.call([{
+        var promises = ajax.call([{
             methodname: call,
             args: {'form': params}
         }]);
@@ -77,5 +77,5 @@ return {
         promise.fail(notification.exception);
     }
 
-}
+};
 });

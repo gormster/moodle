@@ -14,7 +14,7 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function(
 
 	return {
 
-		submit: function(evt) {
+		submit: function() {
 
 			var questions = $('#local-teameval-questions');
 			var promises = [];
@@ -51,6 +51,6 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function(
 
 		}
 
-	}
+	};
 
 });
