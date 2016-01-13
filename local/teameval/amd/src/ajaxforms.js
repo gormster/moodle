@@ -2,14 +2,14 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notificat
 
 return {
 
-    ajaxify: function(form) {
+    ajaxify: function(form, callback) {
         $(form).submit(function(evt) {
             evt.preventDefault();
-            this.put(form);
+            this.put(form, callback);
         }.bind(this));
     },
 
-    put: function(form) {
+    put: function(form, callback) {
 
         // The webservice callback to issue is stored as data-ajaxfroms-callback on the form element
         var call = $(form).data('ajaxforms-methodname');
@@ -61,14 +61,20 @@ return {
             args: {'form': params}
         }]);
 
-        promises[0].done(function() {
-            var callback = $(form).data('ajaxforms-callback');
-            if(window[callback]) {
-                window[callback]();
+        var promise = promises[0];
+
+        if (typeof callback === 'function') {
+            callback(promise);
+        }
+
+        promise.done(function() {
+            var dataCallback = $(form).data('ajaxforms-callback');
+            if(window[dataCallback]) {
+                window[dataCallback]();
             }
         });
 
-        promises[0].fail(notification.exception);
+        promise.fail(notification.exception);
     }
 
 }

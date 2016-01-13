@@ -12,7 +12,7 @@ class settings_form extends ajaxform {
 
         $mform = $this->_form;
 
-        $mform->updateAttributes(['data-ajaxforms-callback' => 'local_teameval_update_settings']);
+        $mform->updateAttributes(['data-ajaxforms-methodname' => 'local_teameval_update_settings']);
 
         $mform->addElement('hidden', 'cmid');
         $mform->setType('cmid', PARAM_INT);

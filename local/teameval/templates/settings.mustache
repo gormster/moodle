@@ -4,8 +4,11 @@
 {{{form}}}
 </div>
 {{#js}}
+{{#_notset}}<script>{{/_notset}}
+
 require(['jquery', 'local_teameval/ajaxforms'], function($, ajaxforms) {
     var container = $('.local-teameval-settings-container');
+    container.css('display','block');
     container.hide();
 
     var settingsButton = $('.local-teameval-settings-button');
@@ -14,6 +17,16 @@ require(['jquery', 'local_teameval/ajaxforms'], function($, ajaxforms) {
     });
     
     var form = container.find('form');
-    ajaxforms.ajaxify(form);
+    ajaxforms.ajaxify(form, function (promise) {
+    	var saveButton = container.find('input[type=submit]');
+		saveButton.prop('disabled',true);
+		saveButton.html('Saving...');
+
+		promise.done(function(data) {
+			container.hide();
+			saveButton.html("Save");
+			saveButton.prop('disabled',false);
+		}.bind(this));
+    });
 });
 {{/js}}

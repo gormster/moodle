@@ -58,6 +58,7 @@
 	padding: 5px;
 	border-radius: 10px;
     margin-bottom:10px;
+    display: none;
 }
 
     .local-teameval-settings-container th {
