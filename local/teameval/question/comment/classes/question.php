@@ -43,6 +43,10 @@ class question implements \local_teameval\question {
                 if (! is_null($comment)) { 
                     $c['comment'] = $comment;
                 }
+                if ($t->id == $userid) {
+                    $c['self'] = true;
+                    $c['name'] = get_string('yourself', 'local_teameval');
+                }
                 $context['users'][] = $c;
             }
         }

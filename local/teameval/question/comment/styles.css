@@ -22,3 +22,7 @@
     box-sizing: border-box;
     width: 100%;
 }
+
+.teamevalquestion-comment-container .comments tr.self {
+    background-color: rgba(120,230,170,0.2);
+}

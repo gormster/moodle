@@ -75,12 +75,9 @@ class response implements \local_teameval\response {
     public function opinion_of($userid) {
         $this->fix_responses();
 
-
-        // $total = array_sum(array_map(function($v) {
-        //     return $v->mark;
-        // }, $this->responses));
         $minval = $this->question->minimum_value();
         $maxval = $this->question->maximum_value();
+
         return ($this->responses[$userid]->mark - $minval) / ($maxval - $minval);
     }
 

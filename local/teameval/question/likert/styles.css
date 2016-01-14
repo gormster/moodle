@@ -28,3 +28,7 @@
 .teamevalquestion-likert-question-submission .responses td input {
 	margin:0;
 }
+
+.teamevalquestion-likert-question-submission .responses tr.self {
+	background-color: rgba(120,230,170,0.2);
+}
