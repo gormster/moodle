@@ -73,6 +73,10 @@ class response implements \local_teameval\response {
         return "No comment";
     }
 
+    public function render_for_report() {
+        return new output\response_report($this->teameval, $this->userid, $this->question, $this);
+    }
+
 }
 
 ?>

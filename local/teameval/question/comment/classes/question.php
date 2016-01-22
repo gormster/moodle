@@ -62,8 +62,12 @@ class question implements \local_teameval\question {
         return false;
     }
 
+    public function has_feedback() {
+        return true;
+    }
+
     public function minimum_value() {
-        return 0; // even if $minval == 1, return 0; it's what users expect
+        return 0;
     }
 
     public function maximum_value() {
@@ -72,6 +76,10 @@ class question implements \local_teameval\question {
 
     public function get_title() {
         return $this->title;
+    }
+
+    public function render_for_report($groupid = null) {
+        return new output\question_report($this->teameval, $this, $groupid);
     }
 
 }

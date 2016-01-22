@@ -1,0 +1,35 @@
+<?php
+
+namespace teamevalreport_feedback;
+
+use stdClass;
+
+class report implements \local_teameval\report {
+
+    protected $teameval;
+
+    public function __construct(\local_teameval\team_evaluation $teameval) {
+
+        $this->teameval = $teameval;
+
+    }
+
+    public function generate_report() {
+
+    	$questions = $this->teameval->get_questions();
+
+    	$feedback_questions = [];
+
+    	foreach($questions as $q) {
+    		if ($q->question->has_feedback()) {
+    			$feedback_questions[] = $q;
+    		}
+    	}
+
+    	$groups = $this->teameval->get_evaluation_context()->all_groups();
+
+    	return new output\feedback_report($groups, $feedback_questions);
+
+    }
+
+}

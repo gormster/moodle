@@ -1,6 +1,8 @@
 <?php
 
 namespace teamevalquestion_likert;
+
+use coding_exception;
     
 class question implements \local_teameval\question {
     
@@ -127,6 +129,14 @@ class question implements \local_teameval\question {
     
     public function get_title() {
         return $this->title;
+    }
+
+    public function has_feedback() {
+        return false;
+    }
+
+    public function render_for_report($groupid = null) {
+        throw new coding_exception("not implemented");
     }
     
 }

@@ -689,6 +689,10 @@ interface question {
     public function maximum_value();
 
     public function get_title();
+
+    public function has_feedback();
+
+    public function render_for_report($groupid = null);
     
 }
 
@@ -718,6 +722,12 @@ interface response {
      * @return string
      */
     public function opinion_of_readable($userid);
+
+    /**
+     * Return a renderable version of this response for inclusion in a report
+     * @return renderable
+     */
+    public function render_for_report();
     
 }
 

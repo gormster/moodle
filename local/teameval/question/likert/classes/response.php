@@ -4,6 +4,7 @@ namespace teamevalquestion_likert;
 
 use stdClass;
 use local_teameval\team_evaluation;
+use coding_exception;
 
 class response implements \local_teameval\response {
 
@@ -103,6 +104,10 @@ class response implements \local_teameval\response {
                 }
             }
         }
+    }
+
+    public function render_for_report() {
+        throw new coding_exception("not implemented");
     }
 
 }
