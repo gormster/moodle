@@ -3,7 +3,7 @@
 <div class="description">{{description}}</div>
 <table class="comments">
 {{#users}}
-    <tr>
+    <tr{{#self}} class="self"{{/self}}>
         <th scope="row">{{name}}</th>
         <td>
             <textarea id="teamevalquestion-comment-for-{{userid}}-{{uniqid}}" rows="3" data-touser="{{userid}}">{{comment}}</textarea>

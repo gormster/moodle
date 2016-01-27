@@ -54,10 +54,8 @@ class question implements \local_teameval\question {
             // get any response this user has given already
             $response = new response($this->teameval, $this, $userid);
             $marks = $response->raw_marks();
-
-            $group = $this->teameval->group_for_user($userid);
             
-            $members = groups_get_members($group->id);
+            $members = $this->teameval->teammates($userid);
             foreach ($members as $user) {
                 $opts = [];
 
@@ -69,11 +67,18 @@ class question implements \local_teameval\question {
                     $opts[] = $o;
                 }
 
-                $context['users'][] = [
+                $c = [
                     "name" => fullname($user),
                     "userid" => $user->id,
                     "options" => $opts
                 ];
+
+                if ($user->id == $userid) {
+                    $c['self'] = true;
+                    $c['name'] = get_string('yourself', 'local_teameval');
+                }
+
+                $context['users'][] = $c;
             }
 
         } else {

@@ -12,7 +12,7 @@
 		</thead>
 		<tbody>
 			{{#users}}
-			<tr>
+			<tr{{#self}} class="self"{{/self}}>
 				<th class="first">{{name}}</th>
 				{{#options}}
 					<td><input type="radio" name="question-{{uniqid}}-marks-for-{{userid}}" data-touser="{{userid}}" value="{{value}}" {{#checked}}checked{{/checked}} /></td>

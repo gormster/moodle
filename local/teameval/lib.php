@@ -508,6 +508,10 @@ class team_evaluation {
         
         if($include_self == false) {
             unset($members[$userid]);
+        } else {
+            $self = $members[$userid];
+            unset($members[$userid]);
+            $members = [$userid => $self] + $members;
         }
 
         return $members;

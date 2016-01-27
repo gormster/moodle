@@ -30,4 +30,7 @@
     $string['releaseallmarks'] = 'Release All Marks';
     $string['score'] = 'Score';
 
+    $string['yourself'] = 'Yourself';
+    $string['self'] = 'Self';
+
 ?>
