@@ -13,6 +13,7 @@ class response implements \local_teameval\response {
     protected $teameval;
     protected $userid;
 	protected $responses;
+    protected $teammates;
 
     public function __construct(team_evaluation $teameval, $question, $userid, $responseid = null) {
         global $DB;
@@ -20,6 +21,7 @@ class response implements \local_teameval\response {
         $this->teameval = $teameval;
         $this->question = $question;
         $this->userid = $userid;
+        $this->teammates = $teameval->teammates($userid);
 
     	$records = $DB->get_records("teamevalquestion_likert_resp", array("questionid" => $question->id, "fromuser" => $userid), '', 'id,touser,mark,markdate');
 
@@ -69,8 +71,7 @@ class response implements \local_teameval\response {
     }
 
     public function marks_given() {
-        //TODO: Should I make sure the number of responses == the number of people in the group?
-        return count($this->responses) > 0 ? true : false;
+        return count($this->responses) >= count($this->teammates) ? true : false;
     }
 
     public function opinion_of($userid) {
