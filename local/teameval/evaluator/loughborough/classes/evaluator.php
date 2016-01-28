@@ -95,7 +95,7 @@ class evaluator implements \local_teameval\evaluator {
                         $user_scores[$markeduser] = 0.0;
                     }
 
-                    $fudge = $user_marked_count[$markeduser][$question] / $user_team_count[$markeduser];
+                    $fudge = $user_team_count[$markeduser] / $user_marked_count[$markeduser][$question];
 
                     $user_scores[$markeduser] += $fudge * ($score / $max_score);
                 }
