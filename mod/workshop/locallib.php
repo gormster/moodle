@@ -358,7 +358,7 @@ class workshop {
         foreach (core_component::get_plugin_list_with_file('workshopeval', 'lib.php', false) as $eval => $evalpath) {
             $evals[$eval] = get_string('pluginname', 'workshopeval_' . $eval);
             if ($eval == "calibrated") {
-                if ($this->useexamples == false || $this->examplesmode == workshop::EXAMPLES_VOLUNTARY || count($this->get_examples_for_manager()) == 0) {
+                if ($this->usecalibration == false) {
                     unset($evals[$eval]);
                 }
             }
