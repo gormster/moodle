@@ -8,7 +8,7 @@
   * Submit questionnaire button for teameval blocks
   * @module local_teameval/submitquestion
   */
-define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function($, templates, ajax, notification) {
+define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'], function($, templates, ajax, notification, Str) {
 
 	var _cmid;
 
@@ -32,7 +32,17 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification'], function(
 
 			var allPromises  = $.when.apply($, promises);
 			allPromises.done(function() {
-				$('.local-teameval-submit-buttons .results.saved').show('fast').delay(5000).hide('fast');
+                var invalids = arguments.filter(function(el) {
+                    return el.valid === false;
+                }).length;
+                if (invalids > 0) {
+                    Str.get_string('ninvalidquestions', 'local_teameval', invalids)
+                        .done(function(string) {
+                        $('.local-teameval-submit-buttons .results.invalid').text(string).show('fast');    
+                    });
+                } else {
+                    $('.local-teameval-submit-buttons .results.saved').show('fast').delay(5000).hide('fast');
+                }
 			}).fail(notification.exception);
 
 		},
