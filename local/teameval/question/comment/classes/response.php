@@ -4,7 +4,7 @@ namespace teamevalquestion_comment;
 
 use stdClass;
 
-class response implements \local_teameval\response {
+class response implements \local_teameval\response_feedback {
 
     public $question;
 
@@ -71,6 +71,19 @@ class response implements \local_teameval\response {
             return $this->comments[$userid]->comment;
         }
         return "No comment";
+    }
+
+    public function feedback_for($userid) {
+        // todo: clean up HTML in this
+        return $this->comment_on($userid);
+    }
+
+    public function feedback_for_readable($userid) {
+        $comment = $this->comment_on($userid);
+        if (!is_null($comment)) {
+            return new output\feedback_readable($this->userid, $userid, $comment);
+        }
+        return null;
     }
 
     public function render_for_report() {

@@ -39,7 +39,7 @@
         ]
     }
 }}
-<div class="local-teameval-release-container">
+<div class="local-teameval-release-container" id="local-teameval-release-{{uniqid}}">
     <div class="release-all">{{#str}}releaseallmarks, local_teameval{{/str}}
         <div class="local-teameval-switch{{#all}} checked{{/all}}" data-level="0" data-target="0" id="switch-all-{{uniqid}}">
         </div>
@@ -69,7 +69,7 @@
                         <td>{{{userpic}}} {{name}}</td>
                         <td>{{score}}</td>
                         <td>{{grade}}</td>
-                        <td><div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="2" data-target="{{id}}" data-override="switch-group-{{gid}}-{{uniqid}}"></div></td>
+                        <td><div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="2" data-target="{{id}}" data-override="switch-group-{{gid}}-{{uniqid}}" id="switch-user-{{id}}-{{uniqid}}"></div></td>
                     </tr>
                     {{/users}}
                 </tbody>
@@ -77,6 +77,9 @@
         </div>
         {{/groups}}
     </div>
+    <button type="button" class="save">
+    {{#str}} savechanges, moodle {{/str}}
+    </button>
 </div>
 {{#js}}
 
@@ -84,37 +87,85 @@
 {{#_notset}}<script>{{/_notset}}
 require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
 
-    
+    $('#local-teameval-release-{{uniqid}}').parent().on('viewWillAppear', function() {
 
-    $('.local-teameval-switch').each( function() {
+        var promises = Ajax.call([{
+            methodname: 'local_teameval_get_release',
+            args: {
+                cmid: {{cmid}}
+            }
+        }]);
+
+        promises[0].done(function(data) {
+
+            //todo: uncheck all switches that are enabled but not in this result set
+
+            $('.local-teameval-release-container .local-teameval-switch.checked').each( function() {
+                $(this).trigger('setState', [null, 'auto']);
+            })
+
+            for (var i = data.length - 1; i >= 0; i--) {
+                var release = data[i];
+
+                switch(parseInt(release.level)) {
+                    case 0:
+                        $('#switch-all-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                    case 1:
+                        $('#switch-group-'+release.target+'-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                    case 2:
+                        $('#switch-user-'+release.target+'-{{uniqid}}').trigger('setState', ['checked', 'auto']);
+                        break;
+                }
+            }
+
+        });
+
+        promises[0].fail(Notification.exception);
+
+    });
+
+    var changedValues = {};
+
+    $('.local-teameval-release-container .local-teameval-switch').each( function() {
         Switch.init($(this));
 
         $(this).on('changed', function() {
+
             var sw = $(this);
-            sw.trigger('showLoading');
+            // sw.trigger('showLoading');
 
             var release = $(this).hasClass('checked');
             var level = $(this).data('level');
             var target = $(this).data('target');
 
-            var promises = Ajax.call([{
-                methodname: 'local_teameval_release',
-                args: {
-                    cmid: {{cmid}},
-                    level: level,
-                    target: target,
-                    release: release
-                }
-            }]);
-
-            promises[0].always(function() {
-                console.log(sw);
-                sw.trigger('hideLoading');
-            });
-
-            promises[0].fail(Notification.exception);
+            changedValues[level+':'+target] = {level: level, target: target, release: release};
 
         });
     });
+
+    $('.local-teameval-release-container button.save' ).click(function() {
+
+        var vals = $.map(changedValues, function(v) { return  v });
+
+        console.log(vals);
+
+        var promises = Ajax.call([{
+            methodname: 'local_teameval_release',
+            args: {
+                cmid: {{cmid}},
+                release: vals
+            }
+        }]);
+
+        promises[0].done(function() {
+            alert('wew lad');
+        });
+
+        promises[0].fail(Notification.exception);
+    });
+
 });
+
 {{/js}}

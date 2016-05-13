@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/teameval/db" VERSION="20151207" COMMENT="XMLDB file for Moodle local/teameval"
+<XMLDB PATH="local/teameval/db" VERSION="20160511" COMMENT="XMLDB file for Moodle local/teameval"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -14,6 +14,7 @@
         <FIELD NAME="fraction" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="50" SEQUENCE="false" DECIMALS="2" COMMENT="The percentage of the evaluation score that is used to calculate a user's final score."/>
         <FIELD NAME="noncompletionpenalty" TYPE="number" LENGTH="4" NOTNULL="true" DEFAULT="10" SEQUENCE="false" DECIMALS="2" COMMENT="The penalty for non-completion of the evaluation form."/>
         <FIELD NAME="deadline" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Last possible date for submission of the questionnaire by users."/>
+        <FIELD NAME="autorelease" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="Automatically release marks to users. On by default"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -50,9 +51,7 @@
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the course module to which this teameval belongs"/>
-        <FIELD NAME="level" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" COMMENT="0 = RELEASE_ALL
-1 = RELEASE_GROUP
-2 = RELEASE_USER"/>
+        <FIELD NAME="level" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" COMMENT="0 = RELEASE_ALL 1 = RELEASE_GROUP 2 = RELEASE_USER"/>
         <FIELD NAME="target" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the group or user whose marks are being released. 0 if level == RELEASE_ALL."/>
       </FIELDS>
       <KEYS>
@@ -61,6 +60,21 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="teameval_rescind" COMMENT="Responses with rescinded feedback">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Question ID for the response"/>
+        <FIELD NAME="markerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the respondant"/>
+        <FIELD NAME="targetid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the user the feedback is for"/>
+        <FIELD NAME="state" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="-1 for rescinded, 0 for unset, 1 for approved."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="target" UNIQUE="true" FIELDS="questionid, markerid, targetid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

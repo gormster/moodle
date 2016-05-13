@@ -28,7 +28,7 @@ class report implements \local_teameval\report {
 
     	$groups = $this->teameval->get_evaluation_context()->all_groups();
 
-    	return new output\feedback_report($groups, $feedback_questions);
+    	return new output\feedback_report($this->teameval, $groups, $feedback_questions);
 
     }
 

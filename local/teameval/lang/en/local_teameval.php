@@ -17,6 +17,8 @@
     $string['enabled'] = 'Enabled';
     $string['selfassessment'] = 'Self-assessment';
     $string['selfassessment_help'] = 'Allow students to evaluate their own performance';
+    $string['autorelease'] = 'Automatically Release Marks';
+    $string['autorelease_help'] = 'Release marks as soon as they are ready. Otherwise marks must be manually released to students.';
     $string['public'] = 'Public';
     $string['public_help'] = 'Other users in this course category can use this questionnaire';
     $string['fraction'] = 'Adjustment Fraction';
@@ -32,5 +34,7 @@
 
     $string['yourself'] = 'Yourself';
     $string['self'] = 'Self';
+    $string['themself'] = 'Themself';
+    $string['themselves'] = 'Themselves';
 
 ?>

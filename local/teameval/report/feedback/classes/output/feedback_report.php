@@ -4,29 +4,61 @@ namespace teamevalreport_feedback\output;
 
 use renderer_base;
 use stdClass;
+use local_teameval;
+use user_picture;
 
 class feedback_report implements \renderable, \templatable {
 
 	protected $groups;
 
+	protected $cmid;
+
+	protected $members = [];
+
 	protected $reports = [];
 
-	public function __construct($groups, $questions) {
+	protected $questions = [];
+
+	protected $states = [];
+
+	public function __construct($teameval, $groups, $questions) {
 
 		$this->groups = $groups;
 
+		$this->cmid = $teameval->get_coursemodule()->id;
+
 		foreach($groups as $gid => $group) {
 
-			$this->reports[$gid] = [];
+			$members = groups_get_members($gid);
+			$this->members[$gid] = $members;
 
-			foreach($questions as $q) {
-				$reportinfo = new stdClass;
-				$reportinfo->title = $q->question->get_title();
-				$reportinfo->renderable = $q->question->render_for_report($gid);
-				$reportinfo->renderername = 'teamevalquestion_' . $q->plugininfo->name;
-				$this->reports[$gid][] = $reportinfo;
+			foreach($members as $uid => $user) {
+				foreach($questions as $q) {
+
+					$this->questions[$q->question->id] = $q;
+
+					$cls = $q->plugininfo->get_response_class();
+
+					$response = new $cls($teameval, $q->question, $uid);
+
+					foreach($teameval->teammates($uid) as $t => $teammate) {
+						$this->reports[$uid][$q->question->id][$t] = $response->feedback_for_readable($t);
+					}
+
+				}
+
 			}
 
+		}
+
+		// we're doing this straight on $DB for efficiency purposes, otherwise this could involve literally hundreds
+		// of hits to the database
+
+		$rescinds = $teameval->all_rescind_states();
+
+		foreach($rescinds as $r) {
+			// going to use some PHP magic here
+			$this->states[$r->questionid][$r->markerid][$r->targetid] = $r->state;
 		}
 
 	}
@@ -36,22 +68,84 @@ class feedback_report implements \renderable, \templatable {
 
 		$c = new stdClass;
 
+		$c->rejectrelease = $output->help_icon('rejectrelease', 'teamevalreport_feedback', true);
+
+		$c->cmid = $this->cmid;
 		$c->groups = [];
 
 		foreach($this->groups as $gid => $group) {
 			$g = new stdClass;
 			$g->name = $group->name;
-			$g->questions = [];
+			$g->groupid = $gid;
 
-			foreach($this->reports[$gid] as $reportinfo) {
-				$renderer = $PAGE->get_renderer($reportinfo->renderername);
-				$q = new stdClass;
-				$q->title = $reportinfo->title;
-				$q->report = $renderer->render($reportinfo->renderable);
-				$g->questions[] = $q;
+			$g->markers = [];
+
+			foreach($this->members[$gid] as $mid => $marker) {
+				$m = new stdClass;
+				$m->userpic = $output->render(new user_picture($marker));
+				$m->fullname = fullname($marker);
+				$m->userid = $mid;
+
+				$m->questions = [];
+
+				foreach($this->reports[$mid] as $qid => $reports) {
+					$q = new stdClass;
+					$q->title = $this->questions[$qid]->question->get_title();
+					$q->questionid = $qid;
+
+					$q->feedbacks = [];
+
+					$renderer = $PAGE->get_renderer('teamevalquestion_' . $this->questions[$qid]->plugininfo->name);
+
+					$odd = true;
+					foreach($reports as $uid => $report) {
+						if ($report) {
+							$f = new stdClass;
+							if ($uid == $mid) {
+								$f->name = get_string('themselves', 'local_teameval');
+								$f->self = true;
+							} else {
+								$f->name = fullname($this->members[$gid][$uid]);
+							}
+
+							$userpic = new user_picture($this->members[$gid][$uid]);
+							$userpic->size = 16;
+							$f->userpic = $output->render($userpic);
+							$f->markedid = $uid;
+							$f->odd = $odd;
+							$f->feedback = $renderer->render($report);
+
+							if (isset($this->states[$qid]) && isset($this->states[$qid][$mid]) && isset($this->states[$qid][$mid][$uid])) {
+								switch($this->states[$qid][$mid][$uid]) {
+									case local_teameval\FEEDBACK_RESCINDED:
+										$f->state = 'rejected';
+										break;
+									case local_teameval\FEEDBACK_APPROVED:
+										$f->state = 'checked';
+										break;
+								}
+							}
+
+							$odd = !$odd;
+
+							$q->feedbacks[] = $f;
+						}
+					}
+
+					if (count($q->feedbacks)) {
+						$m->questions[] = $q;
+					}
+				}
+
+				if (count($m->questions)) {
+					$g->markers[] = $m;
+				}
+
 			}
 
-			$c->groups[] = $g;
+			if (count($g->markers)) {
+				$c->groups[] = $g;
+			}
 		}
 
 		return $c;

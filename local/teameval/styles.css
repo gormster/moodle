@@ -197,8 +197,18 @@
         box-shadow: rgb(25, 201, 25);
     }
 
-    .local-teameval-switch.overridden {
+    .local-teameval-switch.tristate.rejected {
+        border: 1px solid #333;
+        background-color: rgb(235, 59, 59);
+        box-shadow: rgb(25, 201, 25);   
+    }
+
+    .local-teameval-switch.overridden-checked {
         background-color:rgba(59, 235, 59, 0.1);
+    }
+
+    .local-teameval-switch.overridden-rejected {
+        background-color:rgba(235, 59, 59, 0.1);
     }
 
 .local-teameval-switch .toggle {
@@ -218,11 +228,20 @@
     text-align: center;
 }
 
+    .local-teameval-switch.tristate .toggle {
+        left: 16px;
+    }
+
+    .local-teameval-switch.tristate.rejected .toggle {
+        left: 2px;
+    }
+
     .local-teameval-switch.checked .toggle {
         left: 31px;
     }
 
-    .local-teameval-switch.overridden .toggle {
+    .local-teameval-switch.overridden-checked .toggle,
+    .local-teameval-switch.overridden-rejected .toggle {
         background-color: #ccc;
     }
 
@@ -230,3 +249,36 @@
         display: none;
     }
 
+.local-teameval-switch .check,
+.local-teameval-switch .reject {
+    width: 8px;
+    height: 8px;
+    position: absolute;
+    top: 5px;
+    stroke-width: 2;
+}
+
+.local-teameval-switch .check {
+    stroke: green;
+    left: 33px;
+}
+
+
+.local-teameval-switch .reject {
+    stroke: red;
+    left: 4px;
+}
+
+.local-teameval-switch.overridden-checked .reject path,
+.local-teameval-switch.overridden-checked .check path,
+.local-teameval-switch.overridden-rejected .reject path,
+.local-teameval-switch.overridden-rejected .check path,
+.local-teameval-switch.checked .reject path,
+.local-teameval-switch.rejected .check path {
+    stroke: #ccc;
+    stroke-width: 1;
+}
+
+.right {
+    float: right;
+}

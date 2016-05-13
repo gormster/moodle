@@ -26,6 +26,14 @@ require(['jquery', 'local_teameval/ajaxforms'], function($, ajaxforms) {
 			container.hide();
 			saveButton.html("Save");
 			saveButton.prop('disabled',false);
+
+            var releaseTab = $(".local-teameval-containerbox nav.tabs .tab.release").hide()
+            if ($(".local-teameval-settings-container form #id_autorelease").prop('checked')) {
+                releaseTab.hide()
+            } else {
+                releaseTab.show()
+            }
+
 		}.bind(this));
     });
 });

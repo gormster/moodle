@@ -14,4 +14,9 @@ class renderer extends \plugin_renderer_base {
         return parent::render_from_template('teamevalquestion_comment/question_report', $data);
 	}
 
+	public function render_feedback_readable(feedback_readable $report) {
+		$data = $report->export_for_template($this);
+        return parent::render_from_template('teamevalquestion_comment/feedback_readable', $data);
+	}
+
 }

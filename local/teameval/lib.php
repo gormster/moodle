@@ -19,6 +19,10 @@ define(__NAMESPACE__ . '\RELEASE_ALL', 0);
 define(__NAMESPACE__ . '\RELEASE_GROUP', 1);
 define(__NAMESPACE__ . '\RELEASE_USER', 2);
 
+define(__NAMESPACE__ . '\FEEDBACK_RESCINDED', -1);
+define(__NAMESPACE__ . '\FEEDBACK_UNSET', 0);
+define(__NAMESPACE__ . '\FEEDBACK_APPROVED', 1);
+
 class team_evaluation {
 
     protected $id;
@@ -74,6 +78,7 @@ class team_evaluation {
         $settings = new stdClass;
         $settings->enabled = true;
         $settings->public = false;
+        $settings->autorelease = true;
         $settings->self = true;
         $settings->fraction = 0.5;
         $settings->noncompletionpenalty = 0.1;
@@ -121,7 +126,7 @@ class team_evaluation {
         $this->get_settings();
 
         //todo: validate
-        foreach(['enabled', 'public', 'self', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
+        foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
             if (isset($settings->$i)) {
                 $this->settings->$i = $settings->$i;
             }
@@ -568,43 +573,46 @@ class team_evaluation {
     }
 
     public function release_marks_for_all($set = true) {
-        $this->_release_marks_for(0, RELEASE_ALL, $set);
+        $this->release_marks_for(0, RELEASE_ALL, $set);
     }
 
     public function release_marks_for_group($groupid, $set = true) {
-        $this->_release_marks_for($groupid, RELEASE_GROUP, $set);
+        $this->release_marks_for($groupid, RELEASE_GROUP, $set);
     }
 
     public function release_marks_for_user($userid, $set = true) {
-        $this->_release_marks_for($userid, RELEASE_USER, $set);
+        $this->release_marks_for($userid, RELEASE_USER, $set);
     }
 
     public function marks_available($userid) {
         global $DB;
         // First check if the marks are released.
-
-        $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
         $grp = $this->group_for_user($userid);
 
         $is_released = false;
 
-        foreach($releases as $release) {
-            if ($release->level == RELEASE_ALL) {
-                $is_released = true;
-                break;
-            }
-
-            if ($release->level == RELEASE_GROUP) {
-                if ($release->target == $grp->id) {
+        if ($this->get_settings()->autorelease) {
+            $is_released = true;
+        } else {
+            $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+            foreach($releases as $release) {
+                if ($release->level == RELEASE_ALL) {
                     $is_released = true;
                     break;
                 }
-            }
 
-            if ($release->level == RELEASE_USER) {
-                if ($release->target == $userid) {
-                    $is_released = true;
-                    break;
+                if ($release->level == RELEASE_GROUP) {
+                    if ($release->target == $grp->id) {
+                        $is_released = true;
+                        break;
+                    }
+                }
+
+                if ($release->level == RELEASE_USER) {
+                    if ($release->target == $userid) {
+                        $is_released = true;
+                        break;
+                    }
                 }
             }
         }
@@ -625,6 +633,42 @@ class team_evaluation {
 
         return false;
 
+    }
+
+    public function rescind_feedback_for($questionid, $markerid, $targetid, $state=FEEDBACK_RESCINDED) {
+        global $DB;
+        $rslt = $DB->get_record('teameval_rescind', ['questionid' => $questionid, 'markerid' => $markerid, 'targetid' => $targetid]);
+        if ($rslt) {
+            $rslt->state = $state;
+            $DB->update_record('teameval_rescind', $rslt);
+        } else {
+            $record = new stdClass;
+            $record->questionid = $questionid;
+            $record->markerid = $markerid;
+            $record->targetid = $targetid;
+            $record->state = $state;
+            $DB->insert_record('teameval_rescind', $record);
+        }
+    }
+
+    public function rescinded($questionid, $markerid, $targetid) {
+        global $DB;
+        $rslt = $DB->get_record('teameval_rescind', ['questionid' => $questionid, 'markerid' => $markerid, 'targetid' => $targetid]);
+        if ($rslt) {
+            return $rslt->state;
+        }
+        return 0;
+    }
+
+    public function all_rescind_states() {
+        global $DB;
+
+        $qids = array_map(function($q) {
+            return $q->question->id;
+        }, $this->get_questions());
+        list($sql, $params) = $DB->get_in_or_equal($qids);
+        $rescinds = $DB->get_records_select('teameval_rescind', "questionid $sql", $params);
+        return $rescinds;
     }
 
 }
@@ -694,6 +738,11 @@ interface question {
 
     public function get_title();
 
+    /**
+     * If this function returns true, the corresponding response class must implement
+     * @link response_feedback
+     * @return bool 
+     */
     public function has_feedback();
 
     public function render_for_report($groupid = null);
@@ -726,13 +775,24 @@ interface response {
      * @return string
      */
     public function opinion_of_readable($userid);
+    
+}
+
+interface response_feedback extends response {
+
+    /**
+     * What is this user's feedback for a particular teammate? This is a straight plain-text interpretation.
+     * @param int $userid Team mate's user ID
+     * @return string
+     */
+    public function feedback_for($userid);
 
     /**
      * Return a renderable version of this response for inclusion in a report
      * @return renderable
      */
-    public function render_for_report();
-    
+    public function feedback_for_readable($userid);
+
 }
 
 interface evaluator {

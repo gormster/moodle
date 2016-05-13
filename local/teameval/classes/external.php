@@ -52,6 +52,7 @@ class external extends external_api {
                 'enabled' => new external_value(PARAM_BOOL, 'is teameval enabled for this module'),
                 'selfassessment' => new external_value(PARAM_BOOL, 'is self assessment enabled for this module'),
                 'public' => new external_value(PARAM_BOOL, 'is the questionnaire for this teameval publicly available'),
+                'autorelease' => new external_value(PARAM_BOOL, 'will marks be automatically made available'),
                 'fraction' => new external_value(PARAM_INT, 'how much does evaluation affect the final grade'),
                 'noncompletionpenalty' => new external_value(PARAM_INT, 'how much does non completion of the questionnaire reduce final grade'),
                 'deadline' => new external_value(PARAM_INT, 'timestamp - datetime of questionnaire deadline')
@@ -71,6 +72,7 @@ class external extends external_api {
 
         $settings->public = $settings->public ? true : false;
         $settings->enabled = $settings->enabled ? true : false;
+        $settings->autorelease = $settings->autorelease ? true : false;
 
         $settings->fraction = $settings->fraction / 100.0;
         $settings->noncompletionpenalty = $settings->noncompletionpenalty / 100.0;
@@ -153,9 +155,13 @@ class external extends external_api {
     public static function release_parameters() {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'cmid of this team eval'),
-            'level' => new external_value(PARAM_INT, 'release level'),
-            'target' => new external_value(PARAM_INT, 'target of release'),
-            'release' => new external_value(PARAM_BOOL, 'set or unset release')
+            'release' => new external_multiple_structure(
+                new external_single_structure([
+                    'level' => new external_value(PARAM_INT, 'release level'),
+                    'target' => new external_value(PARAM_INT, 'target of release'),
+                    'release' => new external_value(PARAM_BOOL, 'set or unset release')
+                ])
+            )
         ]);
     }
 
@@ -163,15 +169,44 @@ class external extends external_api {
         return null;
     }
 
-    public static function release($cmid, $level, $target, $release) {
+    public static function release($cmid, $release) {
         $teameval = new team_evaluation($cmid);
 
         // TODO: check permissions
+
+        foreach($release as $r) {
+            $teameval->release_marks_for($r['target'], $r['level'], $r['release']);    
+        }
         
-        $teameval->release_marks_for($target, $level, $release);
     }
 
     public static function release_is_allowed_from_ajax() { return true; }
+
+    /* get_release */
+
+    public static function get_release_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'cmid of this teameval')
+        ]);
+    }
+
+    public static function get_release_returns() {
+        return new external_multiple_structure(
+            new external_single_structure([
+                'level' => new external_value(PARAM_INT, 'release level'),
+                'target' => new external_value(PARAM_INT, 'target of release'),
+                'release' => new external_value(PARAM_BOOL, 'set or unset release')
+            ])
+        );
+    }
+
+    public static function get_release($cmid) {
+        global $DB;
+
+        return array_values($DB->get_records('teameval_release', ['cmid' => $cmid]));
+    }
+
+    public static function get_release_is_allowed_from_ajax() { return true; }
 
 }
 

@@ -40,6 +40,14 @@ $functions = [
         'methodname'    => 'release',
         'type'          => 'write'
 
+    ],
+
+    'local_teameval_get_release' => [
+
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'get_release',
+        'type'          => 'read'
+
     ]
     
 ]

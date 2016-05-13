@@ -42,7 +42,6 @@ class renderer extends plugin_renderer_base {
             }
             $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
 
-
             $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
         }
 
@@ -68,6 +67,8 @@ class renderer extends plugin_renderer_base {
         }
         
         $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+
+        $c->hiderelease = $block->settings->autorelease;
 
         $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
         return $this->render_from_template('local_teameval/block', $c);

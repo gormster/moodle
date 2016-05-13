@@ -22,6 +22,10 @@ class settings_form extends ajaxform {
         $mform->addElement('checkbox', 'self', get_string('selfassessment', 'local_teameval'));
         $mform->addHelpButton('self', 'selfassessment', 'local_teameval');
 
+        $mform->addElement('checkbox', 'autorelease', get_string('autorelease', 'local_teameval'));
+        $mform->setDefault('autorelease', true);
+        $mform->addHelpButton('autorelease', 'autorelease', 'local_teameval');
+
         $mform->addElement('checkbox', 'public', get_string('public', 'local_teameval'));
         $mform->addHelpButton('public', 'public', 'local_teameval');
 

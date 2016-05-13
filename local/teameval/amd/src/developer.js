@@ -1,4 +1,4 @@
-define(['jquery'], function($) { return {
+define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
 
     initialise: function() {
 
@@ -14,6 +14,11 @@ define(['jquery'], function($) { return {
                 var rando = Math.floor(Math.random()*things.length);
                 $(things[rando]).prop('checked', true);
             });
+
+            $('.local-teameval-question[data-questiontype="comment"] table.comments textarea').each(function() {
+                $(this).val(LanGen.generateSentence());
+            });
+
         });
 
         $('.local-teameval-developer-buttons').append(randomiseButton);

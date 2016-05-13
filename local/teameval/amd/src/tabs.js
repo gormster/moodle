@@ -8,7 +8,9 @@ define(['jquery'], function($) { return {
                 evt.preventDefault();
                 $('.tab-content').hide();
                 var id = $(this).data('tab-content-id');
+                $('#'+id).trigger('viewWillAppear');
                 $('#'+id).show();
+                $('#'+id).trigger('viewDidAppear');
             });
 
         });

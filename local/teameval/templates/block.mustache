@@ -9,7 +9,7 @@
     <li class="tab" data-tab-content-id="results-{{uniqid}}"><a href="#">{{#str}}results, local_teameval{{/str}}</a></li>
 {{/results}}
 {{#release}}
-    <li class="tab" data-tab-content-id="release-{{uniqid}}"><a href="#">{{#str}}releasemarks, local_teameval{{/str}}</a></li>
+    <li class="tab release" data-tab-content-id="release-{{uniqid}}"><a href="#">{{#str}}releasemarks, local_teameval{{/str}}</a></li>
 {{/release}}
 {{#feedback}}
     <li class="tab" data-tab-content-id="feedback-{{uniqid}}"><a href="#">{{#str}}feedback, local_teameval{{/str}}</a></li>
@@ -39,3 +39,13 @@
     {{/feedback}}
 </div>
 </div>
+
+{{#js}}
+{{#hiderelease}}
+
+require(['jquery'], function($) {
+    $('.local-teameval-containerbox .tab.release').hide();
+});
+
+{{/hiderelease}}
+{{/js}}
