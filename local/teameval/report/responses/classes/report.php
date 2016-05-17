@@ -52,8 +52,7 @@ class report implements \local_teameval\report {
 	        		$memberinfo->user = $user;
 	        		
         			$qi = $r->questioninfo;
-        			$cls = $qi->plugininfo->get_response_class();
-        			$resp = new $cls($this->teameval, $qi->question, $uid);
+        			$resp = $this->teameval->get_response($qi, $uid);
         			$memberinfo->response = $resp;
 	        		
 	        		$groupinfo->members[$uid] = $memberinfo;
