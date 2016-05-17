@@ -36,10 +36,7 @@ class feedback_report implements \renderable, \templatable {
 				foreach($questions as $q) {
 
 					$this->questions[$q->question->id] = $q;
-
-					$cls = $q->plugininfo->get_response_class();
-
-					$response = new $cls($teameval, $q->question, $uid);
+					$response = $teameval->get_response($q, $uid);
 
 					foreach($teameval->teammates($uid) as $t => $teammate) {
 						$this->reports[$uid][$q->question->id][$t] = $response->feedback_for_readable($t);

@@ -326,10 +326,8 @@ class team_evaluation {
         $ready = true;
 
         foreach($questions as $q) {
-            $response_cls = $q->plugininfo->get_response_class();
-
             foreach($members as $m) {
-                $response = new $response_cls($this, $q->question, $m->id);
+                $response = $this->get_response($q, $m->id);
                 if( $response->marks_given() == false ) {
                     $ready = false;
                     break;
@@ -352,8 +350,7 @@ class team_evaluation {
         $questions = $this->get_questions();
         $marks_given = 0;
         foreach($questions as $q) {
-            $response_cls = $q->plugininfo->get_response_class();
-            $response = new $response_cls($this, $q->question, $uid);
+            $response = $this->get_response($q, $uid);
             if ($response->marks_given()) {
                 $marks_given++;
             }
@@ -368,6 +365,7 @@ class team_evaluation {
 
             $evaluators = core_plugin_manager::instance()->get_plugins_of_type("teamevaluator");
 
+            // in future, this will need to be changed to get the selected evaluator for this instance
             $plugininfo = current( $evaluators );
             $evaluator_cls = $plugininfo->get_evaluator_class();
 
@@ -376,9 +374,8 @@ class team_evaluation {
             $questions = $this->get_questions();
             $responses = [];
             foreach($questions as $q) {
-                $response_cls = $q->plugininfo->get_response_class();
                 foreach($markable_users as $m) {
-                    $response = new $response_cls($this, $q->question, $m->id);
+                    $response = $this->get_response($q, $m->id);
                     $responses[$m->id][] = $response;
                 }
             }
@@ -398,6 +395,9 @@ class team_evaluation {
         return $penalty;
     }
 
+    /**
+     * Takes a 0..1 score from an evaluator and turns it into a grade multiplier 
+     */
     protected function score_to_multiplier($score, $uid) {
         $fraction = $this->get_settings()->fraction;
         $multiplier = (1 - $fraction) + ($score * $fraction);
@@ -538,6 +538,40 @@ class team_evaluation {
         return $members;
     }
 
+    /**
+     * It's only two lines, but it gets called a lot, so now it's a convenience function.
+     * @param stdClass $questioninfo The question object from from get_questions()
+     * @param int $userid The ID of the user who's response we need
+     */
+    public function get_response($questioninfo, $userid) {
+        $response_cls = $questioninfo->plugininfo->get_response_class();
+        return new $response_cls($this, $questioninfo->question, $userid);
+    }
+
+    /**
+     * Get the final adjusted grade, if available
+     * @param int $userid The ID of the user whose grade you want
+     * @return float The adjusted grade, in terms of the evaluation context
+     */
+
+    public function adjusted_grade($userid) {
+
+        $evalcontext = $this->get_evaluation_context();
+
+        $group = $evalcontext->group_for_user($userid);
+
+        $unadjusted = $evalcontext->grade_for_group($group->id);
+
+        if ($this->marks_available($userid)) {
+
+            return $unadjusted * $this->multiplier_for_user($userid);
+
+        }
+
+        return null;
+
+    }
+
     // MARK RELEASE
 
     public function release_marks_for($target, $level, $set) {
@@ -634,6 +668,8 @@ class team_evaluation {
         return false;
 
     }
+
+    // FEEDBACK CONTROL
 
     public function rescind_feedback_for($questionid, $markerid, $targetid, $state=FEEDBACK_RESCINDED) {
         global $DB;

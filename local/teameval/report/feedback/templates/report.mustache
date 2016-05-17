@@ -120,6 +120,9 @@ Example context (json): {
 {{/groups}}
 
 <button type="button" id="save-button-{{uniqid}}">Save</button>
+<div class="saved">
+{{#str}} saved, local_teameval {{/str}}
+</div>
 
 </div>
 
@@ -127,6 +130,8 @@ Example context (json): {
 require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
 
 	var updatedStates = {};
+
+	$('.teamevalreport-feedback–container .saved').hide();
 
 	$('.teamevalreport-feedback–container .local-teameval-switch').each(function() {
 		Switch.init(this);
@@ -177,7 +182,7 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
             }]);
 
 		promises[0].done(function() {
-			alert("wew lad");
+			$('.teamevalreport-feedback–container .saved').show(300).delay(3000).hide(300);
 		})
 
 		promises[0].fail(Notification.exception);
