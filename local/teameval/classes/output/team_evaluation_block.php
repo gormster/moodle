@@ -18,6 +18,10 @@ class team_evaluation_block implements renderable {
 
     public $settings;
 
+    public $release;
+
+    public $feedback;
+
     /**
      * @param int $cmid This is the cmid of the activity module this teameval belongs to
      */
@@ -40,6 +44,11 @@ class team_evaluation_block implements renderable {
         global $DB;
         $releases = $DB->get_records('teameval_release', ['cmid' => $cmid]);
         $this->release = new release($this->teameval, $releases);
+
+        global $USER;
+        if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false)) {
+            $this->feedback = new feedback($this->teameval, $USER->id);
+        }
 
     }
 

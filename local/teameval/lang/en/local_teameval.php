@@ -37,4 +37,7 @@
     $string['themself'] = 'Themself';
     $string['themselves'] = 'Themselves';
 
+    $string['youradjustedscore'] = 'Your adjusted score';
+    $string['yourteammatesfeedback'] = 'Your teammates\' feedback';
+
 ?>

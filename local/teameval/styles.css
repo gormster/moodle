@@ -282,3 +282,50 @@
 .right {
     float: right;
 }
+
+/* template/feedback */
+
+.local-teameval-feedback .results {
+    text-align: center;
+    font-size: 200%;
+    padding: 10px;
+}
+
+.local-teameval-feedback .results .score {
+    font-weight: bold;
+}
+
+.local-teameval-feedback .feedback > table {
+    width: 100%;
+}
+
+.local-teameval-feedback .feedback > table th,
+.local-teameval-feedback .feedback > table td {
+    padding: 0.5em;
+}
+
+.local-teameval-feedback .feedback > table thead tr {
+    border-bottom: 1px solid black;
+}
+
+.local-teameval-feedback .feedback > table tbody tr:nth-child(odd) {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.local-teameval-feedback .feedback > table tbody th {
+    width: 20%;
+    vertical-align: middle;
+}
+
+.local-teameval-feedback .feedback > table tbody td {
+    width: 80%;
+}
+
+.local-teameval-containerbox .saved {
+    padding: 10px;
+    color: #393;
+    background-color: #afa;
+    border: 1px solid #393;
+    border-radius: 5px;
+    display: inline-block;
+}

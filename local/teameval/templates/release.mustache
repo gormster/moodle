@@ -1,7 +1,7 @@
 {{!
     @template: local_teameval/release
 
-    Example JSON: {
+    Example context (JSON): {
         "all" : false,
         "groups" : [
             {
@@ -80,12 +80,17 @@
     <button type="button" class="save">
     {{#str}} savechanges, moodle {{/str}}
     </button>
+    <div class="saved">
+    {{#str}} saved, local_teameval {{/str}}
+    </div>
 </div>
 {{#js}}
 
 {{! this exists purely to trigger syntax highlighting in sublime }}
 {{#_notset}}<script>{{/_notset}}
 require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], function($, Switch, Ajax, Notification) {
+
+    $('.local-teameval-release-container .saved').hide();
 
     $('#local-teameval-release-{{uniqid}}').parent().on('viewWillAppear', function() {
 
@@ -160,7 +165,7 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
         }]);
 
         promises[0].done(function() {
-            alert('wew lad');
+            $('.local-teameval-release-container .saved').show(300).delay(3000).hide(300);
         });
 
         promises[0].fail(Notification.exception);

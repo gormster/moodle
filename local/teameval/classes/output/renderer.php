@@ -47,6 +47,8 @@ class renderer extends plugin_renderer_base {
 
         if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
+
+            $c->feedback = $this->render($block->feedback);
         }
 
         if (\local_teameval\is_developer()) {
@@ -73,6 +75,11 @@ class renderer extends plugin_renderer_base {
         $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
         return $this->render_from_template('local_teameval/block', $c);
         
+    }
+
+    public function render_feedback(feedback $feedback) {
+        $context = $feedback->export_for_template($this);
+        return $this->render_from_template('local_teameval/feedback', $context);
     }
 
 }
