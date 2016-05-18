@@ -808,9 +808,11 @@ interface response {
 
     /**
      * Human readable of above; for reports plugins
-     * @return string
+     * @param int $userid Teammates user ID
+     * @param string $source The plugin that is asking for this opinion. Use to customise appearance.
+     * @return renderable
      */
-    public function opinion_of_readable($userid);
+    public function opinion_of_readable($userid, $source = null);
     
 }
 

@@ -19,6 +19,8 @@ class responses_report implements \renderable, \templatable {
 
     	$c->questions = [];
 
+        global $PAGE;
+
     	foreach($this->responses as $question) {
     		$q = new stdClass;
     		$q->title = $question->questioninfo->question->get_title();
@@ -39,7 +41,8 @@ class responses_report implements \renderable, \templatable {
     				$marks = [];
     				foreach($groupinfo->members as $n) {
     					
-    					$marks[] = $m->response->opinion_of_readable($n->user->id);
+                        $renderer = $PAGE->get_renderer('teamevalquestion_' . $m->response->question->plugin_name());
+    					$marks[] = $renderer->render($m->response->opinion_of_readable($n->user->id, 'teamevalreport_responses'));
 	    				
     				}
 

@@ -26,3 +26,10 @@
 .teamevalquestion-comment-container .comments tr.self {
     background-color: rgba(120,230,170,0.2);
 }
+
+.teamevalquestion-comment-full-comment {
+    width:50%;
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    padding: 10px;
+}

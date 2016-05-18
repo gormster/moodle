@@ -7,5 +7,6 @@ $string['scorerange'] = 'Score range';
 $string['fromto'] = 'From {$a->min} to {$a->max}';
 $string['meanings'] = 'Score meanings';
 $string['criteria'] = 'Criteria';
+$string['nomark'] = 'No mark';
 
 ?>

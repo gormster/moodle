@@ -66,11 +66,15 @@ class response implements \local_teameval\response_feedback {
         return null;
     }
 
-    public function opinion_of_readable($userid) {
-        if ($this->marks_given()) {
-            return $this->comments[$userid]->comment;
+    public function opinion_of_readable($userid, $source = null) {
+        if ($source == 'teamevalreport_responses') {
+            $comment = null;
+            if ($this->marks_given()) {
+                $comment = $this->comments[$userid]->comment;
+            }
+            return new output\opinion_readable_short($comment);
         }
-        return "No comment";
+        return $this->feedback_for_readable($userid);
     }
 
     public function feedback_for($userid) {
@@ -80,10 +84,8 @@ class response implements \local_teameval\response_feedback {
 
     public function feedback_for_readable($userid) {
         $comment = $this->comment_on($userid);
-        if (!is_null($comment)) {
-            return new output\feedback_readable($this->userid, $userid, $comment);
-        }
-        return null;
+        
+        return new output\feedback_readable($this->userid, $userid, $comment);
     }
 
     public function render_for_report() {

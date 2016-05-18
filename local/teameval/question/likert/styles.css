@@ -124,3 +124,7 @@
 .teamevalquestion-likert-question-submission .responses.grid thead th {
 	border-left: 1px solid #ccc;
 }
+
+.teamevalquestion-likert-opinion-readable {
+	text-align: right;
+}

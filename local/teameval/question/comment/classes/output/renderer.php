@@ -19,4 +19,9 @@ class renderer extends \plugin_renderer_base {
         return parent::render_from_template('teamevalquestion_comment/feedback_readable', $data);
 	}
 
+	public function render_opinion_readable_short(opinion_readable_short $report) {
+		$data = $report->export_for_template($this);
+        return parent::render_from_template('teamevalquestion_comment/opinion_readable_short', $data);
+	}
+
 }
