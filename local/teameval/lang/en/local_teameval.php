@@ -26,6 +26,8 @@
     $string['noncompletionpenalty'] = 'Non-completion penalty';
     $string['save'] = 'Save'; //HOW IS THIS NOT IN CORE
 
+    $string['reporttype'] = 'Report type';
+
     $string['addquestion'] = 'Add Question';
     $string['saved'] = 'Saved!';
 

@@ -146,6 +146,11 @@
     color:red;
 }
 
+.local-teameval-results-selector {
+    text-align: center;
+    font-size: 125%;
+}
+
 .local-teameval-release-container .release-all {
     font-size: 150%;
     font-weight: bold;

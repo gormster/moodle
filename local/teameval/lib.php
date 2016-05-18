@@ -775,8 +775,8 @@ interface question {
     public function get_title();
 
     /**
-     * If this function returns true, the corresponding response class must implement
-     * @link response_feedback
+     * If this function returns true, the corresponding response class must implement response_feedback
+     * @see response_feedback
      * @return bool 
      */
     public function has_feedback();
