@@ -41,6 +41,9 @@ class team_evaluation {
 
     protected $evaluator;
 
+    // caches scores from evaluator. shouldn't change over the lifetime of the team_evaluation object.
+    protected $_scores; 
+
     public function __construct($cmid) {
 
         $this->cm = get_coursemodule_from_id(null, $cmid);
@@ -409,10 +412,16 @@ class team_evaluation {
         return $multiplier;
     }
 
-    public function multipliers() {
-        $eval = $this->get_evaluator();
+    public function get_scores() {
+        if (!isset($this->_scores)) {
+            $this->_scores = $this->get_evaluator()->scores();
+        }
 
-        $scores = $eval->scores();
+        return $this->_scores;
+    }
+
+    public function multipliers() {
+        $scores = $this->get_scores();
 
         $multipliers = [];
 
@@ -430,9 +439,8 @@ class team_evaluation {
      */
     public function multipliers_for_group($groupid) {
 
-        $eval = $this->get_evaluator();
         $users = $this->_groups_get_members($groupid);
-        $scores = $eval->scores();
+        $scores = $this->get_scores();
 
         $multipliers = [];
 
@@ -447,14 +455,13 @@ class team_evaluation {
     }
 
     public function multiplier_for_user($userid) {
-        $eval = $this->get_evaluator();
-        $scores = $eval->scores();
+        $scores = $this->get_scores();
 
         if (! isset($scores[$userid])) {
             return null;
         }
         
-        $score = $eval->scores()[$userid];
+        $score = $scores[$userid];
 
         return $this->score_to_multiplier($score, $userid);
     }
