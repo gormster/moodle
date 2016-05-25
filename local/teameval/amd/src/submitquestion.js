@@ -30,11 +30,15 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
 
 			});
 
-			var allPromises  = $.when.apply($, promises);
+			var allPromises = $.when.apply($, promises);
 			allPromises.done(function() {
-                var invalids = arguments.filter(function(el) {
-                    return el.valid === false;
+				
+                var invalids = $.grep(arguments, function(el) {
+                	if (el) {
+	                    return el.valid === false;
+	                }
                 }).length;
+
                 if (invalids > 0) {
                     Str.get_string('ninvalidquestions', 'local_teameval', invalids)
                         .done(function(string) {
