@@ -702,6 +702,11 @@ class team_evaluation {
         $qids = array_map(function($q) {
             return $q->question->id;
         }, $this->get_questions());
+
+        if (count($qids) == 0) {
+            return [];
+        }
+
         list($sql, $params) = $DB->get_in_or_equal($qids);
         $rescinds = $DB->get_records_select('teameval_rescind', "questionid $sql", $params);
         return $rescinds;
