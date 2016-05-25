@@ -80,6 +80,8 @@ define(['jquery'], function($) {
 
             o.on('click', function(evt) {
 
+                var newState;
+
                 if (tristate) {
 
                     if (o.hasClass('rejected') || o.hasClass('checked')) {
@@ -92,10 +94,10 @@ define(['jquery'], function($) {
 
                         if (target.hasClass('toggle')) {
                             //do nothing. clicking the toggle has no effect.
-                            return
+                            return;
                         }
 
-                        var offsetX = evt.pageX - o.offset().left
+                        var offsetX = evt.pageX - o.offset().left;
 
                         
                         if (offsetX < o.width() / 2) {
@@ -111,7 +113,7 @@ define(['jquery'], function($) {
                 } else {
                     // switch always toggles
 
-                    var newState = o.hasClass('checked') ? null : 'checked';
+                    newState = o.hasClass('checked') ? null : 'checked';
                     o.trigger('setState', [newState, 'user']);
 
                 }
@@ -186,7 +188,7 @@ define(['jquery'], function($) {
                     }
                 }
 
-                var sw = $('#'+k)
+                var sw = $('#'+k);
                 var oldState = sw.data('state');
                 if(oldState != state) {
                     sw.trigger('setState', state, 'auto');
@@ -197,7 +199,7 @@ define(['jquery'], function($) {
 
             if(changed) {
                 // repeat until stable
-                this.resolveStates()
+                this.resolveStates();
             }
 
         }

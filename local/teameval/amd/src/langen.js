@@ -59,7 +59,7 @@ define([], function() {
   return {
     generateWord: generateWord,
     generateSentence: generateSentence
-  }
+  };
 
 });
 
