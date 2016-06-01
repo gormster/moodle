@@ -240,14 +240,18 @@ Example context (json): {
 					<td title="{{.}}">&nbsp;</td>
 				{{/previous}}
 				<td title="{{name}}" class="first">&nbsp;</td>
-				<th colspan="{{remaining}}">{{name}}</th>
+				{{#remaining}}
+				<td title="{{name}}" colspan="{{remaining}}" class="first remaining">&nbsp;</td>
+				{{/remaining}}
+				<th>{{name}}</th>
 			</tr>
 			{{/headers}}
 			<tr>
 				{{#headers}}
 				<td>&nbsp;</td>
 				{{/headers}}
-				<th class="criteria">{{#str}}criteria, teamevalquestion_likert{{/str}}</th>
+				<th class="criteria value">&nbsp;</th>
+				<th class="criteria meaning">{{#str}}criteria, teamevalquestion_likert{{/str}}</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -256,8 +260,11 @@ Example context (json): {
 				{{#users}}
 					<td><input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} /></td>
 				{{/users}}
-				<td class="criteria">
-				{{value}}{{#meaning}}: {{meaning}}{{/meaning}}
+				<td class="criteria value">
+				{{value}}
+				</td>
+				<td class="criteria meaning">
+				{{meaning}}
 				</td>
 			</tr>
 			{{/options}}
