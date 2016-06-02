@@ -29,7 +29,7 @@ class responses_report implements \renderable, \templatable {
     		foreach($question->groups as $groupinfo) {
     			$g = new stdClass;
     			$g->name = $groupinfo->group->name;
-    			$g->markers = [];
+    			$g->marked = [];
 
     			$g->marks = [];
 
@@ -54,6 +54,9 @@ class responses_report implements \renderable, \templatable {
     				
 
     			}
+
+                $g->markedcount = count($g->marked);
+                $g->markscount = count($g->marks) + 1;
 
     			$q->groups[] = $g;
     		}

@@ -42,13 +42,30 @@
 <table>
     <thead>
         <tr>
-        <th>{{name}}</th>
+            <td colspan="2"></td>
+            <th colspan="{{markedcount}}" class="markees-title">Marks given to</th>
+        </tr>
+        <tr>
+        <td></td>
+        <th class="group-name">{{name}}</th>
         {{#marked}}
             <th>{{fullname}}</th>
         {{/marked}}
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <th rowspan="{{markscount}}" class="markers-title">
+                <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 100 100">
+                <text x="0" y="0" 
+                    font-size="50"
+                    transform="rotate(-90) translate(-50 66)"
+                    text-anchor="middle">
+                Marker
+              </text>
+              </svg>
+            </th>
+        </tr>
         {{#marks}}
         <tr>
             <th scope="row">{{marker}}</th>
