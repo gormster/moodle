@@ -31,6 +31,9 @@ class question implements \local_teameval\question {
 
         if(has_capability('local/teameval:createquestionnaire', $this->teameval->get_context(), $userid)) {
             $context['users'] = [['userid' => 0, 'name' => 'Example User']];
+            if ($this->teameval->get_settings()->self) {
+                array_unshift($context['users'], ['userid' => $userid, 'name' => get_string('yourself', 'local_teameval'), 'self' => true]);
+            }
         } else {
             $teammates = $this->teameval->teammates($userid);
             $context['users'] = [];
@@ -49,9 +52,8 @@ class question implements \local_teameval\question {
                 }
                 $context['users'][] = $c;
             }
+            $context['locked'] = $locked;
         }
-
-        $context['locked'] = $locked;
 
         return $context;
     }
