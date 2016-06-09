@@ -35,7 +35,7 @@ class team_evaluation_block implements renderable {
 
         if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
             $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
-            $this->report = $this->teameval->get_report(); // nearly two seconds
+            $this->report = $this->teameval->get_report();
         }
 
         $settings = $this->teameval->get_settings();
@@ -50,8 +50,14 @@ class team_evaluation_block implements renderable {
 
         global $USER;
         if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false)) {
-            $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms
+
+            if ($this->teameval->marks_available($USER->id)) {
+                $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms
+            }
+
         }
+
+
 
     }
 
