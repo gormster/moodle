@@ -244,12 +244,29 @@ class team_evaluation {
         //first verify that the quesiton is in this teameval
         $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
 
-        if ($isquestion > 0) {
-            return has_capability('local/teameval:submitquestionnaire', $this->context, $userid);
+        if ($isquestion == 0) {
+            return false;
+        }
+      
+        //does the user have the capability to submit in this teameval?
+        if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid) == false) {
+            return false;
         }
 
-        return false;
+        // if a deadline is set, has it passed?
+        if (($this->get_settings()->deadline > 0) && ($this->get_settings()->deadline < time())) {
+            return false;
+        }
+
+        // have the marks already been released?
+        if ($this->marks_available($userid)) {
+            return false;
+        }
+
+        return true;
     }
+
+
 
     protected function get_bare_questions() {
         global $DB;
