@@ -29,7 +29,9 @@
     $string['reporttype'] = 'Report type';
 
     $string['addquestion'] = 'Add Question';
+    $string['saving'] = 'Saving...';
     $string['saved'] = 'Saved!';
+
 
     $string['releaseallmarks'] = 'Release All Marks';
     $string['score'] = 'Score';
