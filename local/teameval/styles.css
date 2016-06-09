@@ -1,7 +1,13 @@
+.local-teameval-container-heading {
+    font-size: 150%;
+    text-align: center;
+    margin-bottom: 0;
+}
+
 .local-teameval-containerbox {
-    border: 1px solid gray;
+    border: 1px solid #ccc;
     border-radius: 10px;
-    background-color: #EEE;
+    background-color: rgba(0,0,0,0.02);
     margin:10px;
     padding:10px;
     position: relative;
@@ -15,7 +21,7 @@
     .local-teameval-containerbox .tabs ul {
         display: block;
         text-align: center;
-        white-space: collapse;
+        margin: 0;
     }
 
     .local-teameval-containerbox .tabs li {
@@ -36,6 +42,7 @@
     .local-teameval-containerbox .tab-content:first-of-type {
         display:block;
     }
+
 
 .local-teameval-settings-button {
 	float:right;
@@ -88,6 +95,17 @@
     .local-teameval-question-dropdown li:hover {
         background-color:#CCC;
     }
+
+.local-teameval-questionnaire .deadline {
+    font-size: 135%;
+    font-weight: bold;
+    text-align: center;
+    color: #A00;
+}
+
+.local-teameval-questionnaire .deadline time {
+    text-decoration: underline;
+}
 
 #local-teameval-questions {
     margin:0;
