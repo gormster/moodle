@@ -7,7 +7,8 @@ define(['jquery'], function($) {
 		init: function() {
 
 			$('.teamevalquestion-comment-show-comment').each(function() {
-				var fullComment = $(this).closest('.teamevalquestion-comment-container').find('.teamevalquestion-comment-full-comment');
+				var fullComment = $(this).closest('.teamevalquestion-comment-container')
+					.find('.teamevalquestion-comment-full-comment');
 				$(this).data('fullComment', fullComment);
 				fullComment.detach();
 			});

@@ -190,7 +190,7 @@ define(['jquery'], function($) {
                 }
 
                 var sw = $('#'+k);
-                if (sw.length == 0) {
+                if (sw.length === 0) {
                     delete overrides[k];
                     return;
                 }
@@ -200,7 +200,7 @@ define(['jquery'], function($) {
                     sw.trigger('setState', [state, 'auto']);
                     var newState = sw.data('state');
                     if (newState != state) {
-                        console.log("Update state failed!");
+                        window.console.log("Update state failed!");
                         return false;
                     }
                     changed = true;
