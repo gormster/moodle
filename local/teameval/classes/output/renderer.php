@@ -69,8 +69,13 @@ class renderer extends plugin_renderer_base {
                 "editingcontext" => json_encode($editingview)
                 ];
         }
+
+        $deadline = null;
+        if (isset($block->settings->deadline)) {
+            $deadline = userdate($block->settings->deadline);
+        }
         
-        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline]);
 
         $c->hiderelease = $block->settings->autorelease;
 
