@@ -6,6 +6,7 @@
         <option value="{{plugin}}" {{#selected}}selected{{/selected}}>{{name}}</option>
         {{/types}}
     </select>
+    <span id="results-loading-indicator">{{#pix}} i/loading_small, core, Loading {{/pix}}</span>
 </div>
 <div class="local-teameval-results-container" id="results-container-{{uniqid}}">
     {{{report}}}
@@ -13,6 +14,8 @@
 {{#js}}
 {{#nothere}}<script>{{/nothere}}
 require(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function($, Ajax, Templates, Notification) {
+
+    $('#results-loading-indicator').hide();
 
      $('#results-selector-{{uniqid}}').on('change', function() {
         var plugin = $(this).val();
@@ -24,6 +27,8 @@ require(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function
                 'plugin': plugin
             }
         }]);
+
+        $('#results-loading-indicator').show();
 
         promises[0].done(function(rslt) {
             if (typeof rslt.html !== 'undefined') {
@@ -41,6 +46,11 @@ require(['jquery', 'core/ajax', 'core/templates', 'core/notification'], function
         });
 
         promises[0].fail(Notification.exception);
+
+        promises[0].always(function() {
+            $('#results-loading-indicator').hide();
+        });
+
      });
 });
 {{/js}}
