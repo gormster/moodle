@@ -70,7 +70,7 @@
         <tr>
             <th scope="row">{{marker}}</th>
             {{#scores}}
-            <td>{{{.}}}</td>
+            <td {{#data}} class="needs-render" data-template="{{template}}" data-context="{{data}}"{{/data}}>{{{prerendered}}}</td>
             {{/scores}}
         </tr>
         {{/marks}}
@@ -79,3 +79,29 @@
 {{/groups}}
 {{/questions}}
 </div>
+{{#js}}{{#_notset}}<script>{{/_notset}}
+
+var initCalls = {
+    {{#amdmodules}}'{{{module}}}': [ {{#calls}}'{{.}}',{{/calls}} ] {{/amdmodules}}
+};
+
+var modules = Object.keys(initCalls);
+var requirements = ['jquery', 'core/templates'].concat(modules);
+
+require(requirements, function($, Templates) {
+
+    console.log(initCalls);
+    console.log(requirements);
+
+    var resolvedModules = Array.prototype.slice.call(arguments);
+
+    $.each(initCalls, function(module, calls) {
+        var m = resolvedModules[requirements.indexOf(module)];
+        for (var i = 0; i < calls.length; i++) {
+            var c = calls[i];
+            m[c]();
+        }
+    });
+
+});
+{{/js}}

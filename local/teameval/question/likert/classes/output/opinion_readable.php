@@ -4,11 +4,11 @@ namespace teamevalquestion_likert\output;
 
 use stdClass;
 use renderable;
-use templatable;
+use local_teameval\templatable;
 use renderer_base;
 use teamevalquestion_likert;
 
-class opinion_readable implements renderable, templatable {
+class opinion_readable extends templatable implements renderable {
 
 	protected $val;
 	protected $max;

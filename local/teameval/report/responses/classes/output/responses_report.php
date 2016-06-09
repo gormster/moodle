@@ -18,8 +18,10 @@ class responses_report implements \renderable, \templatable {
     	$c = new stdClass;
 
     	$c->questions = [];
+        $amdmodules = [];
 
         global $PAGE;
+        $is_ajax = !$PAGE->has_set_url();
 
     	foreach($this->responses as $question) {
     		$q = new stdClass;
@@ -41,8 +43,22 @@ class responses_report implements \renderable, \templatable {
     				$marks = [];
     				foreach($groupinfo->members as $n) {
     					
+                        $readable = $m->response->opinion_of_readable($n->user->id, 'teamevalreport_responses');
+                        $mark = new stdClass;
+
                         $renderer = $PAGE->get_renderer('teamevalquestion_' . $m->response->question->plugin_name());
-    					$marks[] = $renderer->render($m->response->opinion_of_readable($n->user->id, 'teamevalreport_responses'));
+                        $mark->prerendered = $renderer->render($readable);
+                        if ($readable->amd_init_call()) {
+                            list($module, $call) = $readable->amd_init_call();
+                            if (!isset($amdmodules[$module])) {
+                                $amdmodules[$module] = [];
+                            }
+                            if (!in_array($call, $amdmodules[$module])) {
+                                $amdmodules[$module][] = $call;
+                            }
+                        }
+
+    					$marks[] = $mark;
 	    				
     				}
 
@@ -63,6 +79,24 @@ class responses_report implements \renderable, \templatable {
 
     		$c->questions[] = $q;
     	}
+
+
+        if($PAGE->has_set_url()) {
+            // do stuff with the AMD shiz
+            foreach($amdmodules as $module => $calls) {
+                foreach ($calls as $call) {
+                    $PAGE->requires->js_call_amd($module, $call);
+                }
+            }
+        } else {
+            $c->amdmodules = [];
+            foreach($amdmodules as $module => $calls) {
+                $m = new stdClass;
+                $m->module = $module;
+                $m->calls = $calls;
+                $c->amdmodules[] = $m;
+            }
+        }
 
         return $c;
     }
