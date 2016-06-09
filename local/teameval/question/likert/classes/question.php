@@ -31,7 +31,7 @@ class question implements \local_teameval\question {
         }
     }
     
-    public function submission_view($userid) {
+    public function submission_view($userid, $locked = false) {
         global $DB;
 
         // what I need to end up with:
@@ -137,8 +137,9 @@ class question implements \local_teameval\question {
             }
 
             $context['options'] = $opts;
+            $context['optionwidth'] = 100 / count($opts);
 
-
+            $context['locked'] = $locked;
 
 
         } else {

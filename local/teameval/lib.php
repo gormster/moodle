@@ -238,16 +238,8 @@ class team_evaluation {
         $transaction->allow_commit();
     }
 
-    public function can_submit_response($type, $id, $userid) {
-        global $DB;
+    public function can_submit($userid) {
 
-        //first verify that the quesiton is in this teameval
-        $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
-
-        if ($isquestion == 0) {
-            return false;
-        }
-      
         //does the user have the capability to submit in this teameval?
         if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid) == false) {
             return false;
@@ -260,6 +252,23 @@ class team_evaluation {
 
         // have the marks already been released?
         if ($this->marks_available($userid)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function can_submit_response($type, $id, $userid) {
+        global $DB;
+
+        if($this->can_submit($userid) == false) {
+            return false;
+        }
+
+        //first verify that the quesiton is in this teameval
+        $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+
+        if ($isquestion == 0) {
             return false;
         }
 
@@ -772,8 +781,10 @@ interface question {
      * 
      * You MUST attach an event handler for the "delete" event. This handler must return
      * a $.Deferred which will resolve with no arguments.
+     * 
+     * You should return a version that cannot be edited if $locked is set to true.
      */
-    public function submission_view($userid);
+    public function submission_view($userid, $locked = false);
     
     /**
      * The view that an editing user should see. Rendered with editing_view.mustache

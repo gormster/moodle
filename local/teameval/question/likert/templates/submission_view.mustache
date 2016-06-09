@@ -214,7 +214,7 @@ Example context (json): {
 			<tr>
 			<th> ... </th>
 			{{#options}}
-				<th scope="row">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
+				<th style="width:{{optionwidth}}%">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
 			{{/options}}
 			</tr>
 		</thead>
@@ -223,7 +223,12 @@ Example context (json): {
 			<tr>
 				<th scope="row">{{name}}</th>
 				{{#options}}
-					<td><input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} /></td>
+					<td>{{#locked}}
+					{{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+					{{/locked}}
+					{{^locked}}
+					<input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+					{{/locked}}</td>
 				{{/options}}
 			</tr>
 			{{/users}}
@@ -258,7 +263,12 @@ Example context (json): {
 			{{#options}}
 			<tr>
 				{{#users}}
-					<td><input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} /></td>
+					<td>
+					{{#locked}}
+					{{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+					{{/locked}}
+					{{^locked}}<input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+					{{/locked}}</td>
 				{{/users}}
 				<td class="criteria value">
 				{{value}}

@@ -26,7 +26,7 @@ class question implements \local_teameval\question {
         }
     }
 
-    public function submission_view($userid) {
+    public function submission_view($userid, $locked = false) {
         $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
 
         if(has_capability('local/teameval:createquestionnaire', $this->teameval->get_context(), $userid)) {
@@ -50,6 +50,8 @@ class question implements \local_teameval\question {
                 $context['users'][] = $c;
             }
         }
+
+        $context['locked'] = $locked;
 
         return $context;
     }

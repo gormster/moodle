@@ -27,6 +27,11 @@
     background-color: rgba(120,230,170,0.2);
 }
 
+.teamevalquestion-comment-container .nocomment {
+    color: #999;
+    font-style: italic;
+}
+
 .teamevalquestion-comment-full-comment {
     width:50%;
     background-color: white;

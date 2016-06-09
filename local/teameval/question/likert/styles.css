@@ -150,10 +150,8 @@
 	border-right: none;
 }
 
-.teamevalquestion-likert-question-submission .responses th.first {
-	width: 1px;
+.teamevalquestion-likert-question-submission .responses.grid tbody th {
 	white-space: nowrap;
-	text-align: left;
 }
 
 .teamevalquestion-likert-question-submission .responses td input {

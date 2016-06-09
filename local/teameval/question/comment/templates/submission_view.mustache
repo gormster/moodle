@@ -6,7 +6,17 @@
     <tr{{#self}} class="self"{{/self}}>
         <th scope="row">{{name}}</th>
         <td>
+            {{#locked}}
+            {{comment}}
+            {{^comment}}
+            <div class="nocomment">
+            {{#str}} nocomment, teamevalquestion_comment {{/str}}
+            </div>
+            {{/comment}}
+            {{/locked}}
+            {{^locked}}
             <textarea id="teamevalquestion-comment-for-{{userid}}-{{uniqid}}" rows="3" data-touser="{{userid}}">{{comment}}</textarea>
+            {{/locked}}
         </td>
     </tr>
 {{/users}}

@@ -45,7 +45,7 @@ class renderer extends plugin_renderer_base {
             $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
         }
 
-        if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
+        if ($block->teameval->can_submit($USER->id)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
 
             if (isset($c->feedback)) {
@@ -59,7 +59,8 @@ class renderer extends plugin_renderer_base {
 
         $questions = [];
         foreach($block->questions as $q) {
-            $submissionview = $q->question->submission_view($USER->id);
+            $locked = !$block->teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
+            $submissionview = $q->question->submission_view($USER->id, $locked);
             $editingview = $q->question->editing_view($USER->id);
             $questions[] = [
                 "content" => $this->render_from_template($q->submissiontemplate, $submissionview + ["_cmid" => $block->cm->id]),
