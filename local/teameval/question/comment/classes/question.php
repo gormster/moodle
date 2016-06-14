@@ -28,13 +28,9 @@ class question implements \local_teameval\question {
 
     public function submission_view($userid, $locked = false) {
         $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
+ 
 
-        if(has_capability('local/teameval:createquestionnaire', $this->teameval->get_context(), $userid)) {
-            $context['users'] = [['userid' => 0, 'name' => 'Example User']];
-            if ($this->teameval->get_settings()->self) {
-                array_unshift($context['users'], ['userid' => $userid, 'name' => get_string('yourself', 'local_teameval'), 'self' => true]);
-            }
-        } else {
+        if(has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
             $teammates = $this->teameval->teammates($userid);
             $context['users'] = [];
 
@@ -53,6 +49,16 @@ class question implements \local_teameval\question {
                 $context['users'][] = $c;
             }
             $context['locked'] = $locked;
+
+            if ($locked) {
+                $context['incomplete'] = !$response->marks_given();
+            }
+
+        } else {
+            $context['users'] = [['userid' => 0, 'name' => 'Example User']];
+            if ($this->teameval->get_settings()->self) {
+                array_unshift($context['users'], ['userid' => $userid, 'name' => get_string('yourself', 'local_teameval'), 'self' => true]);
+            }
         }
 
         return $context;
