@@ -254,6 +254,10 @@ class question implements \local_teameval\question {
         return true;
     }
 
+    public function has_completion() {
+        return true;
+    }
+
     public function minimum_value() {
         return 0; // even if $minval == 1, return 0; it's what users expect
     }

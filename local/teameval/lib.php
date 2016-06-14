@@ -378,14 +378,22 @@ class team_evaluation {
     public function user_completion($uid) {
         $questions = $this->get_questions();
         $marks_given = 0;
+        $num_questions = 0;
         foreach($questions as $q) {
+            // if this question can't be completed, don't count it towards user completion
+            if (!$q->question->has_completion()) {
+                continue;
+            }
+
+            $num_questions++;
+
             $response = $this->get_response($q, $uid);
             if ($response->marks_given()) {
                 $marks_given++;
             }
         }
 
-        return $marks_given / count($questions);
+        return $marks_given / $num_questions;
     }
 
     public function get_evaluator() {
@@ -819,6 +827,12 @@ interface question {
     public function plugin_name();
 
     public function has_value();
+
+    /**
+     * Does this question contribute toward completion? has_value must be false if this is true.
+     * @return bool
+     */
+    public function has_completion();
 
     public function minimum_value();
 

@@ -12,6 +12,10 @@ class question implements \local_teameval\question {
 
     protected $description;
 
+    protected $anonymous;
+
+    protected $optional;
+
     public function __construct(\local_teameval\team_evaluation $teameval, $questionid = null) {
         global $DB;
 
@@ -23,6 +27,9 @@ class question implements \local_teameval\question {
 
             $this->title            = $record->title;
             $this->description      = $record->description;
+            $this->anonymous        = $record->anonymous;
+            $this->optional         = $record->optional;
+
         }
     }
 
@@ -65,7 +72,7 @@ class question implements \local_teameval\question {
     }
 
     public function editing_view() {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
+        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
     }
 
     public function plugin_name() {
@@ -74,6 +81,10 @@ class question implements \local_teameval\question {
 
     public function has_value() {
         return false;
+    }
+
+    public function has_completion() {
+        return $this->anonymous == false;
     }
 
     public function has_feedback() {

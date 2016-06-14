@@ -11,6 +11,16 @@
             <textarea id="question-description-{{uniqid}}">{{description}}</textarea>
         </div>
     </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
+        </div>
+    </div>
 </div>
 {{#js}}
 {{#_notset}}<script type="text/javascript">{{/_notset}}
@@ -30,6 +40,8 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
         data.title = $('#question-title-{{uniqid}}').val();
         data.description = $('#question-description-{{uniqid}}').val();
+        data.anonymous = $('#question-anonymous-{{uniqid}}').prop('checked');
+        data.optional = $('#question-optional-{{uniqid}}').prop('checked');
 
         var promises = ajax.call([{
             methodname: 'teamevalquestion_comment_update_question',

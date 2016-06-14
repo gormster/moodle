@@ -28,6 +28,8 @@ class external extends external_api {
             'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
             'title' => new external_value(PARAM_TEXT, 'title of question'),
             'description' => new external_value(PARAM_RAW, 'description of question'),
+            'anonymous' => new external_value(PARAM_BOOL, 'question is anonymous'),
+            'optional' => new external_value(PARAM_BOOL, 'question is optional')
         ]);
     }
 
@@ -35,7 +37,7 @@ class external extends external_api {
         return new external_value(PARAM_INT, 'id of question');
     }
 
-    public static function update_question($cmid, $ordinal, $id, $title, $description) {
+    public static function update_question($cmid, $ordinal, $id, $title, $description, $anonymous, $optional) {
         global $DB, $USER;
 
         $teameval = new team_evaluation($cmid);
@@ -49,6 +51,8 @@ class external extends external_api {
 
         $record->title = $title;
         $record->description = $description;
+        $record->anonymous = $anonymous;
+        $record->optional = $optional;
 
         if ($id > 0) {
             $DB->update_record('teamevalquestion_comment', $record);
