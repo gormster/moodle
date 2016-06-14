@@ -48,7 +48,7 @@ class renderer extends plugin_renderer_base {
         if ($block->teameval->can_submit($USER->id)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
 
-            if (isset($c->feedback)) {
+            if (isset($block->feedback)) {
                 $c->feedback = $this->render($block->feedback);
             }
         }
