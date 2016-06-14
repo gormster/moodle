@@ -9,13 +9,13 @@ define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
         var randomiseButton = $('<button type="button">Randomise</button>');
         randomiseButton.click(function() {
             //randomise likert responses
-            $('.local-teameval-question[data-questiontype="likert"] table.responses tbody tr').each(function() {
+            $('.teamevalquestion-likert-question-submission table.responses tbody tr').each(function() {
                 var things = $(this).find('input');
                 var rando = Math.floor(Math.random()*things.length);
                 $(things[rando]).prop('checked', true);
             });
 
-            $('.local-teameval-question[data-questiontype="comment"] table.comments textarea').each(function() {
+            $('.teamevalquestion-comment-container table.comments textarea').each(function() {
                 $(this).val(LanGen.generateSentence());
             });
 
