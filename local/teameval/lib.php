@@ -542,6 +542,10 @@ class team_evaluation {
 
         $group = $this->group_for_user($userid);
 
+        if ($group == null) {
+            return [];
+        }
+
         $members = $this->_groups_get_members($group->id);
         
         if($include_self == false) {
