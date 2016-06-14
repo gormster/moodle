@@ -241,7 +241,7 @@ class team_evaluation {
     public function can_submit($userid) {
 
         //does the user have the capability to submit in this teameval?
-        if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid) == false) {
+        if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid, false) == false) {
             return false;
         }
 
@@ -784,9 +784,17 @@ interface question {
      * @return stdClass|array template data. @see templatable
      * 
      * You MUST attach an event handler for the "delete" event. This handler must return
-     * a $.Deferred which will resolve with no arguments.
-     * 
+     * a $.Deferred whose results will be ignored.
+     *
+     * You MUST attach an event handler for the "submit" event. This handler must return
+     * a $.Deferred whose results will be ignored. If there is an error in submission,
+     * return a non-200 status.
+     *
      * You should return a version that cannot be edited if $locked is set to true.
+     *
+     * You should indicate that the form is incomplete after the first "submit" event
+     * or if $locked is true. You should set the CSS class "incomplete" on your template's
+     * direct ancestor if you do.
      */
     public function submission_view($userid, $locked = false);
     

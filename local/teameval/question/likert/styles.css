@@ -166,9 +166,22 @@
 	border-left: 1px solid #ccc;
 }
 
+.teamevalquestion-likert-question-submission .incomplete-indicator {
+    color: #A00;
+    font-weight: bold;
+    padding: 0.5em;
+    display: none;
+}
+
+.incomplete .teamevalquestion-likert-question-submission .incomplete-indicator {
+    display: block;
+}
+
 .teamevalquestion-likert-opinion-readable {
 	text-align: right;
 }
+
+
 
 @media screen and (max-width: 768px) {
 

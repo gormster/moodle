@@ -32,9 +32,21 @@
     font-style: italic;
 }
 
+.teamevalquestion-comment-container .incomplete-indicator {
+    color: #A00;
+    font-weight: bold;
+    padding: 0.5em;
+    display: none;
+}
+
+.incomplete .teamevalquestion-comment-container .incomplete-indicator {
+    display: block;
+}
+
 .teamevalquestion-comment-full-comment {
     width:50%;
     background-color: white;
     box-shadow: 0 0 5px rgba(0,0,0,0.5);
     padding: 10px;
 }
+

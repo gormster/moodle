@@ -140,6 +140,9 @@ class question implements \local_teameval\question {
             $context['optionwidth'] = 100 / count($opts);
 
             $context['locked'] = $locked;
+            if ($locked) {
+                $context['incomplete'] = !$response->marks_given();
+            }
 
 
         } else {
@@ -167,7 +170,7 @@ class question implements \local_teameval\question {
                 $o["users"] = [
                     [
                         "name" => "Yourself",
-                        "userid" => -1,
+                        "userid" => $userid,
                         "checked" => false
                     ],
                     [

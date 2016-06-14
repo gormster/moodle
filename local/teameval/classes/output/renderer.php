@@ -45,11 +45,21 @@ class renderer extends plugin_renderer_base {
             $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
         }
 
+        $noncompletion = null;
+
         if ($block->teameval->can_submit($USER->id)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
 
             if (isset($block->feedback)) {
                 $c->feedback = $this->render($block->feedback);
+            }
+        } else if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
+            // if we have this capability but can't submit then we need to communicate noncompletion
+            $completion = $block->teameval->user_completion($USER->id);
+            if ($completion < 1) {
+                $n = count($block->questions) - round($completion * count($block->questions));
+                $penalty = round($block->teameval->non_completion_penalty($USER->id) * 100, 2);
+                $noncompletion = ['n' => $n, 'penalty' => $penalty];
             }
         }
 
@@ -76,7 +86,7 @@ class renderer extends plugin_renderer_base {
             $deadline = userdate($block->settings->deadline);
         }
         
-        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion]);
 
         $c->hiderelease = $block->settings->autorelease;
 

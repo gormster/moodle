@@ -21,14 +21,35 @@
     </tr>
 {{/users}}
 </table>
+<div class="incomplete-indicator">{{#str}} incompleteadvice, local_teameval {{/str}}</div>
 </div>
 {{#js}}
 {{#_notset}}<script>{{/_notset}}
 
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 
+    
+
     var questionContainer = $('#teamevalquestion-comment-{{uniqid}}').closest('.question-container');
     var thisQuestion = $('#teamevalquestion-comment-{{uniqid}}');
+
+    {{^locked}}
+    function checkComplete() {
+        var incomplete = thisQuestion.find('textarea').filter(function() {
+            return $(this).val().trim().length == 0;
+        });
+
+        if (incomplete.length > 0) {
+            questionContainer.parent().addClass('incomplete');
+        } else {
+            questionContainer.parent().removeClass('incomplete');
+        }
+    }
+    {{/locked}}
+
+    {{#incomplete}}
+    questionContainer.parent().addClass('incomplete');
+    {{/incomplete}}
 
     questionContainer.on('submit', function () {
 
@@ -49,6 +70,8 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
                 comments: comments
             }
         }]);
+
+        checkComplete();
 
         return promises[0];
 
