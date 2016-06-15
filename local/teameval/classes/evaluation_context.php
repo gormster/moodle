@@ -43,6 +43,8 @@ abstract class evaluation_context {
 
     /**
      * Called when teameval knows that adjusted grades will have changed
+     * Teameval is not responsible for making sure that the users specified herein have
+     * been assigned grades in your plugin - you have to check that yourself.
      * @param [int] $users optional array of user ids whose grades have changed
      */
     abstract public function trigger_grade_update($users = null);

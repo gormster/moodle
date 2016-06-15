@@ -58,13 +58,15 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 	});
 
 	function updateMeanings() {
-		var minval = $('#question-minval-{{uniqid}}').val();
-		var maxval = $('#question-maxval-{{uniqid}}').val();
+		var minval = parseInt($('#question-minval-{{uniqid}}').val())
+		var maxval = parseInt($('#question-maxval-{{uniqid}}').val());
 
 		// fetch our current meanings
 		$('#question-meanings-{{uniqid}} li').each( function(idx) {
 			_meanings[this.value] = $(this).find('input').val();
 		});
+
+		console.log(_meanings);
 
 		// make new textboxes
 
@@ -96,8 +98,8 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		data.ordinal = ordinal;
 		data.title = $('#question-title-{{uniqid}}').val();
 		data.description = $('#question-description-{{uniqid}}').val();
-		data.minval = $('#question-minval-{{uniqid}}').val();
-		data.maxval = $('#question-maxval-{{uniqid}}').val();
+		data.minval = parseInt($('#question-minval-{{uniqid}}').val());
+		data.maxval = parseInt($('#question-maxval-{{uniqid}}').val());
 		data.meanings = $.map(_meanings, function(v, k) {
 		 	if ((k < data.minval) || (k > data.maxval)) return;
 			return {'value': k, 'meaning':v}; 
@@ -108,23 +110,16 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			args: data
 		}]);
 
-		//submission context needs an example student, as well
-		var submissionContext = $.extend({}, data, {
-			users: {
-				userid: 0,
-				name: "Example User"
-			},
-			optionswidth: (100 / data.maxval - data.minval + 1)
-		});
-
-		submissionContext.options = [];
-		for(var i  = data.minval; i <= data.maxval; i++) {
-			var meaning = _meanings[i];
-			submissionContext.options.push({'value': i, 'meaning':meaning});
-		}
+		// NOTE
+		// At the moment, we're requesting the submission context from the server.
+		// This is because, quite simply, it's way too complex.
+		// At some point in the future we might implement an optimistic render feature,
+		// which would require a javascript implementation of the submission context.
+		// At the moment, though, the small amount of increased traffic is fine.
 
 		promises[0].done(function(result) {
-			data.id = result;
+			data.id = result.id;
+			submissionContext = JSON.parse(result.submissionContext);
 			deferred.resolve(result, submissionContext, data);
 		}).fail(notification.exception);
 		

@@ -108,10 +108,18 @@ class team_evaluation {
 
                 $this->settings = $settings;
             } else {
-                // when fetching the record from the DB these are ints
-                // we need them to be bools
+                // for reasons I cannot possibly understand
+                // literally every numeric type comes back as a string
+                // let's fix that
                 $this->settings->enabled = (bool)$this->settings->enabled;
                 $this->settings->public = (bool)$this->settings->public;
+                $this->settings->autorelease = (bool)$this->settings->autorelease;
+                $this->settings->self = (bool)$this->settings->self;
+                $this->settings->fraction = (float)$this->settings->fraction;
+                $this->settings->noncompletionpenalty = (float)$this->settings->noncompletionpenalty;
+                if(!is_null($this->settings->deadline)) {
+                    $this->settings->deadline = (int)$this->settings->deadline;
+                }
             }
 
             unset($this->settings->cmid);
@@ -144,6 +152,12 @@ class team_evaluation {
         $record->cmid = $this->cm->id;
         $record->id = $this->id;
         $DB->update_record('teameval', $record);
+
+        // if you've changed a setting that could potentiall change grades
+        // we need to trigger a grade update
+        if (isset($settings->fraction) || isset($settings->noncompletionpenalty)) {
+            $this->get_evaluation_context()->trigger_grade_update();
+        }
     }
 
     public function get_context() {

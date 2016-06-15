@@ -40,7 +40,10 @@ class external extends external_api {
 	}
 
 	public static function update_question_returns() {
-		return new external_value(PARAM_INT, 'id of question');
+		return new external_single_structure([
+			"id" => new external_value(PARAM_INT, 'id of question'),
+			"submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
+			]);
 	}
 
 	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
@@ -62,9 +65,10 @@ class external extends external_api {
 		$record->minval = min(max(0, $minval), 1); //between 0 and 1
 		$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
 
-		$record->meanings = [];
+		$record->meanings = new stdClass;
 		foreach ($meanings as $m) {
-			$record->meanings[$m['value']] = $m['meaning'];
+			$val = $m['value'];
+			$record->meanings->$val = $m['meaning'];
 		}
 
 		$record->meanings = json_encode($record->meanings);
@@ -79,7 +83,9 @@ class external extends external_api {
 		//finally tell the teameval we're done
 		$teameval->update_question($transaction, "likert", $id, $ordinal);
 
-		return $id;
+		$question = new question($teameval, $id);
+
+		return ["id" => $id, "submissionContext" => json_encode($question->submission_view($USER->id))];
 
 	}
 
