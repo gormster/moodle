@@ -50,9 +50,6 @@ class renderer extends plugin_renderer_base {
         if ($block->teameval->can_submit($USER->id)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
 
-            if (isset($block->feedback)) {
-                $c->feedback = $this->render($block->feedback);
-            }
         } else if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
             // if we have this capability but can't submit then we need to communicate noncompletion
             $completion = $block->teameval->user_completion($USER->id);
@@ -61,6 +58,10 @@ class renderer extends plugin_renderer_base {
                 $penalty = round($block->teameval->non_completion_penalty($USER->id) * 100, 2);
                 $noncompletion = ['n' => $n, 'penalty' => $penalty];
             }
+        }
+
+        if (isset($block->feedback)) {
+            $c->feedback = $this->render($block->feedback);
         }
 
         if (\local_teameval\is_developer()) {
