@@ -847,6 +847,14 @@ interface question {
      */
     public function has_feedback();
 
+    /**
+     * Return true if the feedback given by your question should not be associated with the person
+     * who left that feedback when shown to the target of that feedback. Teacher roles can always
+     * see who gave feedback.
+     * @return bool
+     */
+    public function is_feedback_anonymous();
+
     public function render_for_report($groupid = null);
     
 }

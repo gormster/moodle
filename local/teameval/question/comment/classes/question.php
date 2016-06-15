@@ -27,8 +27,14 @@ class question implements \local_teameval\question {
 
             $this->title            = $record->title;
             $this->description      = $record->description;
-            $this->anonymous        = $record->anonymous;
-            $this->optional         = $record->optional;
+            $this->anonymous        = (bool)$record->anonymous;
+            $this->optional         = (bool)$record->optional;
+
+        } else {
+
+            // set defaults
+            $this->anonymous        = false;
+            $this->optional         = false;
 
         }
     }
@@ -72,7 +78,7 @@ class question implements \local_teameval\question {
     }
 
     public function editing_view() {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
+        return ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
     }
 
     public function plugin_name() {
@@ -84,11 +90,15 @@ class question implements \local_teameval\question {
     }
 
     public function has_completion() {
-        return $this->anonymous == false;
+        return $this->optional == false;
     }
 
     public function has_feedback() {
         return true;
+    }
+
+    public function is_feedback_anonymous() {
+        return $this->anonymous;
     }
 
     public function minimum_value() {

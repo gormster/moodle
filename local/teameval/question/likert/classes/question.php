@@ -274,6 +274,10 @@ class question implements \local_teameval\question {
         return false;
     }
 
+    public function is_feedback_anonymous() {
+        return false;
+    }
+
     public function render_for_report($groupid = null) {
         throw new coding_exception("not implemented");
     }
