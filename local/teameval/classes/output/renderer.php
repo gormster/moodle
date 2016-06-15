@@ -26,7 +26,7 @@ class renderer extends plugin_renderer_base {
         }
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
-            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->questiontypes]);
+            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->settings->self, $block->questiontypes]);
 
             $current_plugin = $block->teameval->get_report_plugin();
             $report_renderer = $PAGE->get_renderer("teamevalreport_{$current_plugin->name}");

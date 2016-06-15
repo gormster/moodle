@@ -13,12 +13,12 @@
     </div>
     <div class="control-group">
         <div class="controls">
-            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
+            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" {{#anonymous}}checked="checked"{{/anonymous}} /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
         </div>
     </div>
     <div class="control-group">
         <div class="controls">
-            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
+            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" {{#optional}}checked="checked"{{/optional}} /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
         </div>
     </div>
 </div>
@@ -48,11 +48,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
             args: data
         }]);
 
+        var demoUsers = [{ userid: 0, name: "Example User" }];
+        {{#_self}}demoUsers.unshift({userid: -1, name: "Yourself", self: true});{{/_self}}
+
         var submissionContext = $.extend({}, data, {
-            users: {
-                userid: 0,
-                name: "Example User"
-            }
+            users: demoUsers
         });
 
         var editingContext = data;

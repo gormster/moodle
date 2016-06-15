@@ -17,6 +17,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 	var _subplugins;
 
+	var _self;
+
 	var _addButton;
 
 	return {
@@ -59,7 +61,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 		addQuestion: function(type) {
 			var _this = this;
-			var context = {'_newquestion' : true, '_cmid': _cmid};
+			var context = {'_newquestion' : true, '_cmid': _cmid, '_self': _self};
 			templates.render('teamevalquestion_'+type+'/editing_view', context).done(function(html, js) {
 				var question = $('<li class="local-teameval-question editing" />');
 				question.data('questiontype', type);
@@ -130,6 +132,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			var questionType = question.data('questiontype');
 
 			editingContext._cmid = _cmid;
+			editingContext._self = _self;
 
 			// hide the action bar
 			question.find('.local-teameval-question-actions').hide();
@@ -222,9 +225,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			}).fail(notification.exception);
 		},
 
-		initialise: function(cmid, subplugins) {
+		initialise: function(cmid, self, subplugins) {
 
 			_cmid = cmid;
+			_self = self;
 			_subplugins = subplugins;
 
 			// stupid javascript scoping
@@ -234,16 +238,6 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			// add the controls to the questions already in the block
 
 			$('#local-teameval-questions .local-teameval-question').each(function() {
-
-				//decode JSON-encoded data attributes
-				$.each(['submissioncontext', 'editingcontext'], function(idx, val) {
-					if (typeof $(this).data(val) === 'string') {
-						var ctx = JSON.parse($(this).data(val));
-						$(this).data(val, ctx);
-					}
-				}.bind(this));
-
-				
 				_this.addEditingControls($(this));
 			});
 
