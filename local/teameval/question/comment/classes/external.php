@@ -38,6 +38,8 @@ class external extends external_api {
     }
 
     public static function update_question($cmid, $ordinal, $id, $title, $description, $anonymous, $optional) {
+        require_login();
+
         global $DB, $USER;
 
         $teameval = new team_evaluation($cmid);
@@ -68,6 +70,39 @@ class external extends external_api {
 
     public static function update_question_is_allowed_from_ajax() { return true; }
 
+    /* delete_question */
+
+    public static function delete_question_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+            'id' => new external_value(PARAM_INT, 'id of question')
+        ]);
+    }
+
+    public static function delete_question_returns() {
+        return null;
+    }
+
+    public static function delete_question($cmid, $id) {
+        require_login();
+
+        global $USER, $DB;
+
+        $teameval = new team_evaluation($cmid);
+
+        $transaction = $teameval->should_delete_question('comment', $id, $USER->id);
+
+        if ($transaction) {
+            $DB->delete_records('teamevalquestion_comment', ['id' => $id]);
+            $DB->delete_records('teamevalquestion_comment_res', ['questionid' => $id]);
+
+            $teameval->delete_question($transaction, 'comment', $id);
+        } else {
+            throw required_capability_exception($teameval->get_context(), 'local/teameval:createquestionnaire', 'nopermissions');
+        }
+    }
+
+    public static function delete_question_is_allowed_from_ajax() { return true; }
 
     /* submit_response */
 

@@ -77,6 +77,18 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
     });
 
+    questionContainer.on("delete", function () {
+        var promises = ajax.call([{
+            methodname: 'teamevalquestion_comment_delete_question',
+            args: {
+                cmid: {{_cmid}},
+                id: {{id}}
+            }
+        }]);
+
+        return promises[0];
+    });
+
 });
 
 {{/js}}

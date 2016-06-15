@@ -10,6 +10,14 @@ $functions = [
         
     ],
 
+    'teamevalquestion_comment_delete_question' => [
+        
+        'classname'     => 'teamevalquestion_comment\external',
+        'methodname'    => 'delete_question',
+        'type'          => 'write'
+        
+    ],
+
     'teamevalquestion_comment_submit_response' => [
 
         'classname'     => 'teamevalquestion_comment\external',
