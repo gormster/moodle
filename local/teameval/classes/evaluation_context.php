@@ -82,6 +82,10 @@ abstract class evaluation_context {
 
                 if ($this->marks_available($userid)) {
                     $grade->rawgrade *= $teameval->multiplier_for_user($userid);
+                    $feedbacks = $teameval->all_feedback($userid);
+                    if(count($feedbacks)) {
+                        $grade->feedback .= $this->format_feedback($feedbacks);
+                    }
                 } else {
                     $grade->rawgrade = null;
                 }
@@ -90,6 +94,23 @@ abstract class evaluation_context {
         }
 
         return $grades;
+    }
+
+    private function format_feedback($feedbacks) {
+        $o = '<h3>Team Evaluation</h3>';
+        foreach($feedbacks as $q) {
+            $o .= "<h4>{$q->title}</h4><ul>";
+            foreach($q->feedbacks as $fb) {
+                $feedback = clean_text($fb->feedback);
+                if (isset($fb->from)) {
+                    $o .= "<li><strong>{$fb->from}:</strong> $feedback</li>";
+                } else {
+                    $o .= "<li>$feedback</li>";
+                }
+            }
+            $o .= '</ul>';
+        }
+        return $o;
     }
 
 }

@@ -631,6 +631,50 @@ class team_evaluation {
 
     }
 
+    public function all_feedback($userid) {
+
+        $questions = $this->get_questions();
+
+        $feedbacks = [];
+        foreach($questions as $qi) {
+            if ($qi->question->has_feedback() == false) {
+                continue;
+            }
+
+            $q = new stdClass;
+            $q->title = $qi->question->get_title();
+            $q->feedbacks = [];
+
+            foreach($this->teammates($userid) as $tm) {
+                $fb = new stdClass;
+
+                $response = $this->get_response($qi, $tm->id);
+                $fb->feedback = trim( $response->feedback_for($userid) );
+                if (strlen($fb->feedback) == 0) {
+                    continue;
+                }
+
+                if($qi->question->is_feedback_anonymous() == false) {
+                    if ($userid == $tm->id) {
+                        $fb->from = get_string('yourself', 'local_teameval');
+                    } else {
+                        $fb->from = fullname($tm);
+                    }
+                }
+
+                $q->feedbacks[] = $fb;
+            }
+
+            if (count($q->feedbacks)) {
+                $feedbacks[] = $q;
+            }
+
+        }
+
+        return $feedbacks;
+
+    }
+
     // MARK RELEASE
 
     public function release_marks_for($target, $level, $set) {
