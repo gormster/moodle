@@ -14,11 +14,10 @@ class renderer extends plugin_renderer_base {
         
         global $PAGE, $USER;
 
-        $context = context_module::instance($block->cm->id);
+        $context = $block->teameval->get_context();
         $c = new stdClass; // template context
 
         if (has_capability('local/teameval:changesettings', $context)) {
-            // $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
             $settingsform = new forms\settings_form();
             $settingsform->set_data($block->settings);
             
@@ -40,9 +39,15 @@ class renderer extends plugin_renderer_base {
                 }
                 $types[] = $type;
             }
-            $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
 
-            $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
+            // Results and Mark Release are only available to teamevals attached to modules
+            if (isset($block->cm)) {
+
+                $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
+
+                $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
+
+            }
         }
 
         $noncompletion = null;

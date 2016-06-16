@@ -205,7 +205,19 @@ class team_evaluation {
     }
 
     public function get_coursemodule() {
-        return $this->cm;
+        if (isset($this->cm)) {
+            return $this->cm;
+        }
+        return null;
+    }
+
+    public function __get($k) {
+        switch($k) {
+            case 'id':
+                return $this->id;
+            default:
+                throw new coding_exception("Undefined property $k on class team_evaluation.");
+        }
     }
 
     // These functions are designed to be called from question subplugins
