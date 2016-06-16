@@ -28,7 +28,7 @@ class team_evaluation_block implements renderable {
     public function __construct($cmid) {
 
         $this->cm = get_coursemodule_from_id(null, $cmid);
-        $this->teameval = new team_evaluation($cmid);
+        $this->teameval = team_evaluation::from_cmid($cmid);
 
         $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
         $this->questions = $this->teameval->get_questions();

@@ -42,13 +42,38 @@ class team_evaluation {
     protected $evaluator;
 
     // caches scores from evaluator. shouldn't change over the lifetime of the team_evaluation object.
-    protected $_scores; 
+    protected $_scores;
 
-    public function __construct($cmid) {
+    public static function from_cmid($cmid) {
 
-        $this->cm = get_coursemodule_from_id(null, $cmid);
+        global $DB;
 
-        $this->context = context_module::instance($cmid);
+        $id = $DB->get_field('teameval', 'id', ['cmid' => $cmid]);
+
+        return new team_evaluation($id, $cmid);
+
+    }
+
+    /**
+     * When creating a teameval for the first time, pass in the cmid or the contextid
+     * You should only ever call the constructor with cmid or contextid set from
+     * within this class. PHP doesn't support constructor overloading so I can't force
+     * that, but if you've only got a cmid or contextid use from_cmid or from_contextid.
+     */
+    public function __construct($id, $cmid = null, $contextid = null) {
+
+        $this->id = $id;
+
+        if (!$id) {
+            if ($cmid) {
+                $this->cm = get_coursemodule_from_id(null, $cmid);
+                $this->context = context_module::instance($cmid);
+            } else if ($contextid) {
+                $this->context = context::instance_by_id($contextid);
+            }
+        }
+
+        $this->get_settings();
 
         $this->get_evaluation_context();
     
@@ -98,16 +123,28 @@ class team_evaluation {
         // initialise settings if they're not already
         if (!isset($this->settings)) {
 
-            $this->settings = $DB->get_record('teameval', array('cmid' => $this->cm->id));
+            $this->settings = $DB->get_record('teameval', array('id' => $this->id));
             
             if ($this->settings === false) {
                 $settings = team_evaluation::default_settings();
-                $settings->cmid = $this->cm->id;
+                if (isset($this->cm)) {
+                    $settings->cmid = $this->cm->id;
+                } else {
+                    $settings->contextid = $this->context->id;
+                }
                 
                 $this->id = $DB->insert_record('teameval', $settings, false);
 
                 $this->settings = $settings;
             } else {
+
+                if ($this->settings->cmid) {
+                    $this->cm = get_coursemodule_from_id(null, $this->settings->cmid);
+                    $this->context = context_module::instance($this->settings->cmid);
+                } else if ($this->settings->contextid) {
+                    $this->context = context::instance_by_id($this->settings->contextid);
+                }
+
                 // for reasons I cannot possibly understand
                 // literally every numeric type comes back as a string
                 // let's fix that
@@ -122,7 +159,10 @@ class team_evaluation {
                 }
             }
 
+            // these aren't really part of the settings
+            unset($this->settings->id);
             unset($this->settings->cmid);
+            unset($this->settings->contextid);
         }
 
         // don't return our actual settings object, else it could be updated behind our back

@@ -34,7 +34,7 @@ class external extends external_api {
 
     public static function get_settings($cmid) {
         //todo: this should 100% go through some kind of output thing. needs permissions checks, for starters.
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
         return $teameval->get_settings();
     }
 
@@ -77,7 +77,7 @@ class external extends external_api {
         $settings->fraction = $settings->fraction / 100.0;
         $settings->noncompletionpenalty = $settings->noncompletionpenalty / 100.0;
 
-        $teameval = new team_evaluation($settings->cmid);
+        $teameval = team_evaluation::from_cmid($settings->cmid);
         $teameval->update_settings($settings);
     }
 
@@ -99,7 +99,7 @@ class external extends external_api {
     }
 
     public static function questionnaire_set_order($cmid, $order) {
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
         $teameval->questionnaire_set_order($order);
     }
 
@@ -125,7 +125,7 @@ class external extends external_api {
     public static function report($cmid, $plugin) {
         global $USER, $PAGE;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
         $teameval->set_report_plugin($plugin);
         $report = $teameval->get_report();
 
@@ -170,7 +170,7 @@ class external extends external_api {
     }
 
     public static function release($cmid, $release) {
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
 
         // TODO: check permissions
 

@@ -58,7 +58,7 @@ abstract class evaluation_context {
     }
 
     public function marks_available($userid) {
-        $teameval = new team_evaluation($this->cm->id);
+        $teameval = team_evaluation::from_cmid($this->cm->id);
         return $teameval->marks_available($userid);
     }
 
@@ -70,7 +70,7 @@ abstract class evaluation_context {
             $grades = array($grades['userid']=>$grades);
         }
 
-        $teameval = new team_evaluation($this->cm->id);
+        $teameval = team_evaluation::from_cmid($this->cm->id);
 
         foreach($grades as $userid => $grade) {
             if (!is_object($grade)) {

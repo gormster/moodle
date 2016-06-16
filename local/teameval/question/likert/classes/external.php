@@ -49,7 +49,7 @@ class external extends external_api {
 	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = team_evaluation::from_cmid($cmid);
 		$transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
 		if ($transaction == null) {
@@ -107,7 +107,7 @@ class external extends external_api {
 	public static function delete_question($cmid, $id) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = team_evaluation::from_cmid($cmid);
 
 		$transaction = $teameval->should_delete_question("likert", $id, $USER->id);
 		if ($transaction == null) {
@@ -143,7 +143,7 @@ class external extends external_api {
 	public static function submit_response($cmid, $id, $marks) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = team_evaluation::from_cmid($cmid);
 
 		if ($teameval->can_submit_response('likert', $id, $USER->id)) {
 			$formdata = [];

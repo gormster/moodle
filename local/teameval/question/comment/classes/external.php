@@ -42,7 +42,7 @@ class external extends external_api {
 
         global $DB, $USER;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
         $transaction = $teameval->should_update_question("comment", $id, $USER->id);
 
         if ($transaction == null) {
@@ -88,7 +88,7 @@ class external extends external_api {
 
         global $USER, $DB;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
 
         $transaction = $teameval->should_delete_question('comment', $id, $USER->id);
 
@@ -127,7 +127,7 @@ class external extends external_api {
 
         global $DB, $USER;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = team_evaluation::from_cmid($cmid);
 
         if ($teameval->can_submit_response('comment', $id, $USER->id)) {
             $question = new question($teameval, $id);
