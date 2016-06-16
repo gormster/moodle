@@ -23,7 +23,7 @@ class external extends external_api {
 
 	public static function update_question_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
 			'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
 			'title' => new external_value(PARAM_TEXT, 'title of question'),
@@ -46,10 +46,10 @@ class external extends external_api {
 			]);
 	}
 
-	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
+	public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
 		global $DB, $USER;
 
-		$teameval = team_evaluation::from_cmid($cmid);
+		$teameval = new team_evaluation($teamevalid);
 		$transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
 		if ($transaction == null) {
@@ -95,7 +95,7 @@ class external extends external_api {
 
 	public static function delete_question_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'id' => new external_value(PARAM_INT, 'id of question')
 		]);
 	}
@@ -104,10 +104,10 @@ class external extends external_api {
 		return null;
 	}
 
-	public static function delete_question($cmid, $id) {
+	public static function delete_question($teamevalid, $id) {
 		global $DB, $USER;
 
-		$teameval = team_evaluation::from_cmid($cmid);
+		$teameval = new team_evaluation($teamevalid);
 
 		$transaction = $teameval->should_delete_question("likert", $id, $USER->id);
 		if ($transaction == null) {
@@ -125,7 +125,7 @@ class external extends external_api {
 
 	public static function submit_response_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'id' => new external_value(PARAM_INT, 'id of question'),
 			'marks' => new external_multiple_structure(
 				new external_single_structure([
@@ -140,10 +140,10 @@ class external extends external_api {
 		return null;
 	}
 
-	public static function submit_response($cmid, $id, $marks) {
+	public static function submit_response($teamevalid, $id, $marks) {
 		global $DB, $USER;
 
-		$teameval = team_evaluation::from_cmid($cmid);
+		$teameval = new team_evaluation($teamevalid);
 
 		if ($teameval->can_submit_response('likert', $id, $USER->id)) {
 			$formdata = [];

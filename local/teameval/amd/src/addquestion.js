@@ -13,7 +13,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 	"use strict";
 
-	var _cmid;
+	var _id;
 
 	var _subplugins;
 
@@ -61,7 +61,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 		addQuestion: function(type) {
 			var _this = this;
-			var context = {'_newquestion' : true, '_cmid': _cmid, '_self': _self};
+			var context = {'_newquestion' : true, '_id': _id, '_self': _self};
 			templates.render('teamevalquestion_'+type+'/editing_view', context).done(function(html, js) {
 				var question = $('<li class="local-teameval-question editing" />');
 				question.data('questiontype', type);
@@ -131,7 +131,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			var editingContext = question.data('editingcontext') || {};
 			var questionType = question.data('questiontype');
 
-			editingContext._cmid = _cmid;
+			editingContext._id = _id;
 			editingContext._self = _self;
 
 			// hide the action bar
@@ -175,7 +175,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			var submissionContext = question.data('submissioncontext') || {};
 			var questionType = question.data('questiontype');
 
-			submissionContext._cmid = _cmid;
+			submissionContext._id = _id;
 
 			templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
 
@@ -215,7 +215,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			var promises = ajax.call([{
 				methodname: 'local_teameval_questionnaire_set_order',
 				args: {
-					cmid: _cmid,
+					id: _id,
 					order: order
 				}
 			}]);
@@ -225,9 +225,9 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			}).fail(notification.exception);
 		},
 
-		initialise: function(cmid, self, subplugins) {
+		initialise: function(teamevalid, self, subplugins) {
 
-			_cmid = cmid;
+			_id = teamevalid;
 			_self = self;
 			_subplugins = subplugins;
 

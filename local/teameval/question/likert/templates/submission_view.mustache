@@ -313,7 +313,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_delete_question',
 			args: {
-				cmid: {{_cmid}},
+				teamevalid: {{_id}},
 				id: {{id}}
 			}
 		}]);
@@ -334,7 +334,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_submit_response',
 			args: {
-				cmid: {{_cmid}},
+				teamevalid: {{_id}},
 				id: {{id}},
 				marks: marks
 			}

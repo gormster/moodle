@@ -87,7 +87,7 @@ class external extends external_api {
 
     public static function questionnaire_set_order_parameters() {
         return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
+            'id' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
             'order' => new external_multiple_structure(
                 new external_value(PARAM_INT, 'list of question IDs')
             )
@@ -98,8 +98,8 @@ class external extends external_api {
         return null;
     }
 
-    public static function questionnaire_set_order($cmid, $order) {
-        $teameval = team_evaluation::from_cmid($cmid);
+    public static function questionnaire_set_order($id, $order) {
+        $teameval = new team_evaluation($id);
         $teameval->questionnaire_set_order($order);
     }
 

@@ -65,7 +65,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
         var promises = ajax.call([{
             methodname: 'teamevalquestion_comment_submit_response',
             args: {
-                cmid: {{_cmid}},
+                teamevalid: {{_id}},
                 id: {{id}},
                 comments: comments
             }
@@ -81,7 +81,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
         var promises = ajax.call([{
             methodname: 'teamevalquestion_comment_delete_question',
             args: {
-                cmid: {{_cmid}},
+                teamevalid: {{_id}},
                 id: {{id}}
             }
         }]);

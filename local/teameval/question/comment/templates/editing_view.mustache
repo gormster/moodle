@@ -32,7 +32,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
         var deferred = $.Deferred();
 
-        var data = { cmid: {{_cmid}} };
+        var data = { teamevalid: {{_id}} };
         {{#id}}
         data.id = {{id}};
         {{/id}}
