@@ -82,6 +82,11 @@ class team_evaluation {
     public function get_evaluation_context() {
         global $CFG;
 
+        // if this is a template, there's no evaluation context
+        if (! isset($this->cm)) {
+            return null;
+        }
+
         if (! isset($this->evalcontext)) {
         
             $modname = $this->cm->modname;
@@ -184,13 +189,8 @@ class team_evaluation {
         }
 
         $record = clone $this->settings;
-
-        if (! isset($this->id)) {
-            $this->id = $DB->get_field('teameval', 'id', ['cmid' => $this->cm->id]);
-        }
-
-        $record->cmid = $this->cm->id;
         $record->id = $this->id;
+        
         $DB->update_record('teameval', $record);
 
         // if you've changed a setting that could potentiall change grades
@@ -243,13 +243,13 @@ class team_evaluation {
     public function update_question($transaction, $type, $id, $ordinal) {
         global $DB;
 
-        $record = $DB->get_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $record = $DB->get_record("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
         if ($record) {
             $record->ordinal = $ordinal;
             $DB->update_record("teameval_questions", $record);
         } else {
             $record = new stdClass;
-            $record->cmid = $this->cm->id;
+            $record->teamevalid = $this->id;
             $record->qtype = $type;
             $record->questionid = $id;
             $record->ordinal = $ordinal;
@@ -287,12 +287,17 @@ class team_evaluation {
      */
     public function delete_question($transaction, $type, $id) {
         global $DB;
-        $DB->delete_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $DB->delete_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
         
         $transaction->allow_commit();
     }
 
     public function can_submit($userid) {
+
+        //does this teameval belong to a coursemodule
+        if (!isset($this->cm)) {
+            return false;
+        }
 
         //does the user have the capability to submit in this teameval?
         if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid, false) == false) {
@@ -320,7 +325,7 @@ class team_evaluation {
         }
 
         //first verify that the quesiton is in this teameval
-        $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $isquestion = $DB->count_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
 
         if ($isquestion == 0) {
             return false;
@@ -333,7 +338,7 @@ class team_evaluation {
 
     protected function get_bare_questions() {
         global $DB;
-        return $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), "ordinal ASC");
+        return $DB->get_records("teameval_questions", array("teamevalid" => $this->id), "ordinal ASC");
     }
 
     /**
@@ -369,7 +374,7 @@ class team_evaluation {
         require_capability('local/teameval:createquestionnaire', $this->context);
 
         //first assert that $order contains ALL the question IDs and ONLY the question IDs of this teameval
-        $records = $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), '', 'id, questionid');
+        $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, questionid');
         $ids = array_map(function($record) {
             return $record->questionid;
         }, $records);
@@ -860,7 +865,7 @@ class team_evaluation {
 interface question {
     
     /**
-     * @param int $cmid the ID of the coursemodule for this teameval instance
+     * @param team_evaluation $teameval this teameval instance
      * @param int $questionid the ID of the question. may be null if this is a new question.
      */
     public function __construct(team_evaluation $teameval, $questionid = null);

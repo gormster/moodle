@@ -144,6 +144,53 @@ function xmldb_local_teameval_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016061600, 'local', 'teameval');
     }
 
+    if ($oldversion < 2016061601) {
+
+
+        $table = new xmldb_table('teameval_questions');
+
+        $field = new xmldb_field('teamevalid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'cmid');
+
+        // Conditionally launch add field teamevalid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Now we need to populate teamevalid by looking up data on teameval
+        // It's reasonable to assume that every single teameval has questions so we get all of them
+        $recordset = $DB->get_recordset('teameval', null, '', 'id, cmid');
+
+        foreach($recordset as $record) {
+            if ($record->cmid) {
+                $DB->execute('UPDATE {teameval_questions} SET teamevalid = :id WHERE cmid = :cmid', ['id' => $record->id, 'cmid' => $record->cmid]);
+            }
+        }
+
+        // Now we can drop cmid
+
+        // Define key cmid (foreign) to be dropped form teameval_questions.
+        $key = new xmldb_key('cmid', XMLDB_KEY_FOREIGN, array('cmid'), 'teameval', array('id'));
+
+        // Launch drop key cmid.
+        $dbman->drop_key($table, $key);
+
+        $field = new xmldb_field('cmid');
+
+        // Conditionally launch drop field cmid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $key = new xmldb_key('fk_teamevalid', XMLDB_KEY_FOREIGN, array('teamevalid'), 'teameval', array('id'));
+
+        // Launch add key fk_teamevalid.
+        $dbman->add_key($table, $key);
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2016061601, 'local', 'teameval');
+    }
+
+
 
 
     return true;

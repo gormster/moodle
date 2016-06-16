@@ -6,6 +6,9 @@ require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
 abstract class evaluation_context {
 
+    /**
+     * You MUST set this in your constructor.
+     */
     protected $cm;
 
     /**

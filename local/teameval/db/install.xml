@@ -28,14 +28,14 @@
     <TABLE NAME="teameval_questions" COMMENT="Questions for teameval instances.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Coursemodule/teameval id"/>
+        <FIELD NAME="teamevalid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="ID of the teameval this question belongs to"/>
         <FIELD NAME="qtype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Subplugin identifier for teamevalquestion subplugin"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Instance id for the subplugin's own database tables"/>
         <FIELD NAME="ordinal" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Ordering number for questions"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="teameval" REFFIELDS="id"/>
+        <KEY NAME="fk_teamevalid" TYPE="foreign" FIELDS="teamevalid" REFTABLE="teameval" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="teameval_responses" COMMENT="Responses to teameval questionnaires. Why the backwards normalisation? It's more efficient than asking every subplugin for its responses, plus this way we're not relying on subplugins to store this information correctly; they only have their own data to worry about.">
