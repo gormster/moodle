@@ -15,6 +15,7 @@
                         "fullname": "Alice User",
                         "userpic": "",
                         "score": 0.87,
+                        "noncompletionpenalty": 0,
                         "grade": 56.1,
                         "released": false
                     },
@@ -23,6 +24,7 @@
                         "fullname": "Bob User",
                         "userpic": "",
                         "score": 0.96,
+                        "noncompletionpenalty": 0,
                         "grade": 58.8,
                         "released": false
                     },
@@ -31,6 +33,7 @@
                         "fullname": "Carol User",
                         "userpic": "",
                         "score": 1.17,
+                        "noncompletionpenalty": 0,
                         "grade": 65.1,
                         "released": false
                     }
@@ -57,10 +60,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{#str}}name, core{{/str}}</th>
-                        <th>{{#str}}score, local_teameval{{/str}}</th>
-                        <th>{{#str}}grade, core{{/str}}</th>
-                        <th>{{#str}}releasemarks, local_teameval{{/str}}</th>
+                        <th style="width:60%">{{#str}}name, core{{/str}}</th>
+                        <th style="width:10%">{{#str}}score, local_teameval{{/str}}</th>
+                        <th style="width:10%">{{#str}}noncompletionpenalty, local_teameval{{/str}}</th>
+                        <th style="width:10%">{{#str}}grade, core{{/str}}</th>
+                        <th style="width:10%">{{#str}}releasemarks, local_teameval{{/str}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,6 +72,7 @@
                     <tr>
                         <td>{{{userpic}}} {{name}}</td>
                         <td>{{score}}</td>
+                        <td>{{noncompletionpenalty}}%</td>
                         <td>{{grade}}</td>
                         <td><div class="local-teameval-switch{{#released}} checked{{/released}}{{#overridden}} overridden{{/overridden}}" data-level="2" data-target="{{id}}" data-override="switch-group-{{gid}}-{{uniqid}}" id="switch-user-{{id}}-{{uniqid}}"></div></td>
                     </tr>
