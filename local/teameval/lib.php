@@ -42,20 +42,52 @@ class team_evaluation {
     protected $evaluator;
 
     // caches scores from evaluator. shouldn't change over the lifetime of the team_evaluation object.
-    protected $_scores; 
+    protected $_scores;
 
-    public function __construct($cmid) {
+    public static function from_cmid($cmid) {
 
-        $this->cm = get_coursemodule_from_id(null, $cmid);
+        global $DB;
 
-        $this->context = context_module::instance($cmid);
+        $id = $DB->get_field('teameval', 'id', ['cmid' => $cmid]);
+
+        return new team_evaluation($id, $cmid);
+
+    }
+
+    /**
+     * When creating a teameval for the first time, pass in the cmid or the contextid
+     * You should only ever call the constructor with cmid or contextid set from
+     * within this class. PHP doesn't support constructor overloading so I can't force
+     * that, but if you've only got a cmid or contextid use from_cmid or from_contextid.
+     */
+    public function __construct($id, $cmid = null, $contextid = null) {
+
+        $this->id = $id;
+
+        if (!$id) {
+            if ($cmid) {
+                $this->cm = get_coursemodule_from_id(null, $cmid);
+                $this->context = context_module::instance($cmid);
+            } else if ($contextid) {
+                $this->context = context::instance_by_id($contextid);
+            }
+        }
+
+        $this->get_settings();
 
         $this->get_evaluation_context();
+
+        $this->get_releases();
     
     }
 
     public function get_evaluation_context() {
         global $CFG;
+
+        // if this is a template, there's no evaluation context
+        if (! isset($this->cm)) {
+            return null;
+        }
 
         if (! isset($this->evalcontext)) {
         
@@ -98,23 +130,46 @@ class team_evaluation {
         // initialise settings if they're not already
         if (!isset($this->settings)) {
 
-            $this->settings = $DB->get_record('teameval', array('cmid' => $this->cm->id));
+            $this->settings = $DB->get_record('teameval', array('id' => $this->id));
             
             if ($this->settings === false) {
                 $settings = team_evaluation::default_settings();
-                $settings->cmid = $this->cm->id;
+                if (isset($this->cm)) {
+                    $settings->cmid = $this->cm->id;
+                } else {
+                    $settings->contextid = $this->context->id;
+                }
                 
                 $this->id = $DB->insert_record('teameval', $settings, false);
 
                 $this->settings = $settings;
             } else {
-                // when fetching the record from the DB these are ints
-                // we need them to be bools
+
+                if ($this->settings->cmid) {
+                    $this->cm = get_coursemodule_from_id(null, $this->settings->cmid);
+                    $this->context = context_module::instance($this->settings->cmid);
+                } else if ($this->settings->contextid) {
+                    $this->context = context::instance_by_id($this->settings->contextid);
+                }
+
+                // for reasons I cannot possibly understand
+                // literally every numeric type comes back as a string
+                // let's fix that
                 $this->settings->enabled = (bool)$this->settings->enabled;
                 $this->settings->public = (bool)$this->settings->public;
+                $this->settings->autorelease = (bool)$this->settings->autorelease;
+                $this->settings->self = (bool)$this->settings->self;
+                $this->settings->fraction = (float)$this->settings->fraction;
+                $this->settings->noncompletionpenalty = (float)$this->settings->noncompletionpenalty;
+                if(!is_null($this->settings->deadline)) {
+                    $this->settings->deadline = (int)$this->settings->deadline;
+                }
             }
 
+            // these aren't really part of the settings
+            unset($this->settings->id);
             unset($this->settings->cmid);
+            unset($this->settings->contextid);
         }
 
         // don't return our actual settings object, else it could be updated behind our back
@@ -136,14 +191,15 @@ class team_evaluation {
         }
 
         $record = clone $this->settings;
-
-        if (! isset($this->id)) {
-            $this->id = $DB->get_field('teameval', 'id', ['cmid' => $this->cm->id]);
-        }
-
-        $record->cmid = $this->cm->id;
         $record->id = $this->id;
+        
         $DB->update_record('teameval', $record);
+
+        // if you've changed a setting that could potentiall change grades
+        // we need to trigger a grade update
+        if (isset($settings->fraction) || isset($settings->noncompletionpenalty)) {
+            $this->get_evaluation_context()->trigger_grade_update();
+        }
     }
 
     public function get_context() {
@@ -151,7 +207,19 @@ class team_evaluation {
     }
 
     public function get_coursemodule() {
-        return $this->cm;
+        if (isset($this->cm)) {
+            return $this->cm;
+        }
+        return null;
+    }
+
+    public function __get($k) {
+        switch($k) {
+            case 'id':
+                return $this->id;
+            default:
+                throw new coding_exception("Undefined property $k on class team_evaluation.");
+        }
     }
 
     // These functions are designed to be called from question subplugins
@@ -189,13 +257,13 @@ class team_evaluation {
     public function update_question($transaction, $type, $id, $ordinal) {
         global $DB;
 
-        $record = $DB->get_record("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $record = $DB->get_record("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
         if ($record) {
             $record->ordinal = $ordinal;
             $DB->update_record("teameval_questions", $record);
         } else {
             $record = new stdClass;
-            $record->cmid = $this->cm->id;
+            $record->teamevalid = $this->id;
             $record->qtype = $type;
             $record->questionid = $id;
             $record->ordinal = $ordinal;
@@ -233,27 +301,58 @@ class team_evaluation {
      */
     public function delete_question($transaction, $type, $id) {
         global $DB;
-        $DB->delete_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
+        $DB->delete_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
         
         $transaction->allow_commit();
+    }
+
+    public function can_submit($userid) {
+
+        //does this teameval belong to a coursemodule
+        if (!isset($this->cm)) {
+            return false;
+        }
+
+        //does the user have the capability to submit in this teameval?
+        if (has_capability('local/teameval:submitquestionnaire', $this->context, $userid, false) == false) {
+            return false;
+        }
+
+        // if a deadline is set, has it passed?
+        if (($this->get_settings()->deadline > 0) && ($this->get_settings()->deadline < time())) {
+            return false;
+        }
+
+        // have the marks already been released?
+        if ($this->marks_available($userid)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function can_submit_response($type, $id, $userid) {
         global $DB;
 
-        //first verify that the quesiton is in this teameval
-        $isquestion = $DB->count_records("teameval_questions", array("cmid" => $this->cm->id, "qtype" => $type, "questionid" => $id));
-
-        if ($isquestion > 0) {
-            return has_capability('local/teameval:submitquestionnaire', $this->context, $userid);
+        if($this->can_submit($userid) == false) {
+            return false;
         }
 
-        return false;
+        //first verify that the quesiton is in this teameval
+        $isquestion = $DB->count_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $type, "questionid" => $id));
+
+        if ($isquestion == 0) {
+            return false;
+        }
+
+        return true;
     }
+
+
 
     protected function get_bare_questions() {
         global $DB;
-        return $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), "ordinal ASC");
+        return $DB->get_records("teameval_questions", array("teamevalid" => $this->id), "ordinal ASC");
     }
 
     /**
@@ -289,7 +388,7 @@ class team_evaluation {
         require_capability('local/teameval:createquestionnaire', $this->context);
 
         //first assert that $order contains ALL the question IDs and ONLY the question IDs of this teameval
-        $records = $DB->get_records("teameval_questions", array("cmid" => $this->cm->id), '', 'id, questionid');
+        $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, questionid');
         $ids = array_map(function($record) {
             return $record->questionid;
         }, $records);
@@ -329,11 +428,13 @@ class team_evaluation {
         $ready = true;
 
         foreach($questions as $q) {
-            foreach($members as $m) {
-                $response = $this->get_response($q, $m->id);
-                if( $response->marks_given() == false ) {
-                    $ready = false;
-                    break;
+            if ($q->question->has_completion()) {
+                foreach($members as $m) {
+                    $response = $this->get_response($q, $m->id);
+                    if( $response->marks_given() == false ) {
+                        $ready = false;
+                        break;
+                    }
                 }
             }
 
@@ -352,14 +453,22 @@ class team_evaluation {
     public function user_completion($uid) {
         $questions = $this->get_questions();
         $marks_given = 0;
+        $num_questions = 0;
         foreach($questions as $q) {
+            // if this question can't be completed, don't count it towards user completion
+            if (!$q->question->has_completion()) {
+                continue;
+            }
+
+            $num_questions++;
+
             $response = $this->get_response($q, $uid);
             if ($response->marks_given()) {
                 $marks_given++;
             }
         }
 
-        return $marks_given / count($questions);
+        return $marks_given / $num_questions;
     }
 
     public function get_evaluator() {
@@ -516,6 +625,10 @@ class team_evaluation {
 
         $group = $this->group_for_user($userid);
 
+        if ($group == null) {
+            return [];
+        }
+
         $members = $this->_groups_get_members($group->id);
         
         if($include_self == false) {
@@ -579,6 +692,50 @@ class team_evaluation {
 
     }
 
+    public function all_feedback($userid) {
+
+        $questions = $this->get_questions();
+
+        $feedbacks = [];
+        foreach($questions as $qi) {
+            if ($qi->question->has_feedback() == false) {
+                continue;
+            }
+
+            $q = new stdClass;
+            $q->title = $qi->question->get_title();
+            $q->feedbacks = [];
+
+            foreach($this->teammates($userid) as $tm) {
+                $fb = new stdClass;
+
+                $response = $this->get_response($qi, $tm->id);
+                $fb->feedback = trim( $response->feedback_for($userid) );
+                if (strlen($fb->feedback) == 0) {
+                    continue;
+                }
+
+                if($qi->question->is_feedback_anonymous() == false) {
+                    if ($userid == $tm->id) {
+                        $fb->from = get_string('yourself', 'local_teameval');
+                    } else {
+                        $fb->from = fullname($tm);
+                    }
+                }
+
+                $q->feedbacks[] = $fb;
+            }
+
+            if (count($q->feedbacks)) {
+                $feedbacks[] = $q;
+            }
+
+        }
+
+        return $feedbacks;
+
+    }
+
     // MARK RELEASE
 
     public function release_marks_for($target, $level, $set) {
@@ -625,17 +782,24 @@ class team_evaluation {
         $this->release_marks_for($userid, RELEASE_USER, $set);
     }
 
-    public function marks_available($userid) {
+    protected function get_releases() {
         global $DB;
-        // First check if the marks are released.
-        $grp = $this->group_for_user($userid);
+        if (!isset($this->releases)) {
+            $this->releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+        }
+        return $this->releases;
+    }
 
+    public function marks_released($userid) {
+        global $DB;
+
+        $grp = $this->group_for_user($userid);
         $is_released = false;
 
         if ($this->get_settings()->autorelease) {
             $is_released = true;
         } else {
-            $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+            $releases = $this->get_releases();
             foreach($releases as $release) {
                 if ($release->level == RELEASE_ALL) {
                     $is_released = true;
@@ -658,7 +822,12 @@ class team_evaluation {
             }
         }
 
-        if ($is_released == false) {
+        return $is_released;
+    }
+
+    public function marks_available($userid) {
+        // First check if the marks are released.
+        if (!$this->marks_released($userid)) {
             return false;
         }
 
@@ -667,6 +836,8 @@ class team_evaluation {
         if ($this->get_settings()->deadline < time()) {
             return true;
         }
+
+        $grp = $this->group_for_user($userid);
 
         if ($this->group_ready($grp->id)) {
             return true;
@@ -724,7 +895,7 @@ class team_evaluation {
 interface question {
     
     /**
-     * @param int $cmid the ID of the coursemodule for this teameval instance
+     * @param team_evaluation $teameval this teameval instance
      * @param int $questionid the ID of the question. may be null if this is a new question.
      */
     public function __construct(team_evaluation $teameval, $questionid = null);
@@ -754,9 +925,20 @@ interface question {
      * @return stdClass|array template data. @see templatable
      * 
      * You MUST attach an event handler for the "delete" event. This handler must return
-     * a $.Deferred which will resolve with no arguments.
+     * a $.Deferred whose results will be ignored.
+     *
+     * You MUST attach an event handler for the "submit" event. This handler must return
+     * a $.Deferred whose results should be an object with an 'incomplete' property indicating
+     * if the submitted data was a complete response to the question. If there is an error 
+     * in submission, return a non-200 status.
+     *
+     * You should return a version that cannot be edited if $locked is set to true.
+     *
+     * You should indicate that the form is incomplete after the first "submit" event
+     * or if $locked is true. You should set the CSS class "incomplete" on your template's
+     * direct ancestor if you do.
      */
-    public function submission_view($userid);
+    public function submission_view($userid, $locked = false);
     
     /**
      * The view that an editing user should see. Rendered with editing_view.mustache
@@ -767,6 +949,13 @@ interface question {
      * You MUST attach an event handler for the "save" event to the parent .question-container.
      * This event must return a $.Deferred which will resolve with the new 
      * question data which will be returned from $this->submission_view.
+     *
+     * Once submitting users have started submitting responses to your question, you should
+     * prevent editing users from changing aspects of your question that would affect marks.
+     * For example, in the Likert question, you could no longer change the minimum and maximum
+     * values. However, you may allow some aspects of your question to be edited, such as
+     * the title or description. It's up to you to ensure that users don't edit your question
+     * in such a way that the responses become unreadable.
      *
      * @return stdClass|array template data. @see templatable
      */
@@ -780,6 +969,12 @@ interface question {
 
     public function has_value();
 
+    /**
+     * Does this question contribute toward completion? has_value must be false if this is true.
+     * @return bool
+     */
+    public function has_completion();
+
     public function minimum_value();
 
     public function maximum_value();
@@ -792,6 +987,14 @@ interface question {
      * @return bool 
      */
     public function has_feedback();
+
+    /**
+     * Return true if the feedback given by your question should not be associated with the person
+     * who left that feedback when shown to the target of that feedback. Teacher roles can always
+     * see who gave feedback.
+     * @return bool
+     */
+    public function is_feedback_anonymous();
 
     public function render_for_report($groupid = null);
     

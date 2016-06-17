@@ -214,7 +214,7 @@ Example context (json): {
 			<tr>
 			<th> ... </th>
 			{{#options}}
-				<th scope="row">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
+				<th style="width:{{optionwidth}}%">{{value}}{{#meaning}}: {{meaning}}{{/meaning}}</th>
 			{{/options}}
 			</tr>
 		</thead>
@@ -223,7 +223,12 @@ Example context (json): {
 			<tr>
 				<th scope="row">{{name}}</th>
 				{{#options}}
-					<td><input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} /></td>
+					<td>{{#locked}}
+					{{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+					{{/locked}}
+					{{^locked}}
+					<input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+					{{/locked}}</td>
 				{{/options}}
 			</tr>
 			{{/users}}
@@ -240,40 +245,75 @@ Example context (json): {
 					<td title="{{.}}">&nbsp;</td>
 				{{/previous}}
 				<td title="{{name}}" class="first">&nbsp;</td>
-				<th colspan="{{remaining}}">{{name}}</th>
+				{{#remaining}}
+				<td title="{{name}}" colspan="{{remaining}}" class="first remaining">&nbsp;</td>
+				{{/remaining}}
+				<th>{{name}}</th>
 			</tr>
 			{{/headers}}
 			<tr>
 				{{#headers}}
 				<td>&nbsp;</td>
 				{{/headers}}
-				<th class="criteria">{{#str}}criteria, teamevalquestion_likert{{/str}}</th>
+				<th class="criteria value">&nbsp;</th>
+				<th class="criteria meaning">{{#str}}criteria, teamevalquestion_likert{{/str}}</th>
 			</tr>
 		</thead>
 		<tbody>
 			{{#options}}
 			<tr>
 				{{#users}}
-					<td><input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} /></td>
+					<td>
+					{{#locked}}
+					{{#checked}}{{#pix}} t/check, core {{/pix}}{{/checked}}
+					{{/locked}}
+					{{^locked}}<input type="radio" name="question-{{uniqid}}-response-{{userid}}" value="{{value}}" title="{{name}}" data-touser="{{userid}}" {{#checked}}checked{{/checked}} />
+					{{/locked}}</td>
 				{{/users}}
-				<td class="criteria">
-				{{value}}{{#meaning}}: {{meaning}}{{/meaning}}
+				<td class="criteria value">
+				{{value}}
+				</td>
+				<td class="criteria meaning">
+				{{meaning}}
 				</td>
 			</tr>
 			{{/options}}
 		</tbody>
 	</table>
 	{{/waterfall}}
+	<div class="incomplete-indicator">{{#str}} incompleteadvice, local_teameval {{/str}}</div>
 </div>
-{{#js}}
+{{#js}}{{#_notset}}<script>{{/_notset}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notification) {
 	var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
+
+	{{^locked}}
+	function checkComplete() {
+		var userids = [{{#users}}{{userid}},{{/users}}];
+
+		var markedUsers = questionContainer.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
+
+		var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
+
+		if (missingUsers.length > 0) {
+			questionContainer.parent().addClass('incomplete');
+		} else {
+			questionContainer.parent().removeClass('incomplete');
+		}
+
+		return (missingUsers.length > 0);
+	}
+	{{/locked}}
+
+	{{#incomplete}}
+	questionContainer.parent().addClass('incomplete');
+	{{/incomplete}}
 
 	questionContainer.on("delete", function () {
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_delete_question',
 			args: {
-				cmid: {{_cmid}},
+				teamevalid: {{_id}},
 				id: {{id}}
 			}
 		}]);
@@ -291,18 +331,20 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			marks.push(m);
 		});
 
-		console.log(marks);
-
 		var promises = ajax.call([{
 			methodname: 'teamevalquestion_likert_submit_response',
 			args: {
-				cmid: {{_cmid}},
+				teamevalid: {{_id}},
 				id: {{id}},
 				marks: marks
 			}
 		}]);
 
-		return promises[0];
+		var incomplete = checkComplete();
+
+		return promises[0].then(function() {
+			return {'incomplete': incomplete};
+		});
 	});
 });
 {{/js}}

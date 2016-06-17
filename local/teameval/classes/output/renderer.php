@@ -14,11 +14,10 @@ class renderer extends plugin_renderer_base {
         
         global $PAGE, $USER;
 
-        $context = context_module::instance($block->cm->id);
+        $context = $block->teameval->get_context();
         $c = new stdClass; // template context
 
         if (has_capability('local/teameval:changesettings', $context)) {
-            // $PAGE->requires->js_call_amd('local_teameval/settings', 'initialise', [$block->cm->id, $block->teameval->get_settings()]);
             $settingsform = new forms\settings_form();
             $settingsform->set_data($block->settings);
             
@@ -26,7 +25,7 @@ class renderer extends plugin_renderer_base {
         }
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
-            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->cm->id, $block->questiontypes]);
+            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->teameval->id, $block->settings->self, $block->questiontypes]);
 
             $current_plugin = $block->teameval->get_report_plugin();
             $report_renderer = $PAGE->get_renderer("teamevalreport_{$current_plugin->name}");
@@ -40,14 +39,33 @@ class renderer extends plugin_renderer_base {
                 }
                 $types[] = $type;
             }
-            $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
 
-            $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
+            // Results and Mark Release are only available to teamevals attached to modules
+            if (isset($block->cm)) {
+
+                $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
+
+                $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
+
+            }
         }
 
-        if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
+        $noncompletion = null;
+
+        if ($block->teameval->can_submit($USER->id)) {
             $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
 
+        } else if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
+            // if we have this capability but can't submit then we need to communicate noncompletion
+            $completion = $block->teameval->user_completion($USER->id);
+            if ($completion < 1) {
+                $n = count($block->questions) - round($completion * count($block->questions));
+                $penalty = round($block->teameval->non_completion_penalty($USER->id) * 100, 2);
+                $noncompletion = ['n' => $n, 'penalty' => $penalty];
+            }
+        }
+
+        if (isset($block->feedback)) {
             $c->feedback = $this->render($block->feedback);
         }
 
@@ -57,18 +75,24 @@ class renderer extends plugin_renderer_base {
 
         $questions = [];
         foreach($block->questions as $q) {
-            $submissionview = $q->question->submission_view($USER->id);
+            $locked = !$block->teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
+            $submissionview = $q->question->submission_view($USER->id, $locked);
             $editingview = $q->question->editing_view($USER->id);
             $questions[] = [
-                "content" => $this->render_from_template($q->submissiontemplate, $submissionview + ["_cmid" => $block->cm->id]),
+                "content" => $this->render_from_template($q->submissiontemplate, $submissionview + ["_id" => $block->teameval->id]),
                 "type" => $q->plugininfo->name,
                 "questionid" => $q->questionid,
                 "submissioncontext" => json_encode($submissionview),
                 "editingcontext" => json_encode($editingview)
                 ];
         }
+
+        $deadline = null;
+        if (isset($block->settings->deadline)) {
+            $deadline = userdate($block->settings->deadline);
+        }
         
-        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion]);
 
         $c->hiderelease = $block->settings->autorelease;
 

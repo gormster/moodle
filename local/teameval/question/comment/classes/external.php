@@ -23,11 +23,13 @@ class external extends external_api {
 
     public static function update_question_parameters() {
         return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
             'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
             'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
             'title' => new external_value(PARAM_TEXT, 'title of question'),
             'description' => new external_value(PARAM_RAW, 'description of question'),
+            'anonymous' => new external_value(PARAM_BOOL, 'question is anonymous'),
+            'optional' => new external_value(PARAM_BOOL, 'question is optional')
         ]);
     }
 
@@ -35,10 +37,19 @@ class external extends external_api {
         return new external_value(PARAM_INT, 'id of question');
     }
 
-    public static function update_question($cmid, $ordinal, $id, $title, $description) {
+    public static function update_question($teamevalid, $ordinal, $id, $title, $description, $anonymous, $optional) {
+        require_login();
+
         global $DB, $USER;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = new team_evaluation($teamevalid);
+
+        $any_response_submitted = false;
+        if ($id > 0) {
+            $question = new question($teameval, $id);
+            $any_response_submitted = $question->any_response_submitted();
+        }
+
         $transaction = $teameval->should_update_question("comment", $id, $USER->id);
 
         if ($transaction == null) {
@@ -49,6 +60,10 @@ class external extends external_api {
 
         $record->title = $title;
         $record->description = $description;
+        if ($any_response_submitted == false) {
+            $record->anonymous = $anonymous;
+            $record->optional = $optional;
+        }
 
         if ($id > 0) {
             $DB->update_record('teamevalquestion_comment', $record);
@@ -64,12 +79,45 @@ class external extends external_api {
 
     public static function update_question_is_allowed_from_ajax() { return true; }
 
+    /* delete_question */
+
+    public static function delete_question_parameters() {
+        return new external_function_parameters([
+            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
+            'id' => new external_value(PARAM_INT, 'id of question')
+        ]);
+    }
+
+    public static function delete_question_returns() {
+        return null;
+    }
+
+    public static function delete_question($teamevalid, $id) {
+        require_login();
+
+        global $USER, $DB;
+
+        $teameval = new team_evaluation($teamevalid);
+
+        $transaction = $teameval->should_delete_question('comment', $id, $USER->id);
+
+        if ($transaction) {
+            $DB->delete_records('teamevalquestion_comment', ['id' => $id]);
+            $DB->delete_records('teamevalquestion_comment_res', ['questionid' => $id]);
+
+            $teameval->delete_question($transaction, 'comment', $id);
+        } else {
+            throw required_capability_exception($teameval->get_context(), 'local/teameval:createquestionnaire', 'nopermissions');
+        }
+    }
+
+    public static function delete_question_is_allowed_from_ajax() { return true; }
 
     /* submit_response */
 
     public static function submit_response_parameters() {
         return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
             'id' => new external_value(PARAM_INT, 'id of question'),
             'comments' => new external_multiple_structure(
                 new external_single_structure([
@@ -84,11 +132,11 @@ class external extends external_api {
         return null;
     }
 
-    public static function submit_response($cmid, $id, $comments) {
+    public static function submit_response($teamevalid, $id, $comments) {
 
         global $DB, $USER;
 
-        $teameval = new team_evaluation($cmid);
+        $teameval = new team_evaluation($teamevalid);
 
         if ($teameval->can_submit_response('comment', $id, $USER->id)) {
             $question = new question($teameval, $id);

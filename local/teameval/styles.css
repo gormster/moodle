@@ -1,7 +1,13 @@
+.local-teameval-container-heading {
+    font-size: 150%;
+    text-align: center;
+    margin-bottom: 0;
+}
+
 .local-teameval-containerbox {
-    border: 1px solid gray;
+    border: 1px solid #ccc;
     border-radius: 10px;
-    background-color: #EEE;
+    background-color: rgba(0,0,0,0.02);
     margin:10px;
     padding:10px;
     position: relative;
@@ -15,7 +21,7 @@
     .local-teameval-containerbox .tabs ul {
         display: block;
         text-align: center;
-        white-space: collapse;
+        margin: 0;
     }
 
     .local-teameval-containerbox .tabs li {
@@ -37,16 +43,20 @@
         display:block;
     }
 
+
 .local-teameval-settings-button {
-	float:right;
-	padding: 2px;
+	position: absolute;
+    top: 0px;
+    right: 0px;
+    border-top-right-radius: 9px;
+	padding: 2px 5px;
     background-image:url([[pix:core|i/settings]]);
-    width:20px;
-    height:20px;
+    padding-left: 23px;
     background-size: 16px 16px;
-    background-position: center;
+    background-position: 5px center;
     background-repeat: no-repeat;
     cursor: pointer;
+    font-weight: bold;
 }
 
 .local-teameval-settings-button:hover {
@@ -89,6 +99,18 @@
         background-color:#CCC;
     }
 
+.local-teameval-questionnaire .deadline {
+    font-size: 135%;
+    font-weight: bold;
+    text-align: center;
+    color: #A00;
+    margin-bottom: 0.5em;
+}
+
+.local-teameval-questionnaire .deadline time {
+    text-decoration: underline;
+}
+
 #local-teameval-questions {
     margin:0;
     margin-right:26px;
@@ -102,7 +124,7 @@
 }
 
     #local-teameval-questions .local-teameval-question:hover {
-        background-color:#F9F9F9;
+        background-color:#FFF;
     }
 
         #local-teameval-questions .local-teameval-question:hover .local-teameval-question-actions {
@@ -124,6 +146,16 @@
         background-color: hsla(0, 0%, 70%, 0.3);
     }
 
+    #local-teameval-questions .local-teameval-question.incomplete {
+        background-color: rgba(255, 100, 100, 0.1);
+        border: 1px solid rgba(128, 60, 60, 0.8);
+    }
+
+    #local-teameval-questions .local-teameval-question.incomplete:hover {
+        background-color: rgba(255, 100, 100, 0.05);
+        border-color: rgba(200, 60, 60, 1.0);
+    }
+
 .local-teameval-question-actions {
     float:right;
     visibility: hidden;
@@ -143,7 +175,16 @@
 
 .local-teameval-submit-buttons .results {
     display:none;
-    color:red;
+}
+
+.local-teameval-submit-buttons .results.incomplete {
+    color: #A00;
+    font-weight: bold;
+    background-color: rgba(200,128,128,0.3);
+    border: 1px solid #A00;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
 }
 
 .local-teameval-results-selector {
@@ -178,6 +219,11 @@
 .local-teameval-release-container .group table {
     width: 100%;
 }
+
+    .local-teameval-release-container .group table th {
+        white-space: nowrap;
+        padding-right: .5em;
+    }
 
     .local-teameval-release-container .group tr:nth-child(even) td {
         background-color: rgba(0,0,0,0.025);
@@ -286,6 +332,13 @@
 
 .right {
     float: right;
+}
+
+.noncompletion-advice {
+    text-align: center;
+    color: #A00;
+    font-weight: bold;
+    padding: 0.5em;
 }
 
 /* template/feedback */

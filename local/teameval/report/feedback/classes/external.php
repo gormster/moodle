@@ -39,7 +39,7 @@ class external extends external_api {
 
 	public static function update_states($cmid, $states) {
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = team_evaluation::from_cmid($cmid);
 
 		global $USER;
 		require_capability('local/teameval:invalidateassessment', $teameval->get_context(), $USER->id);

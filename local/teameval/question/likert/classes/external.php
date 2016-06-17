@@ -23,7 +23,7 @@ class external extends external_api {
 
 	public static function update_question_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
 			'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
 			'title' => new external_value(PARAM_TEXT, 'title of question'),
@@ -40,17 +40,26 @@ class external extends external_api {
 	}
 
 	public static function update_question_returns() {
-		return new external_value(PARAM_INT, 'id of question');
+		return new external_single_structure([
+			"id" => new external_value(PARAM_INT, 'id of question'),
+			"submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
+			]);
 	}
 
-	public static function update_question($cmid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
+	public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = new team_evaluation($teamevalid);
 		$transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
 		if ($transaction == null) {
 			throw new moodle_exception("cannotupdatequestion", "local_teameval");
+		}
+
+		$any_response_submitted = false;
+		if ($id > 0) {
+			$question = new question($teameval, $id);
+			$any_response_submitted = $question->any_response_submitted();
 		}
 
 		//get or create the record
@@ -59,12 +68,15 @@ class external extends external_api {
 		//update the values
 		$record->title = $title;
 		$record->description = $description;
-		$record->minval = min(max(0, $minval), 1); //between 0 and 1
-		$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+		if ($any_response_submitted == false) {
+			$record->minval = min(max(0, $minval), 1); //between 0 and 1
+			$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+		}
 
-		$record->meanings = [];
+		$record->meanings = new stdClass;
 		foreach ($meanings as $m) {
-			$record->meanings[$m['value']] = $m['meaning'];
+			$val = $m['value'];
+			$record->meanings->$val = $m['meaning'];
 		}
 
 		$record->meanings = json_encode($record->meanings);
@@ -79,7 +91,9 @@ class external extends external_api {
 		//finally tell the teameval we're done
 		$teameval->update_question($transaction, "likert", $id, $ordinal);
 
-		return $id;
+		$question = new question($teameval, $id);
+
+		return ["id" => $id, "submissionContext" => json_encode($question->submission_view($USER->id))];
 
 	}
 
@@ -89,7 +103,7 @@ class external extends external_api {
 
 	public static function delete_question_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'id' => new external_value(PARAM_INT, 'id of question')
 		]);
 	}
@@ -98,10 +112,10 @@ class external extends external_api {
 		return null;
 	}
 
-	public static function delete_question($cmid, $id) {
+	public static function delete_question($teamevalid, $id) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = new team_evaluation($teamevalid);
 
 		$transaction = $teameval->should_delete_question("likert", $id, $USER->id);
 		if ($transaction == null) {
@@ -119,7 +133,7 @@ class external extends external_api {
 
 	public static function submit_response_parameters() {
 		return new external_function_parameters([
-			'cmid' => new external_value(PARAM_INT, 'cmid of teameval'),
+			'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
 			'id' => new external_value(PARAM_INT, 'id of question'),
 			'marks' => new external_multiple_structure(
 				new external_single_structure([
@@ -134,10 +148,10 @@ class external extends external_api {
 		return null;
 	}
 
-	public static function submit_response($cmid, $id, $marks) {
+	public static function submit_response($teamevalid, $id, $marks) {
 		global $DB, $USER;
 
-		$teameval = new team_evaluation($cmid);
+		$teameval = new team_evaluation($teamevalid);
 
 		if ($teameval->can_submit_response('likert', $id, $USER->id)) {
 			$formdata = [];

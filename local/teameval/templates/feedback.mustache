@@ -64,14 +64,14 @@
 	<table>
 		<thead>
 			<tr>
-				<th>{{#str}} name, core {{/str}}</th>
+				{{^anonymous}}<th>{{#str}} name, core {{/str}}</th>{{/anonymous}}
 				<th>{{#str}} feedback, local_teameval {{/str}}</th>
 			</tr>
 		</thead>
 		<tbody>
 			{{#teammates}}
 			<tr>
-				<th scope="row"{{#self}}class="self"{{/self}}>{{{userpic}}} {{name}}</th>
+				{{^anonymous}}<th scope="row"{{#self}}class="self"{{/self}}>{{{userpic}}} {{name}}</th>{{/anonymous}}
 				<td>{{feedback}}</td>
 			</tr>
 			{{/teammates}}

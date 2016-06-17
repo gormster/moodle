@@ -29,6 +29,7 @@
     $string['reporttype'] = 'Report type';
 
     $string['addquestion'] = 'Add Question';
+    $string['saving'] = 'Saving...';
     $string['saved'] = 'Saved!';
 
     $string['releaseallmarks'] = 'Release All Marks';
@@ -41,5 +42,10 @@
 
     $string['youradjustedscore'] = 'Your adjusted score';
     $string['yourteammatesfeedback'] = 'Your teammates\' feedback';
+    
+    $string['incompleteadvice'] = 'This question is incomplete.';
+    $string['incompletewarning'] = 'There are {$a} incomplete questions.';
+    $string['incompletewarning1'] = 'There is 1 incomplete question.';
+    $string['incompletesummary'] = 'You have {$a->n} incomplete questions, resulting in a {$a->penalty}% non-completion penalty.';
 
 ?>

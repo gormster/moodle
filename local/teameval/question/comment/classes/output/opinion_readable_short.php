@@ -4,10 +4,10 @@ namespace teamevalquestion_comment\output;
 
 use stdClass;
 use renderable;
-use templatable;
+use local_teameval\templatable;
 use renderer_base;
 
-class opinion_readable_short implements renderable, templatable {
+class opinion_readable_short extends templatable implements renderable {
 
 	protected $comment;
 
@@ -28,6 +28,10 @@ class opinion_readable_short implements renderable, templatable {
 		//since the uniqid helper doesn't actually work...
 		$c->uniqid = uniqid();
 		return $c;
+	}
+
+	public function amd_init_call() {
+		return ["teamevalquestion_comment/opinion_readable_short", "init"];
 	}
 
 }

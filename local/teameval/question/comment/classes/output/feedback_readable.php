@@ -3,8 +3,11 @@
 namespace teamevalquestion_comment\output;
 
 use stdClass;
+use renderable;
+use local_teameval\templatable;
+use renderer_base;
 
-class feedback_readable implements \renderable, \templatable {
+class feedback_readable extends templatable implements renderable {
 
 	protected $from;
 
@@ -18,7 +21,7 @@ class feedback_readable implements \renderable, \templatable {
 		$this->comment = $comment;
 	}
 
-	public function export_for_template(\renderer_base $output) {
+	public function export_for_template(renderer_base $output) {
 		$c = new stdClass;
 		$c->from = $this->from;
 		$c->to = $this->to;

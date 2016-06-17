@@ -103,6 +103,93 @@ function xmldb_local_teameval_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016051100, 'local', 'teameval');
     }
 
+    if ($oldversion < 2016061600) {
+
+        // Define field contextid to be added to teameval.
+        $table = new xmldb_table('teameval');
+        $field = new xmldb_field('contextid', XMLDB_TYPE_INTEGER, '11', null, null, null, null, 'cmid');
+
+        // Conditionally launch add field contextid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $key = new xmldb_key('cmiduq', XMLDB_KEY_UNIQUE, array('cmid'));
+
+        // Launch drop key cmiduq.
+        $dbman->drop_key($table, $key);
+
+        $field = new xmldb_field('cmid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'id');
+
+        // Launch change of nullability for field cmid.
+        $dbman->change_field_notnull($table, $field);
+        
+
+        $index = new xmldb_index('idx_cmid', XMLDB_INDEX_NOTUNIQUE, array('cmid'));
+
+        // Conditionally launch add index idx_cmid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $index = new xmldb_index('idx_contextid', XMLDB_INDEX_NOTUNIQUE, array('contextid'));
+
+        // Conditionally launch add index idx_contextid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2016061600, 'local', 'teameval');
+    }
+
+    if ($oldversion < 2016061601) {
+
+
+        $table = new xmldb_table('teameval_questions');
+
+        $field = new xmldb_field('teamevalid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'cmid');
+
+        // Conditionally launch add field teamevalid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Now we need to populate teamevalid by looking up data on teameval
+        // It's reasonable to assume that every single teameval has questions so we get all of them
+        $recordset = $DB->get_recordset('teameval', null, '', 'id, cmid');
+
+        foreach($recordset as $record) {
+            if ($record->cmid) {
+                $DB->execute('UPDATE {teameval_questions} SET teamevalid = :id WHERE cmid = :cmid', ['id' => $record->id, 'cmid' => $record->cmid]);
+            }
+        }
+
+        // Now we can drop cmid
+
+        // Define key cmid (foreign) to be dropped form teameval_questions.
+        $key = new xmldb_key('cmid', XMLDB_KEY_FOREIGN, array('cmid'), 'teameval', array('id'));
+
+        // Launch drop key cmid.
+        $dbman->drop_key($table, $key);
+
+        $field = new xmldb_field('cmid');
+
+        // Conditionally launch drop field cmid.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $key = new xmldb_key('fk_teamevalid', XMLDB_KEY_FOREIGN, array('teamevalid'), 'teameval', array('id'));
+
+        // Launch add key fk_teamevalid.
+        $dbman->add_key($table, $key);
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2016061601, 'local', 'teameval');
+    }
+
 
 
 

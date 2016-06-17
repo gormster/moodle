@@ -37,9 +37,14 @@ class feedback_report implements \renderable, \templatable {
 
 					$this->questions[$q->question->id] = $q;
 					$response = $teameval->get_response($q, $uid);
+					$released = $teameval->marks_released($uid);
 
 					foreach($teameval->teammates($uid) as $t => $teammate) {
 						$this->reports[$uid][$q->question->id][$t] = $response->feedback_for_readable($t);
+						if ($released) {
+							// if the state is unset and the marks are released it is implicitly approved
+							$this->states[$q->question->id][$uid][$t] = \local_teameval\FEEDBACK_APPROVED;
+						}
 					}
 
 				}
@@ -48,14 +53,14 @@ class feedback_report implements \renderable, \templatable {
 
 		}
 
-		// we're doing this straight on $DB for efficiency purposes, otherwise this could involve literally hundreds
-		// of hits to the database
-
 		$rescinds = $teameval->all_rescind_states();
 
 		foreach($rescinds as $r) {
-			// going to use some PHP magic here
-			$this->states[$r->questionid][$r->markerid][$r->targetid] = $r->state;
+			// if it's unset we don't want to override an implicit approv
+			if ($r->state != \local_teameval\FEEDBACK_UNSET) {
+				// going to use some PHP magic here
+				$this->states[$r->questionid][$r->markerid][$r->targetid] = $r->state;
+			}
 		}
 
 	}

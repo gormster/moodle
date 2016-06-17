@@ -37,6 +37,7 @@ class feedback implements \renderable, \templatable {
 			$question->title = $qi->question->get_title();
 			$question->teammates = [];
 			$question->feedbackrenderer = 'teamevalquestion_' . $qi->plugininfo->name;
+			$question->anonymous = $qi->question->is_feedback_anonymous();
 
 			foreach($teammates as $uid => $m) {
 
@@ -46,7 +47,10 @@ class feedback implements \renderable, \templatable {
 
 				$response = $teameval->get_response($qi, $uid);
 				$f = new stdClass;
-				$f->user = $m;
+
+				if(!$question->anonymous) {
+					$f->user = $m;
+				}
 
 				$f->feedback = $response->feedback_for_readable($userid);
 
@@ -70,12 +74,14 @@ class feedback implements \renderable, \templatable {
 			unset($q->feedbackrenderer);
 
 			foreach($q->teammates as $t) {
-				$t->userpic = $output->render(new user_picture($t->user));
-				if($t->user->id == $this->userid) {
-					$t->self = true;
-					$t->name = get_string('yourself', 'local_teameval');
-				} else {
-					$t->name = fullname($t->user);
+				if (isset($t->user)) {
+					$t->userpic = $output->render(new user_picture($t->user));
+					if($t->user->id == $this->userid) {
+						$t->self = true;
+						$t->name = get_string('yourself', 'local_teameval');
+					} else {
+						$t->name = fullname($t->user);
+					}
 				}
 				$t->feedback = $renderer->render($t->feedback);
 				unset($t->user);

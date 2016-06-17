@@ -12,6 +12,10 @@ class question implements \local_teameval\question {
 
     protected $description;
 
+    protected $anonymous;
+
+    protected $optional;
+
     public function __construct(\local_teameval\team_evaluation $teameval, $questionid = null) {
         global $DB;
 
@@ -23,15 +27,23 @@ class question implements \local_teameval\question {
 
             $this->title            = $record->title;
             $this->description      = $record->description;
+            $this->anonymous        = (bool)$record->anonymous;
+            $this->optional         = (bool)$record->optional;
+
+        } else {
+
+            // set defaults
+            $this->anonymous        = false;
+            $this->optional         = false;
+
         }
     }
 
-    public function submission_view($userid) {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
+    public function submission_view($userid, $locked = false) {
+        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
+ 
 
-        if(has_capability('local/teameval:createquestionnaire', $this->teameval->get_context(), $userid)) {
-            $context['users'] = [['userid' => 0, 'name' => 'Example User']];
-        } else {
+        if(has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
             $teammates = $this->teameval->teammates($userid);
             $context['users'] = [];
 
@@ -49,13 +61,29 @@ class question implements \local_teameval\question {
                 }
                 $context['users'][] = $c;
             }
+            $context['locked'] = $locked;
+
+            if ($locked) {
+                $context['incomplete'] = !$response->marks_given();
+            }
+
+        } else {
+            $context['users'] = [['userid' => 0, 'name' => 'Example User']];
+            if ($this->teameval->get_settings()->self) {
+                array_unshift($context['users'], ['userid' => $userid, 'name' => get_string('yourself', 'local_teameval'), 'self' => true]);
+            }
         }
 
         return $context;
     }
 
     public function editing_view() {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
+        return ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional, 'locked' => $this->any_response_submitted()];
+    }
+
+    public function any_response_submitted() {
+        global $DB;
+        return $DB->record_exists_select('teamevalquestion_comment_res', 'questionid = :questionid AND comment != :emptystring', ['questionid' => $this->id, 'emptystring' => '']);
     }
 
     public function plugin_name() {
@@ -66,8 +94,16 @@ class question implements \local_teameval\question {
         return false;
     }
 
+    public function has_completion() {
+        return $this->optional == false;
+    }
+
     public function has_feedback() {
         return true;
+    }
+
+    public function is_feedback_anonymous() {
+        return $this->anonymous;
     }
 
     public function minimum_value() {

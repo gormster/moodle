@@ -1,5 +1,6 @@
 define(['jquery'], function($) {
 
+    // switch id: [switch jQueries]
     var overrides = {};
 
     function breakOverrides(el) {
@@ -189,9 +190,19 @@ define(['jquery'], function($) {
                 }
 
                 var sw = $('#'+k);
+                if (sw.length === 0) {
+                    delete overrides[k];
+                    return;
+                }
+
                 var oldState = sw.data('state');
                 if(oldState != state) {
-                    sw.trigger('setState', state, 'auto');
+                    sw.trigger('setState', [state, 'auto']);
+                    var newState = sw.data('state');
+                    if (newState != state) {
+                        window.console.log("Update state failed!");
+                        return false;
+                    }
                     changed = true;
                 }
 

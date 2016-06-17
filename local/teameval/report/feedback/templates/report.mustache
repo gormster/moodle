@@ -120,7 +120,10 @@ Example context (json): {
 {{/groups}}
 
 <button type="button" id="save-button-{{uniqid}}">Save</button>
-<div class="saved">
+<div class="saved" id="progress-indicator-{{uniqid}}">
+{{#pix}} i/loading_small, core, {{#str}} saving, local_teameval {{/str}}{{/pix}} {{#str}} saving, local_teameval {{/str}}
+</div>
+<div class="saved" id="saved-{{uniqid}}">
 {{#str}} saved, local_teameval {{/str}}
 </div>
 
@@ -155,8 +158,6 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
 
 	$('#save-button-{{uniqid}}').click(function(evt) {
 
-		console.log(updatedStates);
-
 		var c = {};
 
 		c['cmid'] = {{cmid}};
@@ -174,15 +175,16 @@ require(['jquery', 'local_teameval/switch', 'core/ajax', 'core/notification'], f
 
 		});
 
-		console.log(c);
-
 		var promises = Ajax.call([{
                 methodname: 'teamevalreport_feedback_update_states',
                 args: c
             }]);
 
+		$('#progress-indicator-{{uniqid}}').show(300);
+
 		promises[0].done(function() {
-			$('.teamevalreport-feedback–container .saved').show(300).delay(3000).hide(300);
+			$('#progress-indicator-{{uniqid}}').hide(300);
+			$('#saved-{{uniqid}}').show(300).delay(3000).hide(300);
 		})
 
 		promises[0].fail(Notification.exception);

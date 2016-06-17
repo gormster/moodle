@@ -31,7 +31,7 @@ class question implements \local_teameval\question {
         }
     }
     
-    public function submission_view($userid) {
+    public function submission_view($userid, $locked = false) {
         global $DB;
 
         // what I need to end up with:
@@ -42,18 +42,36 @@ class question implements \local_teameval\question {
 
         $options = [];
         $totalstrlen = 0;
+        $maxstrlen = 0;
+        $maxwordlen = 0;
 
         for ($i=$this->minval; $i <= $this->maxval; $i++) { 
             $o = ["value" => $i];
             if (isset($this->meanings->$i)) {
-                $o["meaning"] = $this->meanings->$i;
-                $totalstrlen += strlen($this->meanings->$i);
+                $meaning = $this->meanings->$i;
+                $o["meaning"] = $meaning;
+                $totalstrlen += strlen($meaning);
+                $maxstrlen = max($maxstrlen, strlen($meaning));
+                $longestword = array_reduce(str_word_count($meaning, 1), function($v, $p) {
+                    return strlen($v) > strlen($p) ? $v : $p;
+                });
+                $maxwordlen = max($maxwordlen, strlen($longestword));
             }
             $options[] = $o;
         }
 
-        $context['waterfall'] = $totalstrlen >= 255;
-        $context['grid'] = $totalstrlen < 255;
+        $grid = true;
+
+        if ($totalstrlen > 150) {
+            $grid = false;
+        } else if ($maxstrlen > ((12 - count($options)) * 6) + 15) {
+            $grid = false;
+        } else if ($maxwordlen > ((12 - count($options)) * 2) + 3) {
+            $grid = false;
+        }
+
+        $context['waterfall'] = !$grid;
+        $context['grid'] = $grid;
 
         // if the user can respond to this teameval
         if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
@@ -137,8 +155,12 @@ class question implements \local_teameval\question {
             }
 
             $context['options'] = $opts;
+            $context['optionwidth'] = 100 / count($opts);
 
-
+            $context['locked'] = $locked;
+            if ($locked) {
+                $context['incomplete'] = !$response->marks_given();
+            }
 
 
         } else {
@@ -166,7 +188,7 @@ class question implements \local_teameval\question {
                 $o["users"] = [
                     [
                         "name" => "Yourself",
-                        "userid" => -1,
+                        "userid" => $userid,
                         "checked" => false
                     ],
                     [
@@ -213,7 +235,7 @@ class question implements \local_teameval\question {
             }
             
             $context['options'] = $opts;
-
+            $context['optionwidth'] = 100 / count($opts);
             
 
         }
@@ -222,7 +244,7 @@ class question implements \local_teameval\question {
     }
     
     public function editing_view() {
-        $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description];
+        $context = ["id" => $this->id, "title" => $this->title, "description" => $this->description, "minval" => $this->minval, "maxval" => $this->maxval];
 
         $meanings = [];
         for ($i=$this->minval; $i <= $this->maxval; $i++) { 
@@ -235,11 +257,16 @@ class question implements \local_teameval\question {
 
         $context['meanings'] = $meanings;
 
+        if ($this->any_response_submitted()) {
+            $context['locked'] = true;
+        }
+
         return $context;
     }
-    
-    public function update($formdata) {
-        //todo
+
+    public function any_response_submitted() {
+        global $DB;
+        return $DB->record_exists('teamevalquestion_likert_resp', ['questionid' => $this->id]);
     }
 
     public function plugin_name() {
@@ -247,6 +274,10 @@ class question implements \local_teameval\question {
     }
 
     public function has_value() {
+        return true;
+    }
+
+    public function has_completion() {
         return true;
     }
 
@@ -263,6 +294,10 @@ class question implements \local_teameval\question {
     }
 
     public function has_feedback() {
+        return false;
+    }
+
+    public function is_feedback_anonymous() {
         return false;
     }
 

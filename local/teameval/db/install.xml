@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/teameval/db" VERSION="20160511" COMMENT="XMLDB file for Moodle local/teameval"
+<XMLDB PATH="local/teameval/db" VERSION="20160616" COMMENT="XMLDB file for Moodle local/teameval"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="teameval" COMMENT="Settings for teameval instances. No ID because teamevals are 1 to 1 with coursemodules.">
+    <TABLE NAME="teameval" COMMENT="Settings for teameval instances.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Useless primary key"/>
-        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course module this teameval is associated with"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="11" NOTNULL="false" SEQUENCE="false" COMMENT="If cmid is null, then this teameval is a template. Templates are associated with a context represented by this contextid. If cmid is set this does not need to be set."/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="If evaluation is enabled for this course module"/>
         <FIELD NAME="public" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If the questionnaire for this puppy is public. Otherwise it is only available within the course or course category depending on site-wide settings."/>
         <FIELD NAME="self" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="True if self-assessment is enabled for this team evaluation"/>
@@ -18,33 +19,23 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cmiduq" TYPE="unique" FIELDS="cmid"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="idx_cmid" UNIQUE="false" FIELDS="cmid"/>
+        <INDEX NAME="idx_contextid" UNIQUE="false" FIELDS="contextid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="teameval_questions" COMMENT="Questions for teameval instances.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Coursemodule/teameval id"/>
+        <FIELD NAME="teamevalid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="ID of the teameval this question belongs to"/>
         <FIELD NAME="qtype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Subplugin identifier for teamevalquestion subplugin"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Instance id for the subplugin's own database tables"/>
         <FIELD NAME="ordinal" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Ordering number for questions"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="teameval" REFFIELDS="id"/>
-      </KEYS>
-    </TABLE>
-    <TABLE NAME="teameval_responses" COMMENT="Responses to teameval questionnaires. Why the backwards normalisation? It's more efficient than asking every subplugin for its responses, plus this way we're not relying on subplugins to store this information correctly; they only have their own data to worry about.">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the question this response belongs to"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User who gave this response"/>
-        <FIELD NAME="responseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID for the teamevalresponse subplugin to use to refer to its own database tables"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="teameval_questions" REFFIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="fk_teamevalid" TYPE="foreign" FIELDS="teamevalid" REFTABLE="teameval" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="teameval_release" COMMENT="Mark release objects">

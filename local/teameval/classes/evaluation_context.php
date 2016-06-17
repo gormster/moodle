@@ -6,6 +6,9 @@ require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
 abstract class evaluation_context {
 
+    /**
+     * You MUST set this in your constructor.
+     */
     protected $cm;
 
     /**
@@ -43,6 +46,8 @@ abstract class evaluation_context {
 
     /**
      * Called when teameval knows that adjusted grades will have changed
+     * Teameval is not responsible for making sure that the users specified herein have
+     * been assigned grades in your plugin - you have to check that yourself.
      * @param [int] $users optional array of user ids whose grades have changed
      */
     abstract public function trigger_grade_update($users = null);
@@ -56,7 +61,7 @@ abstract class evaluation_context {
     }
 
     public function marks_available($userid) {
-        $teameval = new team_evaluation($this->cm->id);
+        $teameval = team_evaluation::from_cmid($this->cm->id);
         return $teameval->marks_available($userid);
     }
 
@@ -68,7 +73,7 @@ abstract class evaluation_context {
             $grades = array($grades['userid']=>$grades);
         }
 
-        $teameval = new team_evaluation($this->cm->id);
+        $teameval = team_evaluation::from_cmid($this->cm->id);
 
         foreach($grades as $userid => $grade) {
             if (!is_object($grade)) {
@@ -80,6 +85,10 @@ abstract class evaluation_context {
 
                 if ($this->marks_available($userid)) {
                     $grade->rawgrade *= $teameval->multiplier_for_user($userid);
+                    $feedbacks = $teameval->all_feedback($userid);
+                    if(count($feedbacks)) {
+                        $grade->feedback .= $this->format_feedback($feedbacks);
+                    }
                 } else {
                     $grade->rawgrade = null;
                 }
@@ -88,6 +97,23 @@ abstract class evaluation_context {
         }
 
         return $grades;
+    }
+
+    private function format_feedback($feedbacks) {
+        $o = '<h3>Team Evaluation</h3>';
+        foreach($feedbacks as $q) {
+            $o .= "<h4>{$q->title}</h4><ul>";
+            foreach($q->feedbacks as $fb) {
+                $feedback = clean_text($fb->feedback);
+                if (isset($fb->from)) {
+                    $o .= "<li><strong>{$fb->from}:</strong> $feedback</li>";
+                } else {
+                    $o .= "<li>$feedback</li>";
+                }
+            }
+            $o .= '</ul>';
+        }
+        return $o;
     }
 
 }
