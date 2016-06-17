@@ -257,11 +257,16 @@ class question implements \local_teameval\question {
 
         $context['meanings'] = $meanings;
 
+        if ($this->any_response_submitted()) {
+            $context['locked'] = true;
+        }
+
         return $context;
     }
-    
-    public function update($formdata) {
-        //todo
+
+    public function any_response_submitted() {
+        global $DB;
+        return $DB->record_exists('teamevalquestion_likert_resp', ['questionid' => $this->id]);
     }
 
     public function plugin_name() {

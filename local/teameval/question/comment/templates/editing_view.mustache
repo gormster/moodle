@@ -13,12 +13,12 @@
     </div>
     <div class="control-group">
         <div class="controls">
-            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" {{#anonymous}}checked="checked"{{/anonymous}} /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
+            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" {{#anonymous}} checked="checked" {{/anonymous}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>    
         </div>
     </div>
     <div class="control-group">
         <div class="controls">
-            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" {{#optional}}checked="checked"{{/optional}} /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
+            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" {{#optional}} checked="checked" {{/optional}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>    
         </div>
     </div>
 </div>

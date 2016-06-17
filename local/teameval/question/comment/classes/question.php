@@ -78,7 +78,12 @@ class question implements \local_teameval\question {
     }
 
     public function editing_view() {
-        return ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
+        return ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional, 'locked' => $this->any_response_submitted()];
+    }
+
+    public function any_response_submitted() {
+        global $DB;
+        return $DB->record_exists_select('teamevalquestion_comment_res', 'questionid = :questionid AND comment != :emptystring', ['questionid' => $this->id, 'emptystring' => '']);
     }
 
     public function plugin_name() {

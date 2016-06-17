@@ -16,12 +16,12 @@
 		<span class="control-label">{{#str}}scorerange, teamevalquestion_likert{{/str}}</span>
 		<div class="controls">
 			From
-				<select id="question-minval-{{uniqid}}" aria-label="question range minimum" {{#minval}}data-selected="{{minval}}"{{/minval}}>
+				<select id="question-minval-{{uniqid}}" aria-label="question range minimum" {{#minval}}data-selected="{{minval}}"{{/minval}} {{#locked}}disabled="disabled"{{/locked}}>
 					<option value="0">0</option>
 					<option value="1" selected>1</option>
 				</select>
 			to
-				<select id="question-maxval-{{uniqid}}" aria-label="question range maximum" {{#maxval}}data-selected="{{maxval}}"{{/maxval}}>
+				<select id="question-maxval-{{uniqid}}" aria-label="question range maximum" {{#maxval}}data-selected="{{maxval}}"{{/maxval}} {{#locked}}disabled="disabled"{{/locked}}>
 					<option value="3">3</option>
 					<option value="4">4</option>
 					<option value="5" selected>5</option>
@@ -66,8 +66,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			_meanings[this.value] = $(this).find('input').val();
 		});
 
-		console.log(_meanings);
-
+		{{^locked}}
 		// make new textboxes
 
 		$('#question-meanings-{{uniqid}}').empty();
@@ -82,6 +81,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			li.prop('value', i);
 			$('#question-meanings-{{uniqid}}').append(li);
 		}		
+		{{/locked}}
 	}
 
 	{{#_newquestion}} updateMeanings(); {{/_newquestion}}

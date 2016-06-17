@@ -56,14 +56,22 @@ class external extends external_api {
 			throw new moodle_exception("cannotupdatequestion", "local_teameval");
 		}
 
+		$any_response_submitted = false;
+		if ($id > 0) {
+			$question = new question($teameval, $id);
+			$any_response_submitted = $question->any_response_submitted();
+		}
+
 		//get or create the record
 		$record = ($id > 0) ? $DB->get_record('teamevalquestion_likert', array('id' => $id)) : new stdClass;
 		
 		//update the values
 		$record->title = $title;
 		$record->description = $description;
-		$record->minval = min(max(0, $minval), 1); //between 0 and 1
-		$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+		if ($any_response_submitted == false) {
+			$record->minval = min(max(0, $minval), 1); //between 0 and 1
+			$record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+		}
 
 		$record->meanings = new stdClass;
 		foreach ($meanings as $m) {

@@ -950,6 +950,13 @@ interface question {
      * This event must return a $.Deferred which will resolve with the new 
      * question data which will be returned from $this->submission_view.
      *
+     * Once submitting users have started submitting responses to your question, you should
+     * prevent editing users from changing aspects of your question that would affect marks.
+     * For example, in the Likert question, you could no longer change the minimum and maximum
+     * values. However, you may allow some aspects of your question to be edited, such as
+     * the title or description. It's up to you to ensure that users don't edit your question
+     * in such a way that the responses become unreadable.
+     *
      * @return stdClass|array template data. @see templatable
      */
     public function editing_view();

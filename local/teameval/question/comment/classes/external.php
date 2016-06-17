@@ -43,6 +43,13 @@ class external extends external_api {
         global $DB, $USER;
 
         $teameval = new team_evaluation($teamevalid);
+
+        $any_response_submitted = false;
+        if ($id > 0) {
+            $question = new question($teameval, $id);
+            $any_response_submitted = $question->any_response_submitted();
+        }
+
         $transaction = $teameval->should_update_question("comment", $id, $USER->id);
 
         if ($transaction == null) {
@@ -53,8 +60,10 @@ class external extends external_api {
 
         $record->title = $title;
         $record->description = $description;
-        $record->anonymous = $anonymous;
-        $record->optional = $optional;
+        if ($any_response_submitted == false) {
+            $record->anonymous = $anonymous;
+            $record->optional = $optional;
+        }
 
         if ($id > 0) {
             $DB->update_record('teamevalquestion_comment', $record);
