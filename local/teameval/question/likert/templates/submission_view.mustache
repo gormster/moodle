@@ -295,13 +295,13 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
 		var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
 
-		console.log(userids, markedUsers, missingUsers);
-
-		if (missingUsers.length == 0) {
-			questionContainer.parent().removeClass('incomplete');
-		} else {
+		if (missingUsers.length > 0) {
 			questionContainer.parent().addClass('incomplete');
+		} else {
+			questionContainer.parent().removeClass('incomplete');
 		}
+
+		return (missingUsers.length > 0);
 	}
 	{{/locked}}
 
@@ -340,9 +340,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			}
 		}]);
 
-		checkComplete();
+		var incomplete = checkComplete();
 
-		return promises[0];
+		return promises[0].then(function() {
+			return {'incomplete': incomplete};
+		});
 	});
 });
 {{/js}}

@@ -40,7 +40,7 @@ class question implements \local_teameval\question {
     }
 
     public function submission_view($userid, $locked = false) {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description];
+        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
  
 
         if(has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {

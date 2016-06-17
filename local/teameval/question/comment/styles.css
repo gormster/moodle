@@ -6,6 +6,12 @@
     margin-bottom: 1em;
 }
 
+.teamevalquestion-comment-container .optional-advice {
+    margin-bottom: .5em;
+    color: #999;
+    font-style: italic;
+}
+
 .teamevalquestion-comment-container table.comments {
     box-sizing: border-box;
     width: 100%;

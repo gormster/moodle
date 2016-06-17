@@ -428,11 +428,13 @@ class team_evaluation {
         $ready = true;
 
         foreach($questions as $q) {
-            foreach($members as $m) {
-                $response = $this->get_response($q, $m->id);
-                if( $response->marks_given() == false ) {
-                    $ready = false;
-                    break;
+            if ($q->question->has_completion()) {
+                foreach($members as $m) {
+                    $response = $this->get_response($q, $m->id);
+                    if( $response->marks_given() == false ) {
+                        $ready = false;
+                        break;
+                    }
                 }
             }
 
@@ -926,8 +928,9 @@ interface question {
      * a $.Deferred whose results will be ignored.
      *
      * You MUST attach an event handler for the "submit" event. This handler must return
-     * a $.Deferred whose results will be ignored. If there is an error in submission,
-     * return a non-200 status.
+     * a $.Deferred whose results should be an object with an 'incomplete' property indicating
+     * if the submitted data was a complete response to the question. If there is an error 
+     * in submission, return a non-200 status.
      *
      * You should return a version that cannot be edited if $locked is set to true.
      *

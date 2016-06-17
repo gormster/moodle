@@ -32,19 +32,23 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
 
 			var allPromises = $.when.apply($, promises);
 			allPromises.done(function() {
+
+				console.log(arguments);
 				
-                var invalids = $.grep(arguments, function(el) {
+                var incompletes = $.grep(arguments, function(el) {
                 	if (el) {
-	                    return el.valid === false;
+	                    return el.incomplete == true;
 	                }
                 }).length;
 
-                if (invalids > 0) {
-                    Str.get_string('ninvalidquestions', 'local_teameval', invalids)
+                if (incompletes > 0) {
+                	var key = incompletes == 1 ? 'incompletewarning1' : 'incompletewarning';
+                    Str.get_string(key, 'local_teameval', incompletes)
                         .done(function(string) {
-                        $('.local-teameval-submit-buttons .results.invalid').text(string).show('fast');    
+                        $('.local-teameval-submit-buttons .results.incomplete').text(string).show('fast');    
                     });
                 } else {
+                	$('.local-teameval-submit-buttons .results.incomplete').hide('fast');
                     $('.local-teameval-submit-buttons .results.saved').show('fast').delay(5000).hide('fast');
                 }
 			}).fail(notification.exception);
