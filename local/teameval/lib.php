@@ -76,6 +76,8 @@ class team_evaluation {
         $this->get_settings();
 
         $this->get_evaluation_context();
+
+        $this->get_releases();
     
     }
 
@@ -778,17 +780,24 @@ class team_evaluation {
         $this->release_marks_for($userid, RELEASE_USER, $set);
     }
 
-    public function marks_available($userid) {
+    protected function get_releases() {
         global $DB;
-        // First check if the marks are released.
-        $grp = $this->group_for_user($userid);
+        if (!isset($this->releases)) {
+            $this->releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+        }
+        return $this->releases;
+    }
 
+    public function marks_released($userid) {
+        global $DB;
+
+        $grp = $this->group_for_user($userid);
         $is_released = false;
 
         if ($this->get_settings()->autorelease) {
             $is_released = true;
         } else {
-            $releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');
+            $releases = $this->get_releases();
             foreach($releases as $release) {
                 if ($release->level == RELEASE_ALL) {
                     $is_released = true;
@@ -811,7 +820,12 @@ class team_evaluation {
             }
         }
 
-        if ($is_released == false) {
+        return $is_released;
+    }
+
+    public function marks_available($userid) {
+        // First check if the marks are released.
+        if (!$this->marks_released($userid)) {
             return false;
         }
 
@@ -820,6 +834,8 @@ class team_evaluation {
         if ($this->get_settings()->deadline < time()) {
             return true;
         }
+
+        $grp = $this->group_for_user($userid);
 
         if ($this->group_ready($grp->id)) {
             return true;
