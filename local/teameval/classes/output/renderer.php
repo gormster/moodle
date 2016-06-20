@@ -21,7 +21,9 @@ class renderer extends plugin_renderer_base {
             $settingsform = new forms\settings_form();
             $settingsform->set_data($block->settings);
             
-            $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $settingsform->render()]);
+            if(isset($this->cm)) {
+                $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $settingsform->render()]);
+            }
         }
 
         if (has_capability('local/teameval:createquestionnaire', $context)) {
