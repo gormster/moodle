@@ -4,12 +4,14 @@
 	    <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_likert{{/str}}</label>
 	    <div class="controls">
 	    	<input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
-	    </div>
+	    	<span class="help-inline"></span>
+	    </div> 
 	</div>
 	<div class="control-group">
 		<label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_likert{{/str}}</label>
 		<div class="controls">
 			<textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+			<span class="help-inline"></span>
 		</div>
 	</div>
 	<div class="control-group">
@@ -53,6 +55,9 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
 	var _meanings = {};
 
+	var Strings = {};
+    Strings['titleordescription'] = "{{#str}} titleordescription, teamevalquestion_likert {{/str}}";
+
 	questionContainer.find('select[data-selected]').each(function() {
 		$(this).val($(this).data('selected'));
 	});
@@ -84,6 +89,15 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 		{{/locked}}
 	}
 
+	function validateData(data) {
+		var errors = {};
+		if ((data.title.trim().length == 0) && (data.description.trim().length == 0)) {
+			errors['title'] = Strings['titleordescription'];
+			errors['description'] = Strings['titleordescription'];
+		}
+		return errors;
+	}
+
 	{{#_newquestion}} updateMeanings(); {{/_newquestion}}
 	questionContainer.find('#question-minval-{{uniqid}}, #question-maxval-{{uniqid}}').change(updateMeanings);
 
@@ -105,24 +119,37 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 			return {'value': k, 'meaning':v}; 
 		});
 
-		var promises = ajax.call([{
-			methodname: 'teamevalquestion_likert_update_question',
-			args: data
-		}]);
+		// validate data
+		var errors = validateData(data);
+		if (Object.keys(errors).length > 0) {
+			for (var k in errors) {
+				$('#question-'+k+'-{{uniqid}}')
+				.closest('.control-group').addClass('error').end()
+                .next('.help-inline').text(errors[k]);
+			}
 
-		// NOTE
-		// At the moment, we're requesting the submission context from the server.
-		// This is because, quite simply, it's way too complex.
-		// At some point in the future we might implement an optimistic render feature,
-		// which would require a javascript implementation of the submission context.
-		// At the moment, though, the small amount of increased traffic is fine.
+            deferred.reject();
+		} else {
+			var promises = ajax.call([{
+				methodname: 'teamevalquestion_likert_update_question',
+				args: data
+			}]);
 
-		promises[0].done(function(result) {
-			data.id = result.id;
-			submissionContext = JSON.parse(result.submissionContext);
-			deferred.resolve(result, submissionContext, data);
-		}).fail(notification.exception);
-		
+			// NOTE
+			// At the moment, we're requesting the submission context from the server.
+			// This is because, quite simply, it's way too complex.
+			// At some point in the future we might implement an optimistic render feature,
+			// which would require a javascript implementation of the submission context.
+			// At the moment, though, the small amount of increased traffic is fine.
+
+			promises[0].done(function(result) {
+				data.id = result.id;
+				submissionContext = JSON.parse(result.submissionContext);
+				deferred.resolve(result, submissionContext, data);
+			}).fail(notification.exception);
+			
+		}
+
 		return deferred;
 	});
 

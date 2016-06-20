@@ -3,12 +3,15 @@
         <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_comment{{/str}}</label>
         <div class="controls">
             <input type="text" maxlength="255" id="question-title-{{uniqid}}" placeholder="Title" value="{{title}}" />
+            <span class="help-inline"></span>
         </div>
+
     </div>
     <div class="control-group">
         <label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_comment{{/str}}</label>
         <div class="controls">
             <textarea id="question-description-{{uniqid}}">{{description}}</textarea>
+            <span class="help-inline"></span>
         </div>
     </div>
     <div class="control-group">
@@ -28,6 +31,11 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
     var questionContainer = $('#question-content-{{uniqid}}').closest('.question-container');
 
+    var Strings = {};
+    Strings['exampleuser'] = "{{#str}} exampleuser, local_teameval {{/str}}";
+    Strings['yourself'] = "{{#str}} yourself, local_teameval {{/str}}";
+    Strings['titleordescription'] = "{{#str}} titleordescription, teamevalquestion_comment {{/str}}";
+
     questionContainer.on("save", function(evt, ordinal) {
 
         var deferred = $.Deferred();
@@ -43,26 +51,44 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
         data.anonymous = $('#question-anonymous-{{uniqid}}').prop('checked');
         data.optional = $('#question-optional-{{uniqid}}').prop('checked');
 
-        var promises = ajax.call([{
-            methodname: 'teamevalquestion_comment_update_question',
-            args: data
-        }]);
+        // validate that data
+        console.log(data.title.trim().length, data.description.trim().length);
+        if ((data.title.trim().length == 0) && (data.description.trim().length == 0)) {
+            
+            $('#question-title-{{uniqid}}, #question-description-{{uniqid}}')
+                .closest('.control-group').addClass('error').end()
+                .next('.help-inline').text(Strings['titleordescription']);
 
-        var demoUsers = [{ userid: 0, name: "Example User" }];
-        {{#_self}}demoUsers.unshift({userid: -1, name: "Yourself", self: true});{{/_self}}
+            deferred.reject();
 
-        var submissionContext = $.extend({}, data, {
-            users: demoUsers
-        });
+        } else {
 
-        var editingContext = data;
+            // remove all error states
+            $('.control-group').removeClass('error');
+            $('.help-inline').empty();
 
-        promises[0].done(function(result) {
-            data.id = result;
-            deferred.resolve(data.id, submissionContext, editingContext);
-        });
+            var promises = ajax.call([{
+                methodname: 'teamevalquestion_comment_update_question',
+                args: data
+            }]);
 
-        promises[0].fail(notification.exception);
+            var demoUsers = [{ userid: 0, name: "Example User" }];
+            {{#_self}}demoUsers.unshift({userid: -1, name: "Yourself", self: true});{{/_self}}
+
+            var submissionContext = $.extend({}, data, {
+                users: demoUsers
+            });
+
+            var editingContext = data;
+
+            promises[0].done(function(result) {
+                data.id = result;
+                deferred.resolve(data.id, submissionContext, editingContext);
+            });
+
+            promises[0].fail(notification.exception);
+
+        }
 
         return deferred;
 

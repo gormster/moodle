@@ -40,6 +40,8 @@
     $string['themself'] = 'Themself';
     $string['themselves'] = 'Themselves';
 
+    $string['exampleuser'] = 'Example User';
+
     $string['youradjustedscore'] = 'Your adjusted score';
     $string['yourteammatesfeedback'] = 'Your teammates\' feedback';
     

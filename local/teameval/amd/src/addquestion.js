@@ -161,11 +161,16 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 			var questionContainer = question.find('.question-container');
 			var ordinal = question.index('.local-teameval-question');
-			questionContainer.triggerHandler("save", ordinal).done(function(questionID, submissionContext, editingContext) {
+			var promise = questionContainer.triggerHandler("save", ordinal);
+			promise.done(function(questionID, submissionContext, editingContext) {
 				question.data('questionid', questionID);
 				question.data('editingcontext', editingContext);
 				question.data('submissioncontext', submissionContext);
 				this.showQuestion(question);
+			}.bind(this));
+			promise.fail(function() {
+				// at the moment, do nothing
+				// rely on the question plugin to relay that saving has failed
 			}.bind(this));
 
 		},
