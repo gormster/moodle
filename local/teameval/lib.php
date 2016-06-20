@@ -192,7 +192,7 @@ class team_evaluation {
         $this->get_settings();
 
         //todo: validate
-        foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline'] as $i) {
+        foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'] as $i) {
             if (isset($settings->$i)) {
                 $this->settings->$i = $settings->$i;
             }
@@ -748,7 +748,7 @@ class team_evaluation {
 
     public static function templates_for_context($contextid) {
         global $DB;
-        $ids = $DB->get_records('teameval', ['contextid' => $contextid], '', 'id');
+        $ids = $DB->get_records('teameval', ['contextid' => $contextid], 'title ASC', 'id');
         return array_map(function($id) {
             return new team_evaluation($id);
         }, array_keys($ids));

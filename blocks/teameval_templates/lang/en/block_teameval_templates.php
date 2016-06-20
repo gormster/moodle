@@ -7,6 +7,6 @@ $string['teameval_templates:viewtemplate'] = 'View Team Evaluation templates';
 
 $string['newtemplate'] = 'New Template';
 $string['newtemplateheading'] = 'New Team Evaluation Template';
-$string['pagetitle'] = 'This is a page of some kind';
+$string['templatetitle'] = 'Template name';
 
 $string['notatemplate'] = 'Tried to edit a Team Evaluation that is not a template.';

@@ -7,6 +7,7 @@ global $CFG, $OUTPUT, $PAGE;
 require_once($CFG->dirroot . '/local/teameval/lib.php');
 
 use local_teameval\team_evaluation;
+use block_teameval_templates\output\title;
 
 $id = optional_param('id', 0, PARAM_INT);
 $contextid = optional_param('contextid', 0, PARAM_INT);
@@ -62,11 +63,14 @@ if (!isset($teameval)) {
 
 $PAGE->navbar->add($title);
 
-// $output = $PAGE->get_renderer('block_teameval_templates');
-echo $OUTPUT->header();
+$output = $PAGE->get_renderer('block_teameval_templates');
+echo $output->header();
+
+$title = new title($teameval);
+echo $output->render($title);
 
 $teameval_renderer = $PAGE->get_renderer('local_teameval');
 $teameval = new \local_teameval\output\team_evaluation_block($teameval);
 echo $teameval_renderer->render($teameval);
 
-echo $OUTPUT->footer();
+echo $output->footer();

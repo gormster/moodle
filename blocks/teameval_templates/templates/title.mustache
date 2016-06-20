@@ -1,0 +1,29 @@
+<div class="teameval-template-title" id="template-title-{{uniqid}}">
+	<label>{{#str}} templatetitle, block_teameval_templates {{/str}} <input type="text" value="{{title}}" /></label>
+	<button>{{#str}} save, local_teameval {{/str}}</button>
+</div>
+{{#js}}
+require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+	$('#template-title-{{uniqid}} button').click(function() {
+		var title = $('#template-title-{{uniqid}} input').val();
+
+		var button = $(this);
+		button.prop('disabled', true);
+
+		var promises = Ajax.call([{
+			methodname: 'block_teameval_templates_update_title',
+			args: {
+				id: {{id}},
+				title: title
+			}
+		}]);
+
+		promises[0].always(function() {
+			button.prop('disabled', false);
+		});
+
+		promises[0].fail(Notification.exception);
+
+	});
+});
+{{/js}}
