@@ -51,11 +51,6 @@ class team_evaluation_block implements renderable {
             $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
             $this->questions = $this->teameval->get_questions();
 
-            if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
-                $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
-                $this->report = $this->teameval->get_report();
-            }
-
             $settings = $this->teameval->get_settings();
             $settings->fraction *= 100;
             $settings->noncompletionpenalty *= 100;
@@ -65,6 +60,12 @@ class team_evaluation_block implements renderable {
             $cm = $teameval->get_coursemodule();
             if ($cm) {
                 $this->cm = $cm;
+
+                if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
+                    $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
+                    $this->report = $this->teameval->get_report();
+                }
+
 
                 global $DB;
                 $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);

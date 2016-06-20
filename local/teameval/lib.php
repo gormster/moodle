@@ -12,6 +12,8 @@ use renderable;
 use core_plugin_manager;
 use stdClass;
 use context_module;
+use context;
+use coding_exception;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -54,11 +56,15 @@ class team_evaluation {
 
     }
 
+    public static function new_with_contextid($contextid) {
+        return new team_evaluation(0, null, $contextid);
+    }
+
     /**
      * When creating a teameval for the first time, pass in the cmid or the contextid
      * You should only ever call the constructor with cmid or contextid set from
      * within this class. PHP doesn't support constructor overloading so I can't force
-     * that, but if you've only got a cmid or contextid use from_cmid or from_contextid.
+     * that, but if you've only got a cmid or contextid use from_cmid or new_with_contextid.
      */
     public function __construct($id, $cmid = null, $contextid = null) {
 
@@ -118,6 +124,7 @@ class team_evaluation {
         $settings->fraction = 0.5;
         $settings->noncompletionpenalty = 0.1;
         $settings->deadline = null;
+        $settings->title = "New Template";
 
         return $settings;
     }
@@ -136,11 +143,12 @@ class team_evaluation {
                 $settings = team_evaluation::default_settings();
                 if (isset($this->cm)) {
                     $settings->cmid = $this->cm->id;
+                    unset($settings->title); // real teamevals don't have titles
                 } else {
                     $settings->contextid = $this->context->id;
                 }
                 
-                $this->id = $DB->insert_record('teameval', $settings, false);
+                $this->id = $DB->insert_record('teameval', $settings);
 
                 $this->settings = $settings;
             } else {
@@ -736,6 +744,16 @@ class team_evaluation {
 
     }
 
+    // TEMPLATES
+
+    public static function templates_for_context($contextid) {
+        global $DB;
+        $ids = $DB->get_records('teameval', ['contextid' => $contextid], '', 'id');
+        return array_map(function($id) {
+            return new team_evaluation($id);
+        }, array_keys($ids));
+    }
+
     // MARK RELEASE
 
     public function release_marks_for($target, $level, $set) {
@@ -783,6 +801,10 @@ class team_evaluation {
     }
 
     protected function get_releases() {
+        if (!isset($this->cm)) {
+            return [];
+        }
+
         global $DB;
         if (!isset($this->releases)) {
             $this->releases = $DB->get_records('teameval_release', ['cmid' => $this->cm->id], 'level ASC');

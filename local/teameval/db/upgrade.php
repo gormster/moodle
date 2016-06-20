@@ -190,6 +190,20 @@ function xmldb_local_teameval_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016061601, 'local', 'teameval');
     }
 
+    if ($oldversion < 2016061700) {
+
+        // Define field title to be added to teameval.
+        $table = new xmldb_table('teameval');
+        $field = new xmldb_field('title', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'autorelease');
+
+        // Conditionally launch add field title.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Teameval savepoint reached.
+        upgrade_plugin_savepoint(true, 2016061700, 'local', 'teameval');
+    }
 
 
 
