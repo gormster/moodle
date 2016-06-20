@@ -748,7 +748,7 @@ class team_evaluation {
 
     public static function templates_for_context($contextid) {
         global $DB;
-        $ids = $DB->get_records('teameval', ['contextid' => $contextid], 'title ASC', 'id');
+        $ids = $DB->get_records('teameval', ['contextid' => $contextid], 'UPPER(title) ASC', 'id');
         return array_map(function($id) {
             return new team_evaluation($id);
         }, array_keys($ids));
