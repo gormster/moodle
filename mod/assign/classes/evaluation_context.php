@@ -12,21 +12,21 @@ class evaluation_context extends \local_teameval\evaluation_context {
 	}
 
 	public function evaluation_permitted($userid = null) {
-		return $this->assign->get_instance()->teamsubmission;
+		$enabled = $this->assign->get_instance()->teamsubmission;
+		if ($userid) {
+			$groupsub = $this->assign->get_group_submission($userid, 0, false);
+			if (($groupsub == false) || 
+				($groupsub->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) ||
+				($this->assign->submission_empty($groupsub))) {
+				$enabled = false;
+			}
+		}
+		return $enabled;
+
 	}
 
 	public function group_for_user($userid) {
-		$grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
-		$groups = groups_get_all_groups($this->assign->get_course()->id, $userid, $grouping);
-		if(count($groups) == 1) {
-			return current($groups);
-		}
-		if(count($groups) > 1) {
-			//throw something
-		}
-		if(count($groups) == 0) {
-			//figure out correct response here
-		}
+		return $this->assign->get_submission_group($userid);
 	}
 
 	public function all_groups() {
