@@ -10,9 +10,32 @@ use external_single_structure;
 use external_multiple_structure;
 use invalid_parameter_exception;
 
+use stdClass;
+
 require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
 class external extends external_api {
+
+    /* turn_on */
+
+    public static function turn_on_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval')
+        ]);
+    }
+
+    public static function turn_on_returns() {
+        return null;
+    }
+
+    public static function turn_on($cmid) {
+        $teameval = team_evaluation::from_cmid($cmid);
+        $settings = new stdClass;
+        $settings->enabled = true;
+        $teameval->update_settings($settings);
+    }
+
+    public static function turn_on_is_allowed_from_ajax() { return true; }
 
     /* get_settings */
 

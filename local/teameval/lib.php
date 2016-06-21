@@ -96,17 +96,7 @@ class team_evaluation {
         }
 
         if (! isset($this->evalcontext)) {
-        
-            $modname = $this->cm->modname;
-            include_once("$CFG->dirroot/mod/$modname/lib.php");
-
-            $function = "{$modname}_get_evaluation_context";
-            if (!function_exists($function)) {
-                // throw something
-                print_error("noevaluationcontext");
-            }
-
-            $this->evalcontext =  $function($this->cm);
+            $this->evalcontext = evaluation_context::context_for_module($this->cm);
         }
 
         return $this->evalcontext;
@@ -474,6 +464,10 @@ class team_evaluation {
             if ($response->marks_given()) {
                 $marks_given++;
             }
+        }
+
+        if ($num_questions == 0) {
+            return 0;
         }
 
         return $marks_given / $num_questions;

@@ -52,6 +52,21 @@ abstract class evaluation_context {
      */
     abstract public function trigger_grade_update($users = null);
 
+    public static function context_for_module($cm) {
+        global $CFG;
+
+        $modname = $cm->modname;
+        include_once("$CFG->dirroot/mod/$modname/lib.php");
+
+        $function = "{$modname}_get_evaluation_context";
+        if (!function_exists($function)) {
+            // throw something
+            print_error("noevaluationcontext");
+        }
+
+        return $function($cm);
+    }
+
     public function evaluation_enabled() {
         // This can be called even when evaluation is not possible.
         // For this reason we don't use get_settings()

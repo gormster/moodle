@@ -1,3 +1,21 @@
+.local-teameval-turn-on {
+    text-align: center;
+}
+
+.local-teameval-turn-on button {
+    font-weight: bold;
+    font-size: 150%;
+    padding: .75em 1em;
+    margin: .5em;
+}
+
+.local-teameval-disabled {
+    font-style: italic;
+    color: #999;
+    text-align: center;
+    padding: 1em;
+}
+
 .local-teameval-container-heading {
     font-size: 150%;
     text-align: center;

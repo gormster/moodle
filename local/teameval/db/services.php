@@ -2,6 +2,15 @@
 
 $functions = [
     
+    'local_teameval_turn_on' => [
+        
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'turn_on',
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:changesettings',
+        
+    ],
+
     'local_teameval_get_settings' => [
         
         'classname'     => 'local_teameval\external',
@@ -14,7 +23,8 @@ $functions = [
         
         'classname'     => 'local_teameval\external',
         'methodname'    => 'update_settings',
-        'type'          => 'write'
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:changesettings',
         
     ],
 
@@ -22,7 +32,8 @@ $functions = [
 
         'classname'     => 'local_teameval\external',
         'methodname'    => 'questionnaire_set_order',
-        'type'          => 'write'
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
 
     ],
 
@@ -30,7 +41,8 @@ $functions = [
     
         'classname'     => 'local_teameval\external',
         'methodname'    => 'report',
-        'type'          => 'read'
+        'type'          => 'read',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
 
     ],
 
@@ -38,7 +50,8 @@ $functions = [
 
         'classname'     => 'local_teameval\external',
         'methodname'    => 'release',
-        'type'          => 'write'
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
 
     ],
 
@@ -46,7 +59,8 @@ $functions = [
 
         'classname'     => 'local_teameval\external',
         'methodname'    => 'get_release',
-        'type'          => 'read'
+        'type'          => 'read',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
 
     ]
     

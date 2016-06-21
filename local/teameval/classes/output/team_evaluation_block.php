@@ -3,12 +3,18 @@
 namespace local_teameval\output;
 
 use local_teameval\team_evaluation;
+use local_teameval\evaluation_context;
 use core_plugin_manager;
 use renderable;
+use context_module;
 
 class team_evaluation_block implements renderable {
 
     public $cm;
+
+    public $context;
+
+    public $disabled;
 
     public $questions;
     
@@ -33,56 +39,75 @@ class team_evaluation_block implements renderable {
         $enabled = $DB->get_field('teameval', 'enabled', ['cmid' => $cmid]);
 
         $teameval = null;
+        $context = null;
         if ($enabled) {
             $teameval = team_evaluation::from_cmid($cmid);
+        } else {
+            $cm = get_coursemodule_from_id(null, $cmid);
+            $evalcontext = evaluation_context::context_for_module($cm);
+            if ($evalcontext->evaluation_permitted()) {
+                $context = context_module::instance($cmid);
+            }
         }
 
-        return new static($teameval);
+        return new static($teameval, $context);
 
     }
 
-    public function __construct($teameval) {
+    public function __construct($teameval, $context = null) {
 
         // If teameval is not set, we just want to show the big button saying "Start Team Evaluation"
         if ($teameval) {
 
             $this->teameval = $teameval;
+            $this->context = $teameval->get_context();
 
-            $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
-            $this->questions = $this->teameval->get_questions();
+            if ($teameval->get_evaluation_context()->evaluation_permitted() == false) {
 
-            $settings = $this->teameval->get_settings();
-            $settings->fraction *= 100;
-            $settings->noncompletionpenalty *= 100;
-            $settings->id = $this->teameval->id;
-            $this->settings = $settings;
+                $this->disabled = true;
 
-            $cm = $teameval->get_coursemodule();
-            if ($cm) {
-                $this->cm = $cm;
+            } else {
 
-                if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
-                    $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
-                    $this->report = $this->teameval->get_report();
-                }
+                $settings = $this->teameval->get_settings();
+                $settings->fraction *= 100;
+                $settings->noncompletionpenalty *= 100;
+                $settings->id = $this->teameval->id;
+                $this->settings = $settings;
 
+                $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+                $this->questions = $this->teameval->get_questions();
 
-                global $DB;
-                $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
-                $this->release = new release($this->teameval, $releases);
+                $cm = $teameval->get_coursemodule();
+                if ($cm) {
+                    $this->cm = $cm;
 
-                global $USER;
-                if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false)) {
-
-                    if ($this->teameval->marks_available($USER->id)) {
-                        $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms
+                    if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
+                        $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
+                        $this->report = $this->teameval->get_report();
                     }
 
+
+                    global $DB;
+                    $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
+                    $this->release = new release($this->teameval, $releases);
+
+                    global $USER;
+                    if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false)) {
+
+                        if ($this->teameval->marks_available($USER->id)) {
+                            $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms
+                        }
+
+                    }
                 }
+
             }
 
-        }
+        } else {
 
+            $this->context = $context;
+
+        }
 
 
     }

@@ -4,7 +4,6 @@ namespace local_teameval\output;
 
 use plugin_renderer_base;
 use local_teameval\output\team_evaluation_block;
-use context_module;
 use local_teameval\forms;
 use stdClass;
 
@@ -14,7 +13,29 @@ class renderer extends plugin_renderer_base {
         
         global $PAGE, $USER;
 
-        $context = $block->teameval->get_context();
+        $context = $block->context;
+
+        if (empty($block->teameval)) {
+
+            // Teameval isn't enabled and can't be enabled, so return nothing
+            if (empty($block->context)) {
+                return '';
+            }
+
+            if (has_capability('local/teameval:changesettings', $context)) {
+                return $this->render_from_template('local_teameval/turn_on', ['cmid' => $context->instanceid]);
+            }
+
+        }
+
+        if ($block->disabled) {
+
+            if (has_capability('local/teameval:changesettings', $context)) {
+                return $this->render_from_template('local_teameval/disabled', []);
+            }
+
+        }
+        
         $c = new stdClass; // template context
 
         if (has_capability('local/teameval:changesettings', $context)) {
@@ -71,10 +92,6 @@ class renderer extends plugin_renderer_base {
             $c->feedback = $this->render($block->feedback);
         }
 
-        if (\local_teameval\is_developer()) {
-            $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
-        }
-
         $questions = [];
         foreach($block->questions as $q) {
             $locked = !$block->teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
@@ -93,10 +110,15 @@ class renderer extends plugin_renderer_base {
         if (isset($block->settings->deadline)) {
             $deadline = userdate($block->settings->deadline);
         }
-        
+
         $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion]);
 
+
         $c->hiderelease = $block->settings->autorelease;
+        
+        if (\local_teameval\is_developer()) {
+            $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
+        }
 
         $PAGE->requires->js_call_amd('local_teameval/tabs', 'initialise');
         return $this->render_from_template('local_teameval/block', $c);

@@ -8,6 +8,10 @@
     $string['subplugintype_teamevalevaluator'] = 'Evaluator';
     $string['subplugintype_teamevalevaluator_plural'] = 'Evaluators';
 
+    $string['turnonteameval'] = 'Turn On Team Evaluation';
+    $string['enablingteameval'] = 'Enabling Team Evaluation...';
+    $string['teamevaldisabled'] = 'The current settings in this activity prohibit team evaluation.';
+
     $string['questionnaire'] = 'Questionnaire';
     $string['results'] = 'Results';
     $string['releasemarks'] = 'Release Marks';

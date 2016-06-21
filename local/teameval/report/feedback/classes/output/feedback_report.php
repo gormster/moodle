@@ -90,6 +90,10 @@ class feedback_report implements \renderable, \templatable {
 
 				$m->questions = [];
 
+				if (!isset($this->reports[$mid])) {
+					continue;
+				}
+
 				foreach($this->reports[$mid] as $qid => $reports) {
 					$q = new stdClass;
 					$q->title = $this->questions[$qid]->question->get_title();
