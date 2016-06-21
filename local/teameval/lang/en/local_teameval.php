@@ -5,8 +5,10 @@
 
     $string['subplugintype_teamevalquestion'] = 'Question';
     $string['subplugintype_teamevalquestion_plural'] = 'Questions';
-    $string['subplugintype_teamevalevaluator'] = 'Evaluator';
-    $string['subplugintype_teamevalevaluator_plural'] = 'Evaluators';
+    $string['subplugintype_teamevaluator'] = 'Evaluator';
+    $string['subplugintype_teamevaluator_plural'] = 'Evaluators';
+    $string['subplugintype_teamevalreport'] = 'Report';
+    $string['subplugintype_teamevalreport_plural'] = 'Reports';
 
     $string['turnonteameval'] = 'Turn On Team Evaluation';
     $string['enablingteameval'] = 'Enabling Team Evaluation...';
