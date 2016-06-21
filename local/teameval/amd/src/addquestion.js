@@ -249,7 +249,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				_this.addEditingControls($(this));
 			});
 
-			if (_locked == false) {
+			if (!_locked) {
 
 				$('#local-teameval-questions').sortable({
 					handle: '.local-teameval-question-actions .move',

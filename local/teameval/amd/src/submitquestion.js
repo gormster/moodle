@@ -32,12 +32,10 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
 
 			var allPromises = $.when.apply($, promises);
 			allPromises.done(function() {
-
-				console.log(arguments);
 				
                 var incompletes = $.grep(arguments, function(el) {
                 	if (el) {
-	                    return el.incomplete == true;
+	                    return el.incomplete === true;
 	                }
                 }).length;
 
