@@ -35,6 +35,7 @@
     $string['addquestion'] = 'Add Question';
     $string['saving'] = 'Saving...';
     $string['saved'] = 'Saved!';
+    $string['questionnairelocked'] = 'This questionnaire cannot be edited because some users have already completed it.';
 
     $string['releaseallmarks'] = 'Release All Marks';
     $string['score'] = 'Score';

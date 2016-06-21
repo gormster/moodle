@@ -19,6 +19,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 	var _self;
 
+	var _locked;
+
 	var _addButton;
 
 	return {
@@ -83,7 +85,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 		addEditingControls: function(question) {
 			var _this = this;
 
-			templates.render('local_teameval/question_actions', {}).done(function(html) {
+			templates.render('local_teameval/question_actions', {locked:_locked}).done(function(html) {
 
 				var actionBar = $(html);
 				question.prepend(actionBar);
@@ -230,11 +232,12 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			}).fail(notification.exception);
 		},
 
-		initialise: function(teamevalid, self, subplugins) {
+		initialise: function(teamevalid, self, subplugins, locked) {
 
 			_id = teamevalid;
 			_self = self;
 			_subplugins = subplugins;
+			_locked = locked;
 
 			// stupid javascript scoping
 
@@ -246,42 +249,46 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				_this.addEditingControls($(this));
 			});
 
-			$('#local-teameval-questions').sortable({
-				handle: '.local-teameval-question-actions .move',
-				axis: "y",
-				update: function() {
-					_this.setOrder();
-				}
-			});
+			if (_locked == false) {
 
-			// We need some strings before we can render the button
+				$('#local-teameval-questions').sortable({
+					handle: '.local-teameval-question-actions .move',
+					axis: "y",
+					update: function() {
+						_this.setOrder();
+					}
+				});
 
-			var stringsNeeded = ['addquestion'];
+				// We need some strings before we can render the button
 
-			var promise = str.get_strings(stringsNeeded.map(function (v) {
-				return {key: v, component: 'local_teameval'};
-			}));
+				var stringsNeeded = ['addquestion'];
 
-			// we can't continue until we have some text!
-			promise.done(function(_strings) {
+				var promise = str.get_strings(stringsNeeded.map(function (v) {
+					return {key: v, component: 'local_teameval'};
+				}));
 
-				// The underscore (_) object holds all the strings, keyed to their original keys
-				var _ = {};
-				for (var i = _strings.length - 1; i >= 0; i--) {
-					_[stringsNeeded[i]] = _strings[i];
-				}
+				// we can't continue until we have some text!
+				promise.done(function(_strings) {
 
-				// Find the question container and add the button after it
-				var questionContainer = $('#local-teameval-questions');
-				var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
-				addQuestionButton.html('<a href="javascript:void(0);">' + _.addquestion + '</a>');
-				questionContainer.after(addQuestionButton);
+					// The underscore (_) object holds all the strings, keyed to their original keys
+					var _ = {};
+					for (var i = _strings.length - 1; i >= 0; i--) {
+						_[stringsNeeded[i]] = _strings[i];
+					}
 
-				addQuestionButton.find('a').click(_this.preAddQuestion.bind(_this));
+					// Find the question container and add the button after it
+					var questionContainer = $('#local-teameval-questions');
+					var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
+					addQuestionButton.html('<a href="javascript:void(0);">' + _.addquestion + '</a>');
+					questionContainer.after(addQuestionButton);
 
-				_addButton = addQuestionButton;
-				
-			});
+					addQuestionButton.find('a').click(_this.preAddQuestion.bind(_this));
+
+					_addButton = addQuestionButton;
+					
+				});
+
+			}
 
 		}
 

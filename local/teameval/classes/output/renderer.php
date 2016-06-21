@@ -49,8 +49,12 @@ class renderer extends plugin_renderer_base {
             }
         }
 
+        $questionnaire_locked = false;
+
         if (has_capability('local/teameval:createquestionnaire', $context)) {
-            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->teameval->id, $block->settings->self, $block->questiontypes]);
+            $questionnaire_locked = $block->marks_available;
+
+            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->teameval->id, $block->settings->self, $block->questiontypes, $questionnaire_locked]);
 
             // Results and Mark Release are only available to teamevals attached to modules
             if (isset($block->cm)) {
@@ -113,7 +117,7 @@ class renderer extends plugin_renderer_base {
             $deadline = userdate($block->settings->deadline);
         }
 
-        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion]);
+        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion, 'locked' => $questionnaire_locked]);
 
 
         $c->hiderelease = $block->settings->autorelease;

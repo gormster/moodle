@@ -16,6 +16,8 @@ class team_evaluation_block implements renderable {
 
     public $disabled;
 
+    public $marks_available;
+
     public $questions;
     
     public $questiontypes;
@@ -85,6 +87,15 @@ class team_evaluation_block implements renderable {
                 $cm = $teameval->get_coursemodule();
                 if ($cm) {
                     $this->cm = $cm;
+
+                    $this->marks_available = false;
+                    $allusers = $teameval->get_evaluation_context()->marking_users();
+                    foreach($allusers as $u) {
+                        if ($teameval->marks_available($u->id)) {
+                            $this->marks_available = true;
+                            break;
+                        }
+                    }
 
                     if ($cancreate) {
                         $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");

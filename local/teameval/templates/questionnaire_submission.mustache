@@ -16,6 +16,11 @@
     </li>
 {{/questions}}
 </ol>
+{{#locked}}
+<div class="locked">
+{{#str}} questionnairelocked, local_teameval {{/str}}
+</div>
+{{/locked}}
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
 require(['jquery'], function($) {
