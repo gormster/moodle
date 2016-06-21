@@ -55,6 +55,7 @@ class team_evaluation_block implements renderable {
     }
 
     public function __construct($teameval, $context = null) {
+        global $USER, $DB;
 
         // If teameval is not set, we just want to show the big button saying "Start Team Evaluation"
         if ($teameval) {
@@ -62,7 +63,11 @@ class team_evaluation_block implements renderable {
             $this->teameval = $teameval;
             $this->context = $teameval->get_context();
 
-            if ($teameval->get_evaluation_context()->evaluation_permitted() == false) {
+            $cancreate = has_capability('local/teameval:createquestionnaire', $this->teameval->get_context());
+            $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false);
+
+            // If the user can create questionnaires, then check against null (the general case).
+            if ($teameval->get_evaluation_context()->evaluation_permitted($cancreate ? null : $USER->id) == false) {
 
                 $this->disabled = true;
 
@@ -81,18 +86,15 @@ class team_evaluation_block implements renderable {
                 if ($cm) {
                     $this->cm = $cm;
 
-                    if (has_capability('local/teameval:createquestionnaire', $this->teameval->get_context())) {
+                    if ($cancreate) {
                         $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
                         $this->report = $this->teameval->get_report();
                     }
 
-
-                    global $DB;
                     $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
                     $this->release = new release($this->teameval, $releases);
 
-                    global $USER;
-                    if (has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false)) {
+                    if ($cansubmit) {
 
                         if ($this->teameval->marks_available($USER->id)) {
                             $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms

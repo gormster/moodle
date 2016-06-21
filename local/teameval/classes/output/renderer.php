@@ -34,6 +34,8 @@ class renderer extends plugin_renderer_base {
                 return $this->render_from_template('local_teameval/disabled', []);
             }
 
+            return '';
+
         }
         
         $c = new stdClass; // template context

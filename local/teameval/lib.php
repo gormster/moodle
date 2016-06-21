@@ -467,7 +467,7 @@ class team_evaluation {
         }
 
         if ($num_questions == 0) {
-            return 0;
+            return 1;
         }
 
         return $marks_given / $num_questions;
