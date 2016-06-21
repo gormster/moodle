@@ -21,7 +21,7 @@ class renderer extends plugin_renderer_base {
             $settingsform = new forms\settings_form();
             $settingsform->set_data($block->settings);
             
-            if(isset($this->cm)) {
+            if(isset($block->cm)) {
                 $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $settingsform->render()]);
             }
         }
