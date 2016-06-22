@@ -986,7 +986,7 @@ class team_evaluation {
         global $DB;
 
         $qids = array_map(function($q) {
-            return $q->question->id;
+            return $q->id;
         }, $this->get_questions());
 
         if (count($qids) == 0) {
