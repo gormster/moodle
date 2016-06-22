@@ -70,14 +70,21 @@ class team_evaluation {
 
         $this->id = $id;
 
-        if (!$id) {
+        if (empty($id)) {
+
+            if (empty($cmid) && empty($contextid)) {
+                throw new coding_exception("Either id, cmid or contextid must be set.");
+            }
+
             if ($cmid) {
-                $this->cm = get_coursemodule_from_id(null, $cmid);
+                $this->cm = get_course_and_cm_from_cmid($cmid)[1];
                 $this->context = context_module::instance($cmid);
             } else if ($contextid) {
                 $this->context = context::instance_by_id($contextid);
             }
+
         }
+        
 
         $this->get_settings();
 
@@ -144,7 +151,7 @@ class team_evaluation {
             } else {
 
                 if ($this->settings->cmid) {
-                    $this->cm = get_coursemodule_from_id(null, $this->settings->cmid);
+                    $this->cm = get_course_and_cm_from_cmid($this->settings->cmid)[1];
                     $this->context = context_module::instance($this->settings->cmid);
                 } else if ($this->settings->contextid) {
                     $this->context = context::instance_by_id($this->settings->contextid);
@@ -355,7 +362,7 @@ class team_evaluation {
 
     /**
      * Gets all the questions in this teameval questionnaire, along with some helpful context
-     * @return stdClass ->question, ->plugininfo, ->submissiontemplate, ->editingtemplate
+     * @return question_info
      */
     public function get_questions() {
         global $DB;
@@ -364,16 +371,7 @@ class team_evaluation {
         $questions = [];
         $questionplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
         foreach($barequestions as $bareq) {
-            $questioninfo = new stdClass;
-
-            $questioninfo->id = $bareq->id;
-            $questioninfo->plugininfo = $questionplugins[$bareq->qtype];
-            $cls = $questioninfo->plugininfo->get_question_class();
-            $questioninfo->question = new $cls($this, $bareq->questionid);
-            $questioninfo->questionid = $bareq->questionid;
-            $questioninfo->submissiontemplate = "teamevalquestion_{$bareq->qtype}/submission_view";
-            $questioninfo->editingtemplate = "teamevalquestion_{$bareq->qtype}/editing_view";
-
+            $questioninfo = new question_info($this, $bareq->id, $bareq->qtype, $bareq->questionid);
             $questions[] = $questioninfo;
         }
 
