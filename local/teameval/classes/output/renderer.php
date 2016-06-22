@@ -26,6 +26,9 @@ class renderer extends plugin_renderer_base {
                 return $this->render_from_template('local_teameval/turn_on', ['cmid' => $context->instanceid]);
             }
 
+            // If you can't turn it on, don't show anything.
+            return '';
+
         }
 
         if ($block->disabled) {
