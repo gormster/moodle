@@ -14,8 +14,8 @@ class settings_form extends ajaxform {
 
         $mform->updateAttributes(['data-ajaxforms-methodname' => 'local_teameval_update_settings']);
 
-        $mform->addElement('hidden', 'cmid');
-        $mform->setType('cmid', PARAM_INT);
+        $mform->addElement('hidden', 'id');
+        $mform->setType('id', PARAM_INT);
 
         $mform->addElement('checkbox', 'enabled', get_string('enabled', 'local_teameval'));
 

@@ -68,19 +68,6 @@ class external extends external_api {
     public static function update_settings_parameters() {
         $settingsform = new \local_teameval\forms\settings_form;
         return $settingsform->external_parameters();
-        
-        return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
-            'settings' => new external_single_structure([
-                'enabled' => new external_value(PARAM_BOOL, 'is teameval enabled for this module'),
-                'selfassessment' => new external_value(PARAM_BOOL, 'is self assessment enabled for this module'),
-                'public' => new external_value(PARAM_BOOL, 'is the questionnaire for this teameval publicly available'),
-                'autorelease' => new external_value(PARAM_BOOL, 'will marks be automatically made available'),
-                'fraction' => new external_value(PARAM_INT, 'how much does evaluation affect the final grade'),
-                'noncompletionpenalty' => new external_value(PARAM_INT, 'how much does non completion of the questionnaire reduce final grade'),
-                'deadline' => new external_value(PARAM_INT, 'timestamp - datetime of questionnaire deadline')
-            ])
-        ]);
     }
 
     public static function update_settings_returns() {
@@ -100,7 +87,7 @@ class external extends external_api {
         $settings->fraction = $settings->fraction / 100.0;
         $settings->noncompletionpenalty = $settings->noncompletionpenalty / 100.0;
 
-        $teameval = team_evaluation::from_cmid($settings->cmid);
+        $teameval = new team_evaluation($settings->id);
         $teameval->update_settings($settings);
     }
 

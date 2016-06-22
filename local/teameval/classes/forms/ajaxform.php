@@ -55,7 +55,7 @@ abstract class ajaxform extends moodleform {
     }
 
     function process_data($json) {
-        $this->_form->updateSubmission($json);
+        $this->_form->updateSubmission($json, []);
     }
 
 }
