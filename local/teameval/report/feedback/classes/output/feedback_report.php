@@ -35,15 +35,15 @@ class feedback_report implements \renderable, \templatable {
 			foreach($members as $uid => $user) {
 				foreach($questions as $q) {
 
-					$this->questions[$q->question->id] = $q;
+					$this->questions[$q->id] = $q;
 					$response = $teameval->get_response($q, $uid);
 					$released = $teameval->marks_released($uid);
 
 					foreach($teameval->teammates($uid) as $t => $teammate) {
-						$this->reports[$uid][$q->question->id][$t] = $response->feedback_for_readable($t);
+						$this->reports[$uid][$q->id][$t] = $response->feedback_for_readable($t);
 						if ($released) {
 							// if the state is unset and the marks are released it is implicitly approved
-							$this->states[$q->question->id][$uid][$t] = \local_teameval\FEEDBACK_APPROVED;
+							$this->states[$q->id][$uid][$t] = \local_teameval\FEEDBACK_APPROVED;
 						}
 					}
 

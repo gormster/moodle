@@ -366,6 +366,7 @@ class team_evaluation {
         foreach($barequestions as $bareq) {
             $questioninfo = new stdClass;
 
+            $questioninfo->id = $bareq->id;
             $questioninfo->plugininfo = $questionplugins[$bareq->qtype];
             $cls = $questioninfo->plugininfo->get_question_class();
             $questioninfo->question = new $cls($this, $bareq->questionid);
@@ -864,6 +865,11 @@ class team_evaluation {
     }
 
     // FEEDBACK CONTROL
+
+    // In the context of feedback control, questionid refers to the id column of teameval_questions.
+    // It does NOT refer to the questionid column, which is a plugin-specific reference to a given question.
+    // When calling these functions, make sure you're using the ->id property of the questioninfo object
+    // you got back from get_questions.
 
     public function rescind_feedback_for($questionid, $markerid, $targetid, $state=FEEDBACK_RESCINDED) {
         global $DB;
