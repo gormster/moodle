@@ -304,6 +304,20 @@ class question implements \local_teameval\question {
     public function render_for_report($groupid = null) {
         throw new coding_exception("not implemented");
     }
+
+    public static function delete_questions($ids) {
+        global $DB;
+
+        self::reset_userdata($ids);
+
+        $DB->delete_records_list('teamevalquestion_likert', 'id', $ids);
+    }
+
+    public static function reset_userdata($ids) {
+        global $DB;
+
+        $DB->delete_records_list('teamevalquestion_likert_resp', 'questionid', $ids);
+    }
     
 }
 

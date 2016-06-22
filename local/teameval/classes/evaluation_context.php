@@ -6,10 +6,14 @@ require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
 abstract class evaluation_context {
 
-    /**
-     * You MUST set this in your constructor.
-     */
     protected $cm;
+
+    /**
+     * You must call parent::__construct in your constructor.
+     */
+    public function __construct($cm) {
+        $this->cm = $cm;
+    }
 
     /**
      * Should evaluation be shown to this or any user?
@@ -51,6 +55,56 @@ abstract class evaluation_context {
      * @param [int] $users optional array of user ids whose grades have changed
      */
     abstract public function trigger_grade_update($users = null);
+
+    /**
+     * Override this if your class isn't in your plugin's namespace, or just for
+     * performance's sake.
+     */
+    public static function plugin_namespace() {
+        return explode('\\', get_called_class())[0];
+    }
+
+    /**
+     * Implement this as get_string('modulenameplural', 'yourmodule')
+     */
+    public static function component_string() {
+        $ns = static::plugin_namespace();
+        if (strstr($ns, 'mod_')) {
+            return get_string('modulenameplural', substr($ns, 4));
+        }
+        return get_string('pluginname', $ns);
+    }
+    /**
+     * You can override this function to customise the appearance of Teameval feedback in the gradebook.
+     */
+    protected function format_feedback($feedbacks) {
+        $o = '<h3>Team Evaluation</h3>';
+        foreach($feedbacks as $q) {
+            $o .= "<h4>{$q->title}</h4><ul>";
+            foreach($q->feedbacks as $fb) {
+                $feedback = clean_text($fb->feedback);
+                if (isset($fb->from)) {
+                    $o .= "<li><strong>{$fb->from}:</strong> $feedback</li>";
+                } else {
+                    $o .= "<li>$feedback</li>";
+                }
+            }
+            $o .= '</ul>';
+        }
+        return $o;
+    }
+
+
+
+
+
+
+
+    /*
+     * The above methods were teameval calling in to your plugin. 
+     * These are methods for you to call into teameval.
+     * You should probably not override these, as teameval uses them as well.
+     */
 
     public static function context_for_module($cm) {
         global $CFG;
@@ -113,22 +167,62 @@ abstract class evaluation_context {
 
         return $grades;
     }
+    
 
-    private function format_feedback($feedbacks) {
-        $o = '<h3>Team Evaluation</h3>';
-        foreach($feedbacks as $q) {
-            $o .= "<h4>{$q->title}</h4><ul>";
-            foreach($q->feedbacks as $fb) {
-                $feedback = clean_text($fb->feedback);
-                if (isset($fb->from)) {
-                    $o .= "<li><strong>{$fb->from}:</strong> $feedback</li>";
-                } else {
-                    $o .= "<li>$feedback</li>";
-                }
-            }
-            $o .= '</ul>';
-        }
-        return $o;
+    // COURSE RESET
+
+    public static function reset_course_form_definition(&$mform) {
+
+        $ns = static::plugin_namespace() . '_';
+
+        $mform->addElement('static', $ns.'teameval_hr', '', '<hr />');
+
+        $mform->addElement('checkbox', $ns.'reset_teameval_responses', get_string('resetresponses', 'local_teameval'));
+
+        $mform->addElement('checkbox', $ns.'reset_teameval_questionnaire', get_string('resetquestionnaire', 'local_teameval'));
+        $mform->disabledIf($ns.'reset_teameval_questionnaire', $ns.'reset_teameval_responses');
+
     }
+
+    public static function reset_course_form_defaults($course) {
+        $ns = static::plugin_namespace() . '_';
+        return [$ns.'reset_teameval_responses' => 1, $ns.'reset_teameval_questionnaire' => 0];
+    }
+
+    public function reset_userdata($options) {
+        global $DB;
+
+        $ns = static::plugin_namespace() . '_';
+
+        $resetresponses = $ns . 'reset_teameval_responses';
+        $resetresponses = !empty($options->$resetresponses);
+        $resetquestionnaire = $ns . 'reset_teameval_questionnaire';
+        $resetquestionnaire = !empty($options->$resetquestionnaire);
+
+        $status = [];
+
+        if ($this->evaluation_enabled()) {
+
+            $teameval = team_evaluation::from_cmid($this->cm->id);
+
+            if ($resetresponses) {
+
+                $status[] = $teameval->reset_userdata();
+
+                if ($resetquestionnaire) {
+                    $status[] = $teameval->delete_questionnaire();
+                } else {
+                    $teameval->reset_questionnaire();
+                }
+
+            }
+
+        }
+
+        return $status;
+
+    }
+
+
 
 }

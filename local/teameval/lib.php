@@ -910,6 +910,68 @@ class team_evaluation {
         return $rescinds;
     }
 
+    // DELETE/RESET
+
+    public function reset_userdata() {
+        global $DB;
+
+        if (isset($this->cm)) {
+            //delete release data
+            $DB->delete_records('teameval_release', ['cmid' => $this->cm->id ]);
+
+            //delete rescinds
+            $questions = array_keys($DB->get_records('teameval_questions', ['teamevalid' => $this->id], '', 'id'));
+            $DB->delete_records_list('teameval_rescind', 'questionid', $questions);
+        }
+
+        $evalcontext = $this->get_evaluation_context();
+        return ['component' => $evalcontext::component_string(), 'item' => get_string('resetresponses', 'local_teameval'), 'error' => false];
+    }
+
+    public function delete_questionnaire() {
+        global $DB;
+
+        // We're not using get_questions because that actually instantiates a copy of our question
+        // And since we're in the middle of tearing down our teameval that could be problematic.
+
+        $barequestions = $this->get_bare_questions();
+        $sorted = [];
+        foreach($barequestions as $barequestion) {
+            $sorted[$barequestion->type][] = $barequestion->questionid;
+        }
+
+        $questionplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+        foreach($sorted as $qtype => $ids) {
+            $plugin = $questionplugins[$qtype]->get_question_class();
+            $plugin::delete_questions($ids);
+        }
+
+        $DB->delete_records_list('teameval_questions','id',array_keys($barequestions));
+
+        $evalcontext = $this->get_evaluation_context();
+        return ['component' => $evalcontext::component_string(), 'item' => get_string('resetquestionnaire', 'local_teameval'), 'error' => false];
+
+    }
+
+    public function reset_questionnaire() {
+        global $DB;
+
+        // Yes, this IS a lot of repeated code. The reason we're not DRYing this out is because
+        // delete_questionnaire is so destructive.
+
+        $barequestions = $this->get_bare_questions();
+        $sorted = [];
+        foreach($barequestions as $barequestion) {
+            $sorted[$barequestion->type][] = $barequestion->questionid;
+        }
+
+        $questionplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+        foreach($sorted as $qtype => $ids) {
+            $plugin = $questionplugins[$qtype]->get_question_class();
+            $plugin::reset_userdata($ids);
+        }
+    }
+
 }
 
 interface question {
@@ -1017,6 +1079,18 @@ interface question {
     public function is_feedback_anonymous();
 
     public function render_for_report($groupid = null);
+
+    /**
+     * Delete these questions from disk.
+     * @param array $questionids The plugin-local question ID you passed to should_update_question
+     */
+    public static function delete_questions($questionids);
+
+    /**
+     * Reset user data for these questions, including responses.
+     * @param array $questionids The plugin-local question ID you passed to should_update_question
+     */
+    public static function reset_userdata($questionids);
     
 }
 

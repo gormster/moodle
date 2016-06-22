@@ -8,7 +8,7 @@ class evaluation_context extends \local_teameval\evaluation_context {
 
 	public function __construct(\assign $assign) {
 		$this->assign = $assign;
-		$this->cm = $assign->get_course_module();
+		parent::__construct($assign->get_course_module());
 	}
 
 	public function evaluation_permitted($userid = null) {

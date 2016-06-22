@@ -57,4 +57,7 @@
     $string['incompletewarning1'] = 'There is 1 incomplete question.';
     $string['incompletesummary'] = 'You have {$a->n} incomplete questions, resulting in a {$a->penalty}% non-completion penalty.';
 
+    $string['resetresponses'] = 'Delete all team evaluation responses';
+    $string['resetquestionnaire'] = 'Delete all questions from team evaluation questionnaire';
+
 ?>

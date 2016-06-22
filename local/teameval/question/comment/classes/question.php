@@ -122,4 +122,18 @@ class question implements \local_teameval\question {
         return new output\question_report($this->teameval, $this, $groupid);
     }
 
+    public static function delete_questions($ids) {
+        global $DB;
+
+        self::reset_userdata($ids);
+
+        $DB->delete_records_list('teamevalquestion_comment', 'id', $ids);
+    }
+
+    public static function reset_userdata($ids) {
+        global $DB;
+
+        $DB->delete_records_list('teamevalquestion_comment_res', 'questionid', $ids);
+    }
+
 }
