@@ -25,6 +25,9 @@ define(__NAMESPACE__ . '\FEEDBACK_RESCINDED', -1);
 define(__NAMESPACE__ . '\FEEDBACK_UNSET', 0);
 define(__NAMESPACE__ . '\FEEDBACK_APPROVED', 1);
 
+define(__NAMESPACE__ . '\LOCKED_REASON_VISIBLE', -1);
+define(__NAMESPACE__ . '\LOCKED_REASON_MARKED', -2);
+
 class team_evaluation {
 
     protected $id;
@@ -360,6 +363,18 @@ class team_evaluation {
         return $DB->get_records("teameval_questions", array("teamevalid" => $this->id), "ordinal ASC");
     }
 
+    protected function has_questions_with_completion() {
+        $questions = $this->get_questions();
+        $has_value = false;
+        foreach($questions as $question) {
+            $has_value = $question->question->has_completion();
+            if ($has_value) {
+                break;
+            }
+        }
+        return $has_value;
+    }
+
     /**
      * Gets all the questions in this teameval questionnaire, along with some helpful context
      * @return question_info
@@ -408,6 +423,79 @@ class team_evaluation {
             $r->ordinal = $i;
             $bulk = $i == count($order) - 1;
             $DB->update_record('teameval_questions', $r, $bulk);
+        }
+
+    }
+
+    /**
+     * If you get back a LOCKED_REASON, ask questionnaire_locked_hint for help.
+     * @return false or an array of [LOCKED_REASON constant, user object]
+     */
+    public function questionnaire_locked() {
+        // The logic here is:
+        
+        // The questionnaire is locked if a single marking user has evaluation_permitted
+        // This type of lock is not permanent – the questionnaire can be unlocked again
+        // by changing availability
+        
+        // The questionnaire is locked permanently if a single marking user has completed
+        // a question that has_completion
+
+        $marking_users = $this->evalcontext->marking_users();
+
+        // for the sake of efficiency, we're going to filter the list by users who can
+        // actually see the module. this can trim the list to zero, if the module is
+        // hidden.
+
+        $info = new \core_availability\info_module($this->cm);
+        $marking_users = $info->filter_user_list($marking_users);
+
+        $reason = false;
+        
+        foreach($marking_users as $userid => $user) {
+            if ($this->has_questions_with_completion()) {
+                if ($this->user_completion($userid) > 0) {
+                    return [LOCKED_REASON_MARKED, $user];
+                }
+            }
+            if ($reason === false) {
+                if ($this->evalcontext->evaluation_permitted($userid)) {
+                    $reason = [LOCKED_REASON_VISIBLE, $user];
+                }
+                // we need to keep iterating here, because if we find a LOCKED_REASON_MARKED
+                // we should return that instead
+            }
+        }
+
+        return $reason;
+
+    }
+
+    /**
+     * The reason why this questionnaire is locked.
+     */
+    public function questionnaire_locked_reason($reason) {
+
+        switch($reason) {
+            case LOCKED_REASON_VISIBLE:
+                return get_string('lockedreasonvisible', 'local_teameval');
+            case LOCKED_REASON_MARKED:
+                return get_string('lockedreasonmarked', 'local_teameval');
+        }
+
+    }
+
+
+    /**
+     * This function gives help text to the user on why their questionnaire is locked.
+     */
+    public function questionnaire_locked_hint($reason, $user) {
+
+        switch($reason) {
+            case LOCKED_REASON_VISIBLE:
+                return $this->evalcontext->questionnaire_locked_hint($user);
+            case LOCKED_REASON_MARKED:
+                return get_string('lockedhintmarked', 'local_teameval');
         }
 
     }

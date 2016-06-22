@@ -16,7 +16,11 @@ class team_evaluation_block implements renderable {
 
     public $disabled;
 
-    public $marks_available;
+    public $locked;
+
+    public $lockedreason;
+
+    public $lockedhint;
 
     public $questions;
     
@@ -88,13 +92,12 @@ class team_evaluation_block implements renderable {
                 if ($cm) {
                     $this->cm = $cm;
 
-                    $this->marks_available = false;
-                    $allusers = $teameval->get_evaluation_context()->marking_users();
-                    foreach($allusers as $u) {
-                        if ($teameval->marks_available($u->id)) {
-                            $this->marks_available = true;
-                            break;
-                        }
+                    $this->locked = $teameval->questionnaire_locked();
+                    if ($this->locked !== false) {
+                        list($reason, $user) = $this->locked;
+                        $this->locked = true;
+                        $this->lockedreason = $teameval->questionnaire_locked_reason($reason);
+                        $this->lockedhint = $teameval->questionnaire_locked_hint($reason, $user);
                     }
 
                     if ($cancreate) {

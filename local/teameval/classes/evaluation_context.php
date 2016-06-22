@@ -17,10 +17,24 @@ abstract class evaluation_context {
 
     /**
      * Should evaluation be shown to this or any user?
+     * This default implementation does very basic checking. You MUST override this.
+     * You are under no obligation to call parent, however it's not a bad idea.
      * @param type|null $userid If null, check if evaluation is even possible in this context
      * @return bool
      */
-	abstract public function evaluation_permitted($userid = null);
+	public function evaluation_permitted($userid = null) {
+        if ($userid == null) {
+            return true; // see? BASIC.
+        }
+
+        // I'm going to assume if you even called evaluation_permitted you've established
+        // that the user is enrolled in this course.
+        $visible = \core_availability\info_module::is_user_visible($this->cm, $userid, false);
+        if ($visible == false) {
+            return false;
+        }
+
+    }
 
     /**
      * What group is this user associated with?
@@ -74,6 +88,15 @@ abstract class evaluation_context {
         }
         return get_string('pluginname', $ns);
     }
+
+    /**
+     * You can implement this function if you feel like you might need to give a specific reason why
+     * one of the submitters can see the questionnaire.
+     */
+    public function questionnaire_locked_hint($user) {
+        return get_string('lockedhintvisible', 'local_teameval');
+    }
+
     /**
      * You can override this function to customise the appearance of Teameval feedback in the gradebook.
      */

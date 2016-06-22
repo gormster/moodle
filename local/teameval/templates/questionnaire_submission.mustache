@@ -18,7 +18,8 @@
 </ol>
 {{#locked}}
 <div class="locked">
-{{#str}} questionnairelocked, local_teameval {{/str}}
+<div class="reason">{{#str}} questionnairelocked, local_teameval, {{lockedreason}} {{/str}}</div>
+<div class="hint">{{{lockedhint}}}</div>
 </div>
 {{/locked}}
 </div>

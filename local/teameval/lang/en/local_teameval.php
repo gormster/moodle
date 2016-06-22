@@ -37,7 +37,13 @@
     $string['addquestion'] = 'Add Question';
     $string['saving'] = 'Saving...';
     $string['saved'] = 'Saved!';
-    $string['questionnairelocked'] = 'This questionnaire cannot be edited because some users have already completed it.';
+
+    $string['questionnairelocked'] = 'This questionnaire cannot be edited because <strong>{$a}</strong>.';
+    $string['lockedreasonvisible'] = 'one or more submitters can already see it';
+    $string['lockedreasonmarked'] = 'one or more submitters has already submitted marks';
+
+    $string['lockedhintvisible'] = 'You can solve this by hiding the activity, or otherwise making it unavailable.';
+    $string['lockedhintmarked'] = 'To prevent marks from being lost, this questionnaire is now permanently locked.';
 
     $string['releaseallmarks'] = 'Release All Marks';
     $string['score'] = 'Score';
