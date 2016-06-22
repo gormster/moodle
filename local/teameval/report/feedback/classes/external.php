@@ -62,8 +62,6 @@ class external extends external_api {
 			$approves[$uid]++;
 		}
 
-		error_log(print_r($approves, true));
-
 		$qs = $teameval->get_questions();
 		$qs = array_filter($qs, function($v) {
 			return $v->question->has_feedback();
@@ -71,14 +69,10 @@ class external extends external_api {
 
 		$requirednum = count($qs);
 
-		error_log("Required num: $requirednum");
-
 		foreach($approves as $uid => $n) {
 			$p = count($teameval->teammates($uid));
-			error_log("User $uid: P: $p, N: $n");
 			if ($n >= $requirednum * $p) {
 				$teameval->release_marks_for_user($uid);
-				error_log("Markes released for $uid");
 			}
 		}
 
