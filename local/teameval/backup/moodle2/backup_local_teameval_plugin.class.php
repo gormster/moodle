@@ -1,20 +1,18 @@
 <?php
 
+use local_teameval\team_evaluation;
+
 class backup_local_teameval_plugin extends backup_local_plugin {
 
 	protected function define_module_plugin_structure() {
 
-		$this->step->log("We're inside backup_local_plugin", backup::LOG_INFO);
+        $userinfo = $this->get_setting_value('userinfo');
 
 		$plugin = $this->get_plugin_element();
-
 		$pluginwrapper = new backup_nested_element($this->get_recommended_name());
-
 		$plugin->add_child($pluginwrapper);
 
-		$this->step->log("recommended name: " . $this->get_recommended_name(), backup::LOG_INFO);
-
-		$settings = new backup_nested_element('teameval', ['id'],
+		$teameval = new backup_nested_element('teameval', ['id'],
 			[
 				'title',
 				'enabled',
@@ -25,22 +23,48 @@ class backup_local_teameval_plugin extends backup_local_plugin {
 				'noncompletionpenalty',
 				'deadline'
 			]);
-
-		$pluginwrapper->add_child($settings);
-
-		$settings->set_source_table('teameval', array('cmid' => backup::VAR_MODID));
+		$pluginwrapper->add_child($teameval);
+		$teameval->set_source_table('teameval', array('cmid' => backup::VAR_MODID));
 
 		$questions = new backup_nested_element('questions');
-
-		$question = new backup_nested_element('question', ['qtype', 'questionid'], ['qtype', 'questionid', 'ordinal']);
-
+		$question = new backup_nested_element('question', ['id'], ['qtype', 'questionid', 'ordinal']);
 		$questions->add_child($question);
-
-		$settings->add_child($questions);
-
+		$teameval->add_child($questions);
 		$question->set_source_table('teameval_questions', ['teamevalid' => backup::VAR_PARENTID], 'ordinal ASC');
-
 		$this->add_subplugin_structure('teamevalquestion', $question, true, 'local', 'teameval');
+
+        if ($userinfo) {
+
+            $releases = new backup_nested_element('releases');
+            
+            $all = new backup_nested_element('release_all', null, ['target']);
+            $group = new backup_nested_element('release_group', null, ['target']);
+            $user = new backup_nested_element('release_user', null, ['target']);
+            
+            $releases->add_child($all);
+            $releases->add_child($group);
+            $releases->add_child($user);
+
+            $teameval->add_child($releases);
+
+            $all->set_source_table('teameval_release', ['cmid' => backup::VAR_MODID, 'level' => ['sqlparam' => 0]]);
+            $group->set_source_table('teameval_release', ['cmid' => backup::VAR_MODID, 'level' => ['sqlparam' =>  1]]);
+            $user->set_source_table('teameval_release', ['cmid' => backup::VAR_MODID, 'level' => ['sqlparam' =>  2]]);
+
+            $group->annotate_ids('group', 'target');
+            $user->annotate_ids('user', 'target');
+
+            $rescinds = new backup_nested_element('rescinds');
+            $rescind = new backup_nested_element('rescind', ['id'], ['markerid', 'targetid', 'state']);
+            $rescinds->add_child($rescind);
+            $question->add_child($rescinds);
+
+            $rescind->set_source_table('teameval_rescind', ['questionid' => backup::VAR_PARENTID]);
+
+            $rescind->annotate_ids('user', 'markerid');
+            $rescind->annotate_ids('user', 'targetid');
+
+        }
 
 		return $plugin;
 

@@ -74,7 +74,9 @@ class responses_report implements \renderable, \templatable {
                 $g->markedcount = count($g->marked);
                 $g->markscount = count($g->marks) + 1;
 
-    			$q->groups[] = $g;
+                if (count($g->marks) > 0) {
+        			$q->groups[] = $g;
+                }
     		}
 
     		$c->questions[] = $q;

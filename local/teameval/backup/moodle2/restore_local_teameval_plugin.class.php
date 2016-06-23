@@ -27,18 +27,35 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         return $paths;
 	}
 
+
+
+
+
+
+
 	protected function define_module_plugin_structure() {
+        $userinfo = $this->get_setting_value('userinfo');
+
+        $paths = [];
+
         $teameval = new restore_path_element('teameval', $this->get_pathfor('/teameval'));
-
-        // $questions = new restore_path_element('questions', $this->get_pathfor('/teameval/questions'), true);
-
         $question = new restore_path_element('question', $this->get_pathfor('/teameval/questions/question'));
+
+        $paths = [$teameval, $question];
+
+        if ($userinfo) {
+            $release_user = new restore_path_element('release_user', $this->get_pathfor('/teameval/releases/release_user'));
+            $release_group = new restore_path_element('release_group', $this->get_pathfor('/teameval/releases/release_group'));
+            $release_all = new restore_path_element('release_all', $this->get_pathfor('/teameval/releases/release_all'));
+            $rescind = new restore_path_element('rescind', $this->get_pathfor('/teameval/questions/question/rescinds/rescind'));
+
+            $paths = array_merge($paths, [$release_user, $release_group, $release_all, $rescind]);
+            $this->step->log('userinfo paths set', backup::LOG_DEBUG);
+        }
 
         $question_subplugins = $this->add_subplugin_structure('teamevalquestion', $question, 'local', 'teameval');
 
-        $paths = array_merge($question_subplugins, [$teameval, $question]);
-
-        $this->step->log(print_r(array_map(function($i) { return $i->get_path(); }, $paths),true), backup::LOG_DEBUG);
+        $paths = array_merge($question_subplugins, $paths);
 
         return $paths;
 	}
@@ -51,21 +68,28 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 		// and sometimes with an array
 		$settings = (object)$settings;
 
-		$cmid = $this->task->get_moduleid();
-		$this->step->log("module ID: $cmid", backup::LOG_INFO);
-		
+		$cmid = $this->task->get_moduleid();	
 		$settings->cmid = $cmid;
-
+        $settings->deadline = $this->apply_date_offset($settings->deadline);
+        $oldid = $settings->id;
 		$newid = $DB->insert_record('teameval', $settings);
 
-		$this->set_mapping('teameval', 0, $newid);
+		$this->set_mapping('teameval', $oldid, $newid);
 	}
 
 	public function process_question($question) {
 		global $DB;
-		$question = (object)$question;
+		
+        $question = (object)$question;
+        $oldid = $question->id;
+
+        // we make the question ID a negative number, to eliminate the possibility of duplicate keys
+        $question->questionid = -$question->questionid;
+
 		$question->teamevalid = $this->get_new_parentid('teameval');
-		$DB->insert_record('teameval_questions', $question);
+		$newid = $DB->insert_record('teameval_questions', $question);
+
+        $this->set_mapping('question', $oldid, $newid);
 	}
 
 	protected function post_process_question() {
@@ -74,17 +98,62 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 		$teamevalid = $this->get_new_parentid('teameval');
 		$questions = $DB->get_records('teameval_questions', ['teamevalid' => $teamevalid]);
 		foreach($questions as $question) {
-			$oldid = $question->questionid;
-			$question->questionid = $this->get_mappingid($question->qtype.'_questionid', $question->questionid);
+            // we saved this as a negative number, so we have to un-negate it
+			$oldid = -$question->questionid;
+			$question->questionid = $this->get_mappingid($question->qtype.'_questionid', $oldid);
 			if ($question->questionid) {
-				$this->step->log("mapped question $oldid on to question {$question->questionid}", backup::LOG_DEBUG);
 				$DB->update_record('teameval_questions', $question);
 			} else {
-				$this->step->log("deleted question $oldid", backup::LOG_DEBUG);
 				$DB->delete_records('teameval_questions', ['id' => $question->id]);
 			}
 		}
 	}
+
+    public function process_release_all($release) {
+        $release = (object)$release;
+        $this->process_release($release, 0);
+    }
+
+    public function process_release_group($release) {
+        $release = (object)$release;
+        $release->target = $this->get_mappingid('group', $release->target);
+        $this->process_release($release, 1);
+    }
+
+    public function process_release_user($release) {
+        $release = (object)$release;
+        $release->target = $this->get_mappingid('user', $release->target);
+        $this->process_release($release, 2);
+    }
+
+    protected function process_release($release, $level) {
+        global $DB;
+        
+        $cmid = $this->task->get_moduleid();
+
+        $release->level = $level;
+        $release->cmid = $cmid;
+
+        $this->step->log("release $release->cmid $release->level $release->target", backup::LOG_DEBUG);
+
+        $DB->insert_record('teameval_release', $release);
+    }
+
+    public function process_rescind($rescind) {
+        global $DB;
+
+        $rescind = (object)$rescind;
+
+        $questionid = $this->get_new_parentid('question');
+        $this->step->log('rescind new questionid '.$questionid, backup::LOG_DEBUG);
+
+        $rescind->questionid = $questionid;
+        $rescind->markerid = $this->get_mappingid('user', $rescind->markerid);
+        $rescind->targetid = $this->get_mappingid('user', $rescind->targetid);
+
+        $DB->insert_record('teameval_rescind', $rescind);
+
+    }
 
 
 

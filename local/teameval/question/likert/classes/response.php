@@ -31,6 +31,8 @@ class response implements \local_teameval\response {
     		$this->responses[$r->touser] = $r;
     	}
 
+        $this->fix_responses();
+
     }
     
     /**
@@ -75,8 +77,7 @@ class response implements \local_teameval\response {
     }
 
     public function opinion_of($userid) {
-        $this->fix_responses();
-
+        
         $minval = $this->question->minimum_value();
         $maxval = $this->question->maximum_value();
 
@@ -84,9 +85,10 @@ class response implements \local_teameval\response {
     }
 
     public function opinion_of_readable($userid, $source = null) {
+
         $val = null;
         $max = null;
-        if ($this->marks_given()) {
+        if (isset($this->responses[$userid])) {
             $val = $this->responses[$userid]->mark;
             $max = $this->question->maximum_value();
         }

@@ -3,10 +3,15 @@
 class restore_teamevalquestion_comment_subplugin extends restore_subplugin {
 
 	protected function define_question_subplugin_structure() {
+		$userinfo = $this->get_setting_value('userinfo');
+		$paths = [];
 
-		$question = new restore_path_element('commentquestion', $this->get_pathfor('/commentquestion'));
+		$paths[] = new restore_path_element('commentquestion', $this->get_pathfor('/commentquestion'));
+		if ($userinfo) {
+			$paths[] = new restore_path_element('commentresponse', $this->get_pathfor('/commentquestion/commentresponses/commentresponse'));
+		}
 
-		return [$question];
+		return $paths;
 	}
 
 	public function process_commentquestion($question) {
@@ -15,12 +20,27 @@ class restore_teamevalquestion_comment_subplugin extends restore_subplugin {
 		$question = (object)$question;
 
 		$oldid = $question->id;
-		unset($question->id);
 
 		$newid = $DB->insert_record('teamevalquestion_comment', $question);
 
+		// this one is for responses
+		$this->set_mapping('commentquestion', $oldid, $newid);
+
+		// and this one is for teameval
 		$this->set_mapping('comment_questionid', $oldid, $newid);
 
+	}
+
+	public function process_commentresponse($response) {
+		global $DB;
+
+		$response = (object)$response;
+
+		$response->questionid = $this->get_new_parentid('commentquestion');
+		$response->fromuser = $this->get_mappingid('user', $response->fromuser);
+		$response->touser = $this->get_mappingid('user', $response->touser);
+
+		$DB->insert_record('teamevalquestion_comment_res', $response);
 	}
 
 	//TODO: if restore failed and teameval_questions was not updated, delete these rows

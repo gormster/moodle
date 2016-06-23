@@ -26,6 +26,8 @@ class response implements \local_teameval\response_feedback {
         foreach ($comments as $comment) {
             $this->comments[$comment->touser] = $comment;
         }
+
+        $this->fix_responses();
     }
 
     public function marks_given() {
@@ -69,7 +71,7 @@ class response implements \local_teameval\response_feedback {
     public function opinion_of_readable($userid, $source = null) {
         if ($source == 'teamevalreport_responses') {
             $comment = null;
-            if ($this->marks_given()) {
+            if (isset($this->comments[$userid])) {
                 $comment = $this->comments[$userid]->comment;
             }
             return new output\opinion_readable_short($comment);
@@ -90,6 +92,20 @@ class response implements \local_teameval\response_feedback {
 
     public function render_for_report() {
         return new output\response_report($this->teameval, $this->userid, $this->question, $this);
+    }
+
+    /**
+     * Constrains the given responses to the actual teammates of this user
+     */
+    protected function fix_responses() {
+        if ($this->marks_given()) {
+            $teammates = $this->teameval->teammates($this->userid);
+            foreach($this->comments as $k => $v) {
+                if (!isset($teammates[$k])) {
+                    unset($this->comments[$k]);
+                }
+            }
+        }
     }
 
 }
