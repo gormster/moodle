@@ -936,7 +936,7 @@ class team_evaluation {
 
         // Next check if everyone in their group has submitted OR the deadline has passed
 
-        if ($this->get_settings()->deadline < time()) {
+        if (($this->get_settings()->deadline > 0) && ($this->get_settings()->deadline < time())) {
             return true;
         }
 
