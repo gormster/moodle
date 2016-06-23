@@ -1,0 +1,3 @@
+[submodule "mod/workshep"]
+	path = mod/workshep
+	url = https://github.com/gormster/moodle-mod_workshep
