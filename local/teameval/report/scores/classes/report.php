@@ -18,6 +18,7 @@ class report implements \local_teameval\report {
 
     public function generate_report() {
         $scores = $this->teameval->get_evaluator()->scores();
+        $evalcontext = $this->teameval->get_evaluation_context();
 
         $data = [];
         foreach ($scores as $uid => $score) {
@@ -33,9 +34,9 @@ class report implements \local_teameval\report {
         	$datum->group = $group;
         	$datum->grade = $grade;
         	$datum->score = $score;
-        	$datum->intermediategrade = $intermediategrade;
+        	$datum->intermediategrade = $evalcontext->format_grade($intermediategrade);
         	$datum->noncompletionpenalty = $noncompletionpenalty;
-        	$datum->finalgrade = $finalgrade;
+        	$datum->finalgrade = $evalcontext->format_grade($finalgrade);
 
         	$data[$uid] = $datum;
         }

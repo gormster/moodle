@@ -19,7 +19,7 @@ class feedback implements \renderable, \templatable {
 		$this->userid = $userid;
 
 		$adjusted = $teameval->adjusted_grade($userid);
-		$this->score = is_null($adjusted) ? null : round($adjusted, 2);
+		$this->score = is_null($adjusted) ? null : $teameval->get_evaluation_context()->format_grade($adjusted);
 
 		$allquestions = $teameval->get_questions();
 

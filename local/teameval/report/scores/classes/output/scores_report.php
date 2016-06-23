@@ -28,9 +28,9 @@ class scores_report implements \renderable, \templatable {
             $userpic = $output->render(new user_picture($score->user));
             $fullname = fullname($score->user);
             $evalscore = round($score->score, 2);
-            $intergrade = round($score->intermediategrade, 2);
+            $intergrade = $score->intermediategrade;
             $noncomplete = round($score->noncompletionpenalty, 2);
-            $finalgrade = round($score->finalgrade, 2);
+            $finalgrade = $score->finalgrade;
             $ctx[] = ['userpic' => $userpic, 'fullname' => $fullname, 'score' => $evalscore, 'intermediategrade' => $intergrade, 'noncompletionpenalty' => $noncomplete, 'finalgrade' => $finalgrade];
         }
         return ['scores' => $ctx];

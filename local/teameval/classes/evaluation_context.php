@@ -119,6 +119,22 @@ abstract class evaluation_context {
         return $o;
     }
 
+    /**
+     * Grades aren't always out of 100! If you want to make changes to the way teameval presents
+     * grades to your users, you can do it here.
+     */
+    public function format_grade($grade) {
+        $gradeitem = \grade_item::fetch([
+            'itemtype' => 'mod', 
+            'itemmodule' => $this->cm->modname, 
+            'iteminstance' => $this->cm->instance, 
+            'itemnumber' => 0]);
+        if ($gradeitem) {
+            return round($grade, $gradeitem->get_decimals());
+        }
+        return round($grade, 2);
+    }
+
 
 
 

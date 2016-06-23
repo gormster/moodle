@@ -48,7 +48,7 @@ class release implements \renderable, \templatable {
 
             $g = new stdClass;
             $g->gid = $gid;
-            $g->grade = is_null($ggrade) ? '' : round($ggrade, 2);
+            $g->grade = is_null($ggrade) ? '' : $evalcontext->format_grade($ggrade);
             $g->name = $group->name;
             $g->released = in_array($gid, $released_groups);
             $g->overridden = $released_all;            
@@ -64,7 +64,7 @@ class release implements \renderable, \templatable {
                 $u->userpic = $output->render(new user_picture($user));
                 $u->score = isset($scores[$uid]) ? round($scores[$uid], 2) : '-';
                 $u->noncompletionpenalty = round($this->teameval->non_completion_penalty($uid) * 100, 2);
-                $u->grade = is_null($ggrade) ? '-' : round($g->grade * $this->teameval->multiplier_for_user($uid), 2);
+                $u->grade = is_null($ggrade) ? '-' : $evalcontext->format_grade($g->grade * $this->teameval->multiplier_for_user($uid));
                 $u->overridden = ($g->overridden || $g->released);
 
                 $g->users[] = $u;
