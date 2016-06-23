@@ -6,6 +6,7 @@ require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
 abstract class evaluation_context {
 
+    // cm_info
     protected $cm;
 
     /**
@@ -34,6 +35,7 @@ abstract class evaluation_context {
             return false;
         }
 
+        return true;
     }
 
     /**
@@ -158,6 +160,11 @@ abstract class evaluation_context {
     }
 
     public function update_grades($grades) {
+
+        // If evaluation isn't permitted or enabled here, don't do anything
+        if (!$this->evaluation_permitted() || !$this->evaluation_enabled()) {
+            return $grades;
+        }
 
         if (is_object($grades)) {
             $grades = array($grades->userid=>$grades);
