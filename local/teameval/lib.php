@@ -1000,6 +1000,38 @@ class team_evaluation {
 
     // DELETE/RESET
 
+    public static function delete_teameval($id = null, $cmid = null) {
+        global $DB;
+
+        if (empty($id) && empty($cmid)) {
+            throw new coding_exception("id or cmid must be set");
+        }
+
+        if (!empty($cmid)) {
+            $teameval = $DB->get_record('teameval', ['cmid' => $cmid]);
+        } else {
+            $teameval = $DB->get_record('teameval', ['id' => $id]);
+        }
+
+        if (empty($teameval)) {
+            return false;
+        }
+
+        $barequestions = $DB->get_records('teameval_questions', ['teamevalid' => $id]);
+
+        self::delete_questionnaire_f($barequestions);
+
+        if ($cmid) {
+            $DB->delete_records('teameval_release', ['cmid' => $cmid]);
+            $DB->delete_records_list('teameval_rescind', 'questionid', array_keys($barequestions));
+        }
+
+        $DB->delete_records('teameval', ['id' => $teameval->id]);
+
+        return true;
+
+    }
+
     public function reset_userdata() {
         global $DB;
 
@@ -1016,13 +1048,9 @@ class team_evaluation {
         return ['component' => $evalcontext::component_string(), 'item' => get_string('resetresponses', 'local_teameval'), 'error' => false];
     }
 
-    public function delete_questionnaire() {
-        global $DB;
+    protected static function delete_questionnaire_f($barequestions) {
+        global $DB;        
 
-        // We're not using get_questions because that actually instantiates a copy of our question
-        // And since we're in the middle of tearing down our teameval that could be problematic.
-
-        $barequestions = $this->get_bare_questions();
         $sorted = [];
         foreach($barequestions as $barequestion) {
             $sorted[$barequestion->type][] = $barequestion->questionid;
@@ -1035,6 +1063,18 @@ class team_evaluation {
         }
 
         $DB->delete_records_list('teameval_questions','id',array_keys($barequestions));
+
+    }
+
+    public function delete_questionnaire() {
+        global $DB;
+
+        // We're not using get_questions because that actually instantiates a copy of our question
+        // And since we're in the middle of tearing down our teameval that could be problematic.
+
+        $barequestions = $this->get_bare_questions();
+        
+        self::delete_questionnaire_f($barequestions);
 
         $evalcontext = $this->get_evaluation_context();
         return ['component' => $evalcontext::component_string(), 'item' => get_string('resetquestionnaire', 'local_teameval'), 'error' => false];
