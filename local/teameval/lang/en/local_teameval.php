@@ -10,6 +10,16 @@
     $string['subplugintype_teamevalreport'] = 'Report';
     $string['subplugintype_teamevalreport_plural'] = 'Reports';
 
+    $string['teameval:changesettings'] = 'Change team evaluation settings';
+    $string['teameval:createquestionnaire'] = 'Create and edit team evaluation questionnaires';
+    $string['teameval:invalidateassessment'] = 'Invalidate team evaluation assessments';
+    $string['teameval:publishquestionnaire'] = 'Make team evaluation questionnaires available to other users.';
+    $string['teameval:viewtemplate'] = 'Copy questions from this questionnaire into another questionnaire';
+    $string['teameval:submitquestionnaire'] = 'Submit responses to a team evaluation questionnaire';
+    $string['teameval:viewallteams'] = 'View responses from all teams in a team evaluation';
+    $string['teameval:viewownteam'] = 'View responses from user\'s own team in a team evaluation';
+    $string['teameval:viewsubmitternames'] = 'View names of respondants in a team evaluation';
+
     $string['turnonteameval'] = 'Turn On Team Evaluation';
     $string['enablingteameval'] = 'Enabling Team Evaluation...';
     $string['teamevaldisabled'] = 'The current settings in this activity prohibit team evaluation.';
