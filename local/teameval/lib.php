@@ -412,29 +412,29 @@ class team_evaluation {
         require_capability('local/teameval:createquestionnaire', $this->context);
 
         //first assert that $order contains ALL the question IDs and ONLY the question IDs of this teameval
-        $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, questionid');
-        $ids = array_map(function($record) {
-            return $record->questionid;
-        }, $records);
+        $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, qtype, questionid');
 
-        if (count(array_diff($order, $ids)) > 0) {
+        if (count($records) != count($order)) {
             throw new moodle_error('questionidsoutofsync', 'teameval');
         }
 
-        // flip the records so that we've got questionids => ids
-
-        $questionids = [];
+        // flip the records so that we've got type => questionids => ids
+        $questions = [];
         foreach($records as $r) {
-            $questionids[$r->questionid] = $r;
-        }
+            $questions[$r->qtype][$r->questionid] = $r;
+        }        
 
         // set the ordinals according to $order
 
         foreach($order as $i => $qid) {
-            $r = $questionids[$qid];
+            $type = $qid['type'];
+            $id = $qid['id'];
+            if (empty($questions[$type][$id])) {
+                throw new moodle_error('questionidsoutofsync', 'teameval');
+            }
+            $r = $questions[$type][$id];
             $r->ordinal = $i;
-            $bulk = $i == count($order) - 1;
-            $DB->update_record('teameval_questions', $r, $bulk);
+            $DB->update_record('teameval_questions', $r);
         }
 
     }

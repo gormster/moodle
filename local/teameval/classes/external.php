@@ -99,7 +99,10 @@ class external extends external_api {
         return new external_function_parameters([
             'id' => new external_value(PARAM_INT, 'coursemodule id for the teameval'),
             'order' => new external_multiple_structure(
-                new external_value(PARAM_INT, 'list of question IDs')
+                new external_single_structure([
+                    'type' => new external_value(PARAM_PLUGIN, 'question type'),
+                    'id' => new external_value(PARAM_INT, 'question id')
+                ])
             )
         ]);
     }
