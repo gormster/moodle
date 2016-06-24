@@ -55,7 +55,6 @@ require_capability('block/teameval_templates:viewtemplate', $context);
 
 if (!isset($teameval)) {
 	$teameval = team_evaluation::new_with_contextid($contextid);
-	var_dump($teameval);
 	$url = new moodle_url($url, ['id' => $teameval->id]);
 	$url->remove_params('contextid');
 	redirect($url);
