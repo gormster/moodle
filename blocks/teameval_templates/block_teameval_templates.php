@@ -17,7 +17,7 @@ class block_teameval_templates extends block_list {
 	}
 
     public function get_content() {
-    	if ($this->page->user_is_editing()) {
+    	if (has_capability('block/teameval_templates:viewtemplate', $this->page->context) || has_capability('local/teameval:createquestionnaire', $this->page->context)) {
 
     		global $OUTPUT;
 		    
@@ -38,8 +38,10 @@ class block_teameval_templates extends block_list {
 		    	$this->content->icons[] = $OUTPUT->pix_icon('icon', '', 'local_teameval');
 		    }
 
-			$url = new moodle_url('/blocks/teameval_templates/template.php', array('contextid' => $this->page->context->id));
-			$this->content->footer = html_writer::link($url, $OUTPUT->pix_icon('t/add', '') . get_string('newtemplate', 'block_teameval_templates'));
+		    if (has_capability('local/teameval:createquestionnaire', $this->page->context)) {
+				$url = new moodle_url('/blocks/teameval_templates/template.php', array('contextid' => $this->page->context->id));
+				$this->content->footer = html_writer::link($url, $OUTPUT->pix_icon('t/add', '') . get_string('newtemplate', 'block_teameval_templates'));
+			}
 
 		    return $this->content;
 		}
