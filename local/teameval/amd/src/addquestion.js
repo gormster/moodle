@@ -57,7 +57,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				if ($(evt.target).closest('.local-teameval-question-dropdown').length > 0) {
 					var type = $(evt.target).closest('li').data('type');
 					var question = _this.addQuestion(type);
-					_this.editQuestion(question);
+					_this.editQuestion(question, true);
 				}
 				dropdown.remove();
 			});
@@ -66,7 +66,6 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 		addQuestion: function(type) {
 			var _this = this;
-			var context = {'_newquestion' : true, '_id': _id, '_self': _self};
 			var question = $('<li class="local-teameval-question" />');
 			question.data('questiontype', type);
 			var questionContainer = $('<div class="question-container" />');
@@ -122,13 +121,17 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			});
 		},
 
-		editQuestion: function(question) {
+		editQuestion: function(question, newquestion) {
 
 			var editingContext = question.data('editingcontext') || {};
 			var questionType = question.data('questiontype');
 
 			editingContext._id = _id;
 			editingContext._self = _self;
+
+			if (newquestion) {
+				editingContext._newquestion = true;	
+			}
 
 			// hide the action bar
 			question.find('.local-teameval-question-actions').hide();
@@ -290,7 +293,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				var promise = templates.render('local_teameval/add_question', context);
 
 				// we can't continue until we have some text!
-				promise.done(function(html, js) {
+				promise.done(function(html) {
 
 					var rslt = $(html);
 
@@ -342,7 +345,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 					      }
 					}).autocomplete( "instance" )._renderItem = function( ul, item ) {
 				      return $( "<li class='local-teameval-template-search-result'>" )
-				        .append( "<a class='title'>" + item.title + "</a><br><span class='tags'>Matchin tags: " + item.tags.join(', ') + "</span>" )
+				        .append( "<a class='title'>" + item.title + "</a><br>"+
+				        	"<span class='tags'>Matchin tags: " + item.tags.join(', ') + "</span>" )
 				        .appendTo( ul );
 				    };
 
@@ -353,7 +357,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 				    _searchBar.change(function() {
 				    	templateAddButton.prop('disabled', true);
-				    })
+				    });
 					
 				});
 
