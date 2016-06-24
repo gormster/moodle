@@ -14,6 +14,7 @@ use stdClass;
 use context_module;
 use context;
 use coding_exception;
+use local_searchable\searchable;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -73,6 +74,11 @@ class team_evaluation {
 
     public static function new_with_contextid($contextid) {
         return new team_evaluation(0, null, $contextid);
+    }
+
+    public static function exists($id) {
+        global $DB;
+        return $DB->record_exists('teameval', ['id' => $id]);
     }
 
     /**
@@ -156,8 +162,10 @@ class team_evaluation {
                 if (isset($this->cm)) {
                     $settings->cmid = $this->cm->id;
                     unset($settings->title); // real teamevals don't have titles
-                } else {
+                } else if (isset($this->context)) {
                     $settings->contextid = $this->context->id;
+                } else {
+                    throw new coding_exception("Team evaluation does not exist.");
                 }
                 
                 $this->id = $DB->insert_record('teameval', $settings);
@@ -214,6 +222,11 @@ class team_evaluation {
         $record->id = $this->id;
         
         $DB->update_record('teameval', $record);
+
+        // if this is a template or a public questionnaire
+        if (($this->cm == null) || ($this->settings->public)) {
+            $this->update_searchable();
+        }
 
         // if you've changed a setting that could potentiall change grades
         // we need to trigger a grade update
@@ -369,6 +382,10 @@ class team_evaluation {
     }
 
 
+    public function num_questions() {
+        global $DB;
+        return $DB->count_records("teameval_questions", array("teamevalid" => $this->id));
+    }
 
     protected function get_bare_questions() {
         global $DB;
@@ -839,12 +856,56 @@ class team_evaluation {
 
     // TEMPLATES
 
+    public function update_searchable() {
+        $weights = [];
+
+        if (!empty($this->settings->title)) {
+            $titletags = str_word_count($this->settings->title, 1);
+        } else if (!empty($this->cm)) {
+            $titletags = str_word_count($this->cm->name, 1);
+        }
+
+        foreach($titletags as $tag) {
+            $tag = strtolower($tag);
+            $weights[$tag] += 100;
+        }
+
+        $contexttags = str_word_count($this->context->get_context_name(), 1);
+        foreach($contexttags as $tag) {
+            $tag = strtolower($tag);
+            $weights[$tag] += 20;
+        }
+
+        searchable::set_weights('teameval', $this->id, $weights);
+    }
+
     public static function templates_for_context($contextid) {
         global $DB;
         $ids = $DB->get_records('teameval', ['contextid' => $contextid], 'UPPER(title) ASC', 'id');
         return array_map(function($id) {
             return new team_evaluation($id);
         }, array_keys($ids));
+    }
+
+    public function add_questions_from_template($template) {
+        global $USER;
+
+        $questions = $template->get_questions();
+        $base = $this->num_questions();
+
+        foreach($questions as $ordinal => $question) {
+            $transaction = $this->should_update_question($question->type, 0, $USER->id);
+            if ($transaction) {
+                $qclass = $question->plugininfo->get_question_class();
+                $newquestionid = $qclass::duplicate_question($question->questionid);
+                if ($newquestionid) {
+                    $this->update_question($transaction, $question->type, $newquestionid, $base + $ordinal);
+                } else {
+                    $exc = new coding_exception("Question type $question->type does not implement duplicate_question correctly.");
+                    $transaction->rollback($exc);
+                }
+            }
+        }
     }
 
     // MARK RELEASE
@@ -1219,6 +1280,14 @@ interface question {
     public function is_feedback_anonymous();
 
     public function render_for_report($groupid = null);
+
+    /**
+     * Make a new copy of this question. We handle calling should_update_question and update_question.
+     * @param int $questionid The ID of the old question
+     * @param team_evaluation $newteameval The new team evaluation your question is being copied into.
+     * @return int The questionid for the new question (that would normally be passed to update_question)
+     */
+    public static function duplicate_question($questionid, $newteameval);
 
     /**
      * Delete these questions from disk.

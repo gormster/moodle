@@ -76,4 +76,6 @@
     $string['resetresponses'] = 'Delete all team evaluation responses';
     $string['resetquestionnaire'] = 'Delete all questions from team evaluation questionnaire';
 
+    $string['addquestionsfrom'] = 'Add questions from template:';
+
 ?>

@@ -62,6 +62,23 @@ $functions = [
         'type'          => 'read',
         'requiredcapability' => 'local/teameval:createquestionnaire',
 
+    ],
+
+    'local_teameval_template_search' => [
+
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'template_search',
+        'type'          => 'read'
+
+    ],
+
+    'local_teameval_add_from_template' => [
+
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'add_from_template',
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
+
     ]
     
 ]

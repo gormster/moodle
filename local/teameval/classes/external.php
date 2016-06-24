@@ -11,6 +11,9 @@ use external_multiple_structure;
 use invalid_parameter_exception;
 
 use stdClass;
+use local_searchable\searchable;
+use context;
+use context_module;
 
 require_once(dirname(dirname(__FILE__)) . '/lib.php');
 
@@ -221,6 +224,160 @@ class external extends external_api {
 
     public static function get_release_is_allowed_from_ajax() { return true; }
 
+    /* template_search */
+
+    public static function template_search_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'id of this teameval'),
+            'term' => new external_value(PARAM_RAW, 'search term')
+        ]);
+    }
+
+    public static function template_search_returns() {
+        return new external_multiple_structure(
+            new external_single_structure([
+                'id' => new external_value(PARAM_INT, 'template id'),
+                'title' => new external_value(PARAM_RAW, 'template title'),
+                'tags' => new external_multiple_structure(
+                    new external_value(PARAM_RAW, 'matching tags')
+                )
+            ])
+        );
+    }
+
+    public static function template_search($id, $term) {
+        global $DB;
+
+        // We should do this now because otherwise we get a coding_exception
+        if (team_evaluation::exists($id) == false) {
+            throw new invalid_parameter_exception("Team evaluation $id does not exist");
+        }
+
+        $teameval = new team_evaluation($id);
+
+        require_capability('local/teameval:createquestionnaire', $teameval->get_context());
+
+        // now, search!
+
+        $query = str_word_count($term, 1);
+        $query = array_map("strtolower", $query);
+        $results = [];
+
+        $offset = 0;
+
+        $blockinstalled = !is_null(get_capability_info('blocks/teameval_templates:viewtemplate'));
+
+        while(count($results) < 20) {
+            $newresults = searchable::results('teameval', $query, true, 20, $offset);
+            $offset += count($newresults);
+
+            // we could actually spin up a team_evaluation for each result
+            // but that would be pretty expensive for our purposes.
+
+            $ids = array_map(function($i) { return $i->objectid; }, $newresults);
+
+            $records = $DB->get_records_list('teameval', 'id', $ids, '', 'id, cmid, contextid, title');
+
+            foreach($newresults as $result) {
+                $record = $records[$result->objectid];
+
+                if (!empty($record->cmid)) {
+                    $context = context_module::instance($record->cmid);
+                } else if (!empty($record->contextid)) {
+                    $context = context::instance_by_id($record->contextid);
+                }
+
+                if (isset($context) && 
+                    ($blockinstalled && has_capability('blocks/teameval_templates:viewtemplate', $context) ||
+                    (has_capability('local/teameval:viewtemplate', $context)))) {
+
+                    if (!empty($record->title)) {
+                        $title = $record->title;
+                    } else {
+                        $title = $context->get_context_name();
+                    }
+
+                    $tags = $result->tags;
+                    $results[] = ['title' => $record->title, 'id' => $record->id, 'tags' => $tags];
+                }
+            }
+
+            if (count($newresults) < 20) {
+                // we've reached the end of the results
+                break;
+            }
+
+        }
+
+        return $results;
+
+    }
+
+    public static function template_search_is_allowed_from_ajax() { return true; }
+
+    /* add_from_template */
+
+    public static function add_from_template_parameters() {
+        return new external_function_parameters([
+            'from' => new external_value(PARAM_INT, 'id of teameval to add questions from'),
+            'to' => new external_value(PARAM_INT, 'id of teameval to add questions to')
+        ]);
+    }
+
+    public static function add_from_template_returns() {
+        return new external_multiple_structure(
+            new external_single_structure([
+                'type' => new external_value(PARAM_PLUGIN, 'question type'),
+                'questionid' => new external_value(PARAM_INT, 'question id'),
+                'submissioncontext' => new external_value(PARAM_RAW, 'json encoded submission context'),
+                'editingcontext' => new external_value(PARAM_RAW, 'json encoded editing context')
+            ])
+        );
+    }
+
+    public static function add_from_template($from, $to) {
+        global $USER;
+
+        if ((!team_evaluation::exists($from)) || (!team_evaluation::exists($to))) {
+            throw new invalid_parameter_exception("Teameval does not exist");
+        }
+
+        $from = new team_evaluation($from);
+        $to = new team_evaluation($to);
+
+        $blockinstalled = !is_null(get_capability_info('blocks/teameval_templates:viewtemplate'));
+
+        $canread = $blockinstalled && has_capability('blocks/teameval_templates:viewtemplate', $from->get_context());
+
+        if (!$canread) {
+            require_capability('local/teameval:viewtemplate', $from->get_context());
+        }
+
+        require_capability('local/teameval:createquestionnaire', $to->get_context());
+
+        // now that we've settled you can do it, let's add the questions
+
+        $oldquestions = $to->num_questions();
+
+        $to->add_questions_from_template($from);
+
+        $newquestions = array_slice($to->get_questions(), $oldquestions);
+
+        $returns = [];
+        foreach($newquestions as $q) {
+            $r = new stdClass;
+            $r->type = $q->type;
+            $r->questionid = $q->questionid;
+            $r->submissioncontext = $q->question->submission_view($USER->id);
+            $r->editingcontext = $q->question->editing_view();
+            $returns[] = $r;
+        }
+
+        return $returns;
+
+    }
+
+    public static function add_from_template_is_allowed_from_ajax() { return true; }
 }
 
 ?>

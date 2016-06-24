@@ -94,7 +94,7 @@
         font-weight: bold;
     }
 
-#local-teameval-add-question a::before {
+.local-teameval-add-question a::before {
     content: url([[pix:core|t/add]]);
 }
 
@@ -116,6 +116,40 @@
     .local-teameval-question-dropdown li:hover {
         background-color:#CCC;
     }
+
+.local-teameval-template-search {
+    margin: auto;
+    width: 50%;
+    text-align: center;
+}
+
+.local-teameval-template-search .ui-autocomplete-loading {
+    background: white url([[pix:core|i/loading_small]]) right center no-repeat;
+}
+
+li.local-teameval-template-search-result {
+    text-align: left;
+    list-style: none;
+    background-color: white;
+    border: 1px solid #999;
+    padding: .5em;
+    margin: 5px;
+}
+
+li.local-teameval-template-search-result .title {
+    font-size: 110%;
+    font-weight: bold;
+}
+
+li.local-teameval-template-search-result .tags {
+    font-size: 80%;
+    color: #999;
+    font-style: italic;
+}
+
+.local-teameval-template-search input {
+    width: 100%;
+}
 
 .local-teameval-questionnaire .deadline {
     font-size: 135%;

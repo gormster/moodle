@@ -23,6 +23,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 	var _addButton;
 
+	var _searchBar;
+
 	return {
 
 		// Ask the user what kind of question they want to add
@@ -54,7 +56,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			$(document).one('click', function(evt) {
 				if ($(evt.target).closest('.local-teameval-question-dropdown').length > 0) {
 					var type = $(evt.target).closest('li').data('type');
-					_this.addQuestion(type);
+					var question = _this.addQuestion(type);
+					_this.editQuestion(question);
 				}
 				dropdown.remove();
 			});
@@ -64,22 +67,13 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 		addQuestion: function(type) {
 			var _this = this;
 			var context = {'_newquestion' : true, '_id': _id, '_self': _self};
-			templates.render('teamevalquestion_'+type+'/editing_view', context).done(function(html, js) {
-				var question = $('<li class="local-teameval-question editing" />');
-				question.data('questiontype', type);
-
-				var questionContainer = $('<div class="question-container" />');
-				questionContainer.html(html);
-
-				question.append(questionContainer);
-				$('#local-teameval-questions').append(question);
-				templates.runTemplateJS(js);
-
-				// after we've run JS we can add our edit and delete buttons
-
-				_this.addEditingControls(question);
-
-			});
+			var question = $('<li class="local-teameval-question" />');
+			question.data('questiontype', type);
+			var questionContainer = $('<div class="question-container" />');
+			question.append(questionContainer);
+			$('#local-teameval-questions').append(question);
+			_this.addEditingControls(question);
+			return question;
 		},
 
 		addEditingControls: function(question) {
@@ -214,7 +208,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 		setOrder: function() {
 			var order = $("#local-teameval-questions li").map(function() {
-				return $(this).data('questionid');
+				return {type: $(this).data('questiontype'), id: $(this).data('questionid')};
 			}).filter(function() {
 				return this !== undefined;
 			}).get();
@@ -230,6 +224,37 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			promises[0].done(function() {
 				
 			}).fail(notification.exception);
+		},
+
+		addFromTemplate: function() {
+			var templateid = _searchBar.data('template-id');
+
+			if (templateid > 0) {
+
+				var _this = this;
+
+				var promises = ajax.call([{
+					methodname: 'local_teameval_add_from_template',
+					args: {
+						from: templateid,
+						to: _id
+					}
+				}]);
+
+				promises[0].done(function(questions) {
+					for (var i = 0; i < questions.length; i++) {
+						var qdata = questions[i];
+						var question = _this.addQuestion(qdata.type);
+						question.data('questionid', qdata.questionid);
+						question.data('editingcontext', qdata.editingcontext);
+						question.data('submissioncontext', qdata.submissioncontext);
+						_this.showQuestion(question);
+					}
+					
+				});
+
+				promises[0].fail(notification.exception);
+			}
 		},
 
 		initialise: function(teamevalid, self, subplugins, locked) {
@@ -261,30 +286,74 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 				// We need some strings before we can render the button
 
-				var stringsNeeded = ['addquestion'];
-
-				var promise = str.get_strings(stringsNeeded.map(function (v) {
-					return {key: v, component: 'local_teameval'};
-				}));
+				var context = {};
+				var promise = templates.render('local_teameval/add_question', context);
 
 				// we can't continue until we have some text!
-				promise.done(function(_strings) {
+				promise.done(function(html, js) {
 
-					// The underscore (_) object holds all the strings, keyed to their original keys
-					var _ = {};
-					for (var i = _strings.length - 1; i >= 0; i--) {
-						_[stringsNeeded[i]] = _strings[i];
-					}
+					var rslt = $(html);
 
 					// Find the question container and add the button after it
 					var questionContainer = $('#local-teameval-questions');
-					var addQuestionButton = $('<div id="local-teameval-add-question" class="mdl-right" />');
-					addQuestionButton.html('<a href="javascript:void(0);">' + _.addquestion + '</a>');
-					questionContainer.after(addQuestionButton);
+					questionContainer.after(rslt);
 
-					addQuestionButton.find('a').click(_this.preAddQuestion.bind(_this));
+					_addButton = rslt.filter('.local-teameval-add-question');
+					_addButton.find('a').click(_this.preAddQuestion.bind(_this));
 
-					_addButton = addQuestionButton;
+
+					var templateSearch = rslt.filter('.local-teameval-template-search');
+
+					var templateAddButton = templateSearch.find('button');
+				    templateAddButton.click(_this.addFromTemplate.bind(_this));
+				    templateAddButton.prop('disabled', true);
+
+					_searchBar = templateSearch.find('input');
+					_searchBar.autocomplete({
+						minLength: 2,
+						source: function(request, response) {
+							var promises = ajax.call([{
+								methodname: 'local_teameval_template_search',
+								args: {
+									id: _id,
+									term: request.term
+								}
+							}]);
+
+							promises[0].done(function(results) {
+								response(results);
+							});
+
+							promises[0].fail(notification.exception);
+						},
+						focus: function( event, ui ) {
+					        _searchBar.val( ui.item.title );
+					        return false;
+					      },
+						select: function( event, ui ) {
+							if (ui.item) {
+						        _searchBar.val( ui.item.title );
+						        _searchBar.data('template-id', ui.item.id);
+						        templateAddButton.prop('disabled', false);
+						    } else {
+						    	templateAddButton.prop('disabled', true);
+						    }
+					        return false;
+					      }
+					}).autocomplete( "instance" )._renderItem = function( ul, item ) {
+				      return $( "<li class='local-teameval-template-search-result'>" )
+				        .append( "<a class='title'>" + item.title + "</a><br><span class='tags'>Matchin tags: " + item.tags.join(', ') + "</span>" )
+				        .appendTo( ul );
+				    };
+
+				    _searchBar.focus(function() {
+				    	_searchBar.val('');
+				    	templateAddButton.prop('disabled', true);
+				    });
+
+				    _searchBar.change(function() {
+				    	templateAddButton.prop('disabled', true);
+				    })
 					
 				});
 

@@ -72,8 +72,10 @@ class team_evaluation_block implements renderable {
             $cancreate = has_capability('local/teameval:createquestionnaire', $this->teameval->get_context());
             $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false);
 
+            $cm = $teameval->get_coursemodule();
+
             // If the user can create questionnaires, then check against null (the general case).
-            if ($teameval->get_evaluation_context()->evaluation_permitted($cancreate ? null : $USER->id) == false) {
+            if ($cm && $teameval->get_evaluation_context()->evaluation_permitted($cancreate ? null : $USER->id) == false) {
 
                 $this->disabled = true;
 
@@ -88,7 +90,6 @@ class team_evaluation_block implements renderable {
                 $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
                 $this->questions = $this->teameval->get_questions();
 
-                $cm = $teameval->get_coursemodule();
                 if ($cm) {
                     $this->cm = $cm;
 

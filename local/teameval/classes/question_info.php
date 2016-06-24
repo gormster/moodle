@@ -52,6 +52,7 @@ class question_info {
 			case "questionid":
 			case "submissiontemplate":
 			case "editingtemplate":
+			case "type":
 				$name = '_'.$name;
 				return $this->$name;
 		}

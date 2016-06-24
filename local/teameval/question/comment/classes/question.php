@@ -136,4 +136,14 @@ class question implements \local_teameval\question {
         $DB->delete_records_list('teamevalquestion_comment_res', 'questionid', $ids);
     }
 
+    public static function duplicate_question($questionid, $newteameval) {
+        global $DB;
+
+        $record = $DB->get_record('teamevalquestion_comment', ['id' => $questionid]);
+        unset($record->id);
+        $newid = $DB->insert_record('teamevalquestion_comment', $record);
+
+        return $newid;
+    }
+
 }

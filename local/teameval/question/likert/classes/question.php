@@ -305,6 +305,16 @@ class question implements \local_teameval\question {
         throw new coding_exception("not implemented");
     }
 
+    public static function duplicate_question($questionid, $newteameval) {
+        global $DB;
+
+        $record = $DB->get_record('teamevalquestion_likert', ['id' => $questionid]);
+        unset($record->id);
+        $newid = $DB->insert_record('teamevalquestion_likert', $record);
+
+        return $newid;
+    }
+
     public static function delete_questions($ids) {
         global $DB;
 

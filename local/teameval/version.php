@@ -2,7 +2,7 @@
     
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2016062101;
+$plugin->version  = 2016062403;
 $plugin->requires = 2015051100;  // Requires this Moodle version.
 $plugin->component = 'local_teameval';
 $plugin->dependencies = array(
