@@ -32,6 +32,10 @@ Sometimes, changing team evaluation settings will change the final grades of you
 
 There are optionally some more methods you could implement.
 
+### __construct
+
+Technically, you don't need to override this method; you can just call it with the cm_info for your module. However, it will probably make your life a lot easier to override it and store some more context data. For example, if your plugin is encapsulated in a class, storing the instance of it will probably make your life a lot easier.
+
 ### plugin_namespace
 
 When we need to scope things according to your plugin, we use this function. Normally it just returns the top-level namespace of the calling class, but if you're using teameval in a subplugin, or if your evaluation_context is defined in the global namespace, you should override this with a unique namespace for your plugin. (The namespace convention for moodle is plugintype_pluginname, like mod_assign or block_messages).
@@ -94,4 +98,60 @@ That's it! Teameval handles all the UI from there.
 
 ## Implement reset methods
 
-TODO
+There's one last thing to do, and it's all about course reset. There's three methods that are called on your plugin when the course is reset: YOURMODULE_reset_course_form_definition, YOURMODULE_reset_course_form_defaults, and finally YOURMODULE_reset_userdata. For each of these there's a corresponding evaluation_context method.
+
+Unlike previous calls where you would call a convenience method to get your evaluation_context, these first two methods require you to directly call on to your evaluation_context subclass. That's because they're declared static; we're talking about the plugin generally, not a specific course module. So, in your reset_course_form_definition function, you should call ::reset_course_form_definition on *your evaluation_context subclass*.
+
+So if you've declared your evaluation_context subclass in the modern Moodle namespace format in your module's classes directory, it would look like
+
+    function YOURMODULE_reset_course_form_definition($mform) {
+
+        // your form definition goes here...
+
+        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
+        if ($teameval_plugin) {
+            \mod_YOURMODULE\evaluation_context::reset_course_form_definition($mform);
+        }
+
+    }
+
+    function YOURMODULE_reset_course_form_defaults($course) {
+
+        $defaults = array();
+
+        // set your form defaults here...
+
+        $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
+        if ($teameval_plugin) {
+            \mod_YOURMODULE\evaluation_context::reset_course_form_defaults($mform);
+        }
+
+    }
+
+The actual reset is a little more complicated, and will likely be tailored to your specific module. But unlike before, when you call reset, you're resetting the data for a specific module, so it's declared as a normal method on evaluation_context. That means you can use YOURMODULE_get_evaluation_context, but if you've already spun up an instance of your module, it might be faster to call your evaluation_context's constructor directly. That's something you will have to decide for yourself; for simplicity, we're going to call get_evaluation_context in this example.
+
+Probably somewhere in your reset function is a loop over all the modules in your course; you should call reset_userdata at the end of each iteration.
+
+    function YOURMODULE_reset_userdata($data) {
+
+        // your reset function goes here
+
+        foreach($module in $modules) {
+
+            // code goes here to reset the module
+
+            // assuming you store a cm_info object somewhere in your module class
+            $evalcontext = YOURMODULE_get_evaluation_context($module->cm);
+            $evalcontext->reset_userdata($data);
+
+        }
+
+    }
+
+## Test your implementation
+
+At this point you want to go through each of your module's user stories and make sure that team evaluation is working as expected. If your Moodle is in developer mode (i.e. debug is set to E_ALL | E_STRICT and debugdisplay is on) then you'll get a handy "Randomise" button at the bottom of each evaluation form; this will insert random values into each question. It can also leave some questions incomplete, if you want to test that path as well.
+
+## You're done!
+
+Ship it!
