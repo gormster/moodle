@@ -35,7 +35,7 @@ class block_teameval_templates extends block_list {
 		    foreach($all_teamevals as $teameval) {
 		    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id));
 		    	$this->content->items[] = html_writer::link($url, $teameval->get_settings()->title);
-		    	$this->content->icons[] = $OUTPUT->pix_icon('s/dead', 'change this');
+		    	$this->content->icons[] = $OUTPUT->pix_icon('icon', '', 'local_teameval');
 		    }
 
 			$url = new moodle_url('/blocks/teameval_templates/template.php', array('contextid' => $this->page->context->id));
