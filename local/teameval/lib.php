@@ -28,6 +28,18 @@ define(__NAMESPACE__ . '\FEEDBACK_APPROVED', 1);
 define(__NAMESPACE__ . '\LOCKED_REASON_VISIBLE', -1);
 define(__NAMESPACE__ . '\LOCKED_REASON_MARKED', -2);
 
+// TODO
+// This should be in its own class in /classes
+// In fact it should be a family of classes. There's way too much in here.
+// At a first look, these things need to be factored out into controllers:
+// questionnaire_controller (handling the questions)
+// reset_controller (handling deletion and reset)
+// evaluation_controller (handling the evaluators and grade updates)
+// release_controller (handling mark release)
+// rescind_controller (handling feedback approve/rescind)
+// 
+// Also all those namespaced constants should probably be class constants.
+
 class team_evaluation {
 
     protected $id;

@@ -7,6 +7,14 @@ use local_teameval\output\team_evaluation_block;
 use local_teameval\forms;
 use stdClass;
 
+// TODO
+// This violates a number of renderer principles. There's a bunch of things here that should:
+// a) be moved to team_evaluation_block::__construct
+// b) be moved to their own renderable class
+//
+// Also: are we supposed to check permissions here? It feels right, because this is the last
+// stop before output, but it also feels like a violation of principles. Not sure.
+
 class renderer extends plugin_renderer_base {
 
     public function render_team_evaluation_block(team_evaluation_block $block) {
