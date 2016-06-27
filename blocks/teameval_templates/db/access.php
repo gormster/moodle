@@ -26,6 +26,18 @@
             'manager' => CAP_ALLOW
         )
 
+    ),
+
+    'block/teameval_templates:deletetemplate' => array(
+
+        'captype' => 'write',
+        'riskbitmask' => RISK_DATALOSS,
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'coursecreator' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+
     )
 
 

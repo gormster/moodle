@@ -8,6 +8,7 @@ require_once($CFG->dirroot . '/local/teameval/lib.php');
 
 use local_teameval\team_evaluation;
 use block_teameval_templates\output\title;
+use block_teameval_templates\output\deletebutton;
 
 $id = optional_param('id', 0, PARAM_INT);
 $contextid = optional_param('contextid', 0, PARAM_INT);
@@ -69,7 +70,16 @@ $title = new title($teameval);
 echo $output->render($title);
 
 $teameval_renderer = $PAGE->get_renderer('local_teameval');
-$teameval = new \local_teameval\output\team_evaluation_block($teameval);
-echo $teameval_renderer->render($teameval);
+$teameval_block = new \local_teameval\output\team_evaluation_block($teameval);
+echo $teameval_renderer->render($teameval_block);
+
+// If we're a bigshot user capable of deletion OR
+// if we've just made this template and it still has no questions
+
+if (has_capability('block/teameval_templates:deletetemplate', $context) ||
+	($teameval->num_questions() == 0)) {
+	$deletebutton = new deletebutton($teameval);
+	echo $output->render($deletebutton);
+}
 
 echo $output->footer();
