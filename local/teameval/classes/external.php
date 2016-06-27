@@ -238,6 +238,7 @@ class external extends external_api {
             new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'template id'),
                 'title' => new external_value(PARAM_RAW, 'template title'),
+                'from' => new external_value(PARAM_RAW, 'template location'),
                 'tags' => new external_multiple_structure(
                     new external_value(PARAM_RAW, 'matching tags')
                 )
@@ -265,40 +266,24 @@ class external extends external_api {
 
         $offset = 0;
 
-        $blockinstalled = !is_null(get_capability_info('blocks/teameval_templates:viewtemplate'));
-
         while(count($results) < 20) {
             $newresults = searchable::results('teameval', $query, true, 20, $offset);
             $offset += count($newresults);
 
-            // we could actually spin up a team_evaluation for each result
-            // but that would be pretty expensive for our purposes.
-
-            $ids = array_map(function($i) { return $i->objectid; }, $newresults);
-
-            $records = $DB->get_records_list('teameval', 'id', $ids, '', 'id, cmid, contextid, title');
-
             foreach($newresults as $result) {
-                $record = $records[$result->objectid];
-
-                if (!empty($record->cmid)) {
-                    $context = context_module::instance($record->cmid);
-                } else if (!empty($record->contextid)) {
-                    $context = context::instance_by_id($record->contextid);
+                if (!team_evaluation::exists($result->objectid)) {
+                    continue;
                 }
 
-                if (isset($context) && 
-                    ($blockinstalled && has_capability('blocks/teameval_templates:viewtemplate', $context) ||
-                    (has_capability('local/teameval:viewtemplate', $context)))) {
+                $teameval = new team_evaluation($result->objectid);
 
-                    if (!empty($record->title)) {
-                        $title = $record->title;
-                    } else {
-                        $title = $context->get_context_name();
-                    }
+                $context = $teameval->get_context();
+
+                if ($teameval->questionnaire_is_visible()) {
 
                     $tags = $result->tags;
-                    $results[] = ['title' => $record->title, 'id' => $record->id, 'tags' => $tags];
+                    
+                    $results[] = ['title' => $teameval->get_title(), 'id' => $teameval->id, 'from' => $context->get_context_name(), 'tags' => $tags];
                 }
             }
 

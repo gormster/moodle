@@ -246,6 +246,16 @@ class team_evaluation {
         return null;
     }
 
+    public function get_title() {
+        if (isset($this->cm)) {
+            return $this->cm->name;
+        } else if (isset($this->settings->title)) {
+            return $this->settings->title;
+        } else {
+            return $this->get_context()->get_context_name();
+        }
+    }
+
     public function __get($k) {
         switch($k) {
             case 'id':
@@ -852,6 +862,14 @@ class team_evaluation {
 
         return $feedbacks;
 
+    }
+
+    public function questionnaire_is_visible($userid = null) {
+        $blockinstalled = !is_null(get_capability_info('blocks/teameval_templates:viewtemplate'));
+        return (
+            ($blockinstalled && has_capability('blocks/teameval_templates:viewtemplate', $this->context, $userid)) ||
+            has_capability('local/teameval:viewtemplate', $this->context, $userid)
+            );
     }
 
     // TEMPLATES

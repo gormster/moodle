@@ -346,7 +346,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 					}).autocomplete( "instance" )._renderItem = function( ul, item ) {
 				      return $( "<li class='local-teameval-template-search-result'>" )
 				        .append( "<a class='title'>" + item.title + "</a><br>"+
-				        	"<span class='tags'>Matchin tags: " + item.tags.join(', ') + "</span>" )
+				        	"<span class='subtitle'>From <strong>" + item.from + "</strong> • " + 
+				        	"Matching tags: " + item.tags.join(', ') + "</span>" )
 				        .appendTo( ul );
 				    };
 
