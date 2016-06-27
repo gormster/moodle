@@ -1144,7 +1144,7 @@ class team_evaluation {
 
         $sorted = [];
         foreach($barequestions as $barequestion) {
-            $sorted[$barequestion->type][] = $barequestion->questionid;
+            $sorted[$barequestion->qtype][] = $barequestion->questionid;
         }
 
         $questionplugins = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
