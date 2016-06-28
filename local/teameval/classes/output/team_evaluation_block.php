@@ -97,8 +97,8 @@ class team_evaluation_block implements renderable {
                     if ($this->locked !== false) {
                         list($reason, $user) = $this->locked;
                         $this->locked = true;
-                        $this->lockedreason = $teameval->questionnaire_locked_reason($reason);
-                        $this->lockedhint = $teameval->questionnaire_locked_hint($reason, $user);
+                        $this->lockedreason = team_evaluation::questionnaire_locked_reason($reason);
+                        $this->lockedhint = team_evaluation::questionnaire_locked_hint($reason, $user);
                     }
 
                     if ($cancreate) {

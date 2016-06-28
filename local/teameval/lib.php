@@ -513,7 +513,7 @@ class team_evaluation {
     /**
      * The reason why this questionnaire is locked.
      */
-    public function questionnaire_locked_reason($reason) {
+    public static function questionnaire_locked_reason($reason) {
 
         switch($reason) {
             case LOCKED_REASON_VISIBLE:
@@ -528,7 +528,7 @@ class team_evaluation {
     /**
      * This function gives help text to the user on why their questionnaire is locked.
      */
-    public function questionnaire_locked_hint($reason, $user) {
+    public static function questionnaire_locked_hint($reason, $user) {
 
         switch($reason) {
             case LOCKED_REASON_VISIBLE:
