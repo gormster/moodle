@@ -41,3 +41,7 @@
 .teameval-template-tree li.teameval-template-item {
 	list-style-image: url([[pix:local_teameval|icon]]);
 }
+.teameval-templates-delete-button {
+	text-align: center;
+	padding: 1em 0;
+}
