@@ -16,6 +16,14 @@ $functions = [
         'methodname'    => 'delete_template',
         'type'          => 'write'
         
-    ]
+    ],
+
+    'block_teameval_templates_add_to_module' => [
+        
+        'classname'     => 'block_teameval_templates\external',
+        'methodname'    => 'add_to_module',
+        'type'          => 'write'
+        
+    ],
 
 ];

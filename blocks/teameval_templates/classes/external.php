@@ -11,6 +11,7 @@ use external_multiple_structure;
 use invalid_parameter_exception;
 
 use local_teameval\team_evaluation;
+use local_teameval\evaluation_context;
 use stdClass;
 
 class external extends external_api {
@@ -79,5 +80,100 @@ class external extends external_api {
 	}
 
 	public static function delete_template_is_allowed_from_ajax() { return true; }
+
+	/* add_to_module */
+
+	public static function add_to_module_parameters() {
+		return new external_function_parameters([
+            'from' => new external_value(PARAM_INT, 'id of teameval to add questions from'),
+            'to' => new external_value(PARAM_INT, 'cmid of activity to add questions to')
+        ]);
+	}
+
+	public static function add_to_module_returns() {
+		return new external_value(PARAM_URL, 'url to redirect to');
+	}
+
+	public static function add_to_module($from, $to) {
+
+		if (!team_evaluation::exists($from)) {
+            throw new invalid_parameter_exception("Teameval does not exist");
+        }
+
+		$cm = get_course_and_cm_from_cmid($to)[1];
+		$evalcontext = evaluation_context::context_for_module($cm);
+
+		if ($evalcontext->evaluation_permitted() == false) {
+			throw new invalid_parameter_exception("Activity does not support evaluation");
+		}
+
+		// Check that our user can see the source template
+
+        $from = new team_evaluation($from);
+
+        // Okay - teamevals work in a weird way with contexts. You're not necessarily going to have
+        // permission in the actual template's context, but we need to make sure the context you're
+        // reading from is a child of that template's context.
+
+        // In this case, the context we care about is the destination context.
+
+        $ischild = in_array($from->get_context()->id, $cm->context->get_parent_context_ids(true));
+
+        if ($ischild) {
+        	$readcontext = $cm->context;
+		} else {
+			// If the template isn't a context, then there's still the chance you have read permission
+        	// in that template's context.
+			$readcontext = $from->get_context();        	
+		}
+
+        $canread = has_capability('blocks/teameval_templates:viewtemplate', $readcontext);
+
+        if (!$canread) {
+            require_capability('local/teameval:viewtemplate', $readcontext);
+        }
+
+        require_capability('local/teameval:createquestionnaire', $cm->context);
+
+
+		// We might be about to enabled evaluation on this activity, but we can still fail initialisation
+		// if the questionnaire will be immediately locked upon evaluation start. In that case, we should
+		// set evaluation back to disabled.
+		// Check what the enabled setting is now, and make sure to set it back if we fail.
+		$enabled = $evalcontext->evaluation_enabled();
+		$created = false;
+
+		$to = team_evaluation::from_cmid($to);
+
+		// If we've gone from disabled to enabled, temporarily set it back to disabled
+		// (This can pretty much only happen when we're creating a new team evaluation)
+        if (($enabled == false) && ($to->get_settings()->enabled == true)) {
+        	$created = true;
+        	$to->update_settings(['enabled' => false]);
+        }
+
+        $locked = $to->questionnaire_locked();
+        if ($locked) {
+        	list($reason, $user) = $locked;
+        	$reason = team_evaluation::questionnaire_locked_reason($reason);
+        	throw new moodle_exception('questionnairelocked', 'local_teameval', null, $reason);
+        }
+
+        // actually do the thing
+        $to->add_questions_from_template($from);
+
+        // If we changed this value earlier, change it back
+        if ($created) {
+        	$to->update_settings(['enabled' => true]);
+        }
+
+        $redirect = $cm->url;
+        $redirect->set_anchor("team_evaluation");
+
+        return $redirect->out();
+
+	}
+
+	public static function add_to_module_is_allowed_from_ajax() { return true; }
 
 }

@@ -52,6 +52,8 @@ class block_teameval_templates extends block_base {
 
 			    foreach($all_teamevals as $teameval) {
 			    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id));
+		    		$url->param('contextid', $this->page->context->id);
+
                     $link = html_writer::link($url, $teameval->get_title());
 			    	$listitems[] = html_writer::tag('li', $link, ['class' => 'teameval-template-item']);
 			    }

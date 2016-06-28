@@ -147,7 +147,13 @@ abstract class evaluation_context {
      * You should probably not override these, as teameval uses them as well.
      */
 
-    public static function context_for_module($cm) {
+    /**
+     * Get the actual evaluation context for a given module. Does not create or start team evaluation.
+     * @param cm_info $cm The coursemodule object we're interested in
+     * @param bool $throw If you don't care if the module doesn't support team evaluation, pass false
+     * @return type
+     */
+    public static function context_for_module($cm, $throw = true) {
         global $CFG;
 
         $modname = $cm->modname;
@@ -156,7 +162,11 @@ abstract class evaluation_context {
         $function = "{$modname}_get_evaluation_context";
         if (!function_exists($function)) {
             // throw something
-            print_error("noevaluationcontext");
+            if ($throw) {
+                print_error("noevaluationcontext");
+            } else {
+                return null;
+            }
         }
 
         return $function($cm);
