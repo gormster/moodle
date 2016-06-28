@@ -1,7 +1,13 @@
 <div class="teameval-template-title" id="template-title-{{uniqid}}">
+	{{#editable}}
 	<label>{{#str}} templatetitle, block_teameval_templates {{/str}} <input type="text" value="{{title}}" /></label>
 	<button>{{#str}} save, local_teameval {{/str}}</button>
+	{{/editable}}
+	{{^editable}}
+	<h3>{{title}}</h3>
+	{{/editable}}
 </div>
+{{#editable}}
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
 	$('#template-title-{{uniqid}} button').click(function() {
@@ -27,3 +33,4 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
 	});
 });
 {{/js}}
+{{/editable}}
