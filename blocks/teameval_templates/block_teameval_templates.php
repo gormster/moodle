@@ -38,7 +38,9 @@ class block_teameval_templates extends block_base {
 
 		    $contexts = array_reverse($this->page->context->get_parent_contexts(true));
 
-		    foreach($contexts as $context) {
+		    $lists = [];
+
+		    foreach($contexts as  $context) {
 
                 $listitems = [];
 
@@ -54,9 +56,17 @@ class block_teameval_templates extends block_base {
 			    	$listitems[] = html_writer::tag('li', $link, ['class' => 'teameval-template-item']);
 			    }
 
+			    $lists[] = ['heading' => $context->get_context_name(), 'items' => $listitems];
+			}
+
+			foreach($lists as $i => $list) {
+
+				$listitems = $list['items'];
+				$heading = $list['heading'];
+
                 // collapse every list except the last one
                 $class = 'collapsed';
-			    if ($context->id == $this->page->context->id) {
+			    if ($i == count($lists) - 1) {
 				    $class = 'expanded';
 				}
 
