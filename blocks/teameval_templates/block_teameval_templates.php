@@ -2,7 +2,7 @@
 
 use local_teameval\team_evaluation;
 
-class block_teameval_templates extends block_list {
+class block_teameval_templates extends block_base {
     
     public function init() {
         $this->title = get_string('teamevaltemplates', 'block_teameval_templates');
@@ -16,27 +16,58 @@ class block_teameval_templates extends block_list {
 	  );
 	}
 
+    function get_required_javascript() {
+        parent::get_required_javascript();
+        $this->page->requires->js_call_amd('block_teameval_templates/collapsible', 'init', [['target' => '.collapse-label']]);
+    }
+
     public function get_content() {
     	if (has_capability('block/teameval_templates:viewtemplate', $this->page->context) || has_capability('local/teameval:createquestionnaire', $this->page->context)) {
 
     		global $OUTPUT;
 		    
-		    if ($this->content !== null) {
-		      return $this->content;
-		    }
+		    // if ($this->content !== null) {
+		    //   return $this->content;
+		    // }
 	    
 		    $this->content = new stdClass;
 
-		    $this->content->items = [];
-		    $this->content->icons = [];
+		    $this->content->text = html_writer::start_tag('ul', ['class' => 'teameval-template-tree']);
 
-		    $all_teamevals = team_evaluation::templates_for_context($this->page->context->id);
+		    // get all parent contexts of this context, and self
 
-		    foreach($all_teamevals as $teameval) {
-		    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id));
-		    	$this->content->items[] = html_writer::link($url, $teameval->get_settings()->title);
-		    	$this->content->icons[] = $OUTPUT->pix_icon('icon', '', 'local_teameval');
+		    $contexts = array_reverse($this->page->context->get_parent_contexts(true));
+
+		    foreach($contexts as $context) {
+
+                $listitems = [];
+
+		    	$all_teamevals = team_evaluation::templates_for_context($context->id);
+
+                if (count($all_teamevals) == 0) {
+                    continue;
+                }
+
+			    foreach($all_teamevals as $teameval) {
+			    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id));
+                    $link = html_writer::link($url, $teameval->get_title());
+			    	$listitems[] = html_writer::tag('li', $link, ['class' => 'teameval-template-item']);
+			    }
+
+                // collapse every list except the last one
+                $class = 'collapsed';
+			    if ($context->id == $this->page->context->id) {
+				    $class = 'expanded';
+				}
+
+                $content = html_writer::tag('h4', $context->get_context_name(), ['class' => 'collapse-label']);
+                $content .= html_writer::tag('ul', implode('\n', $listitems));
+
+                $this->content->text .= html_writer::tag('li', $content, ['class' => 'collapsible '.$class]);
+
 		    }
+
+            $this->content->text .= html_writer::end_tag('ul');
 
 		    if (has_capability('local/teameval:createquestionnaire', $this->page->context)) {
 				$url = new moodle_url('/blocks/teameval_templates/template.php', array('contextid' => $this->page->context->id));
