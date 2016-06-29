@@ -527,12 +527,14 @@ class team_evaluation {
 
     /**
      * This function gives help text to the user on why their questionnaire is locked.
+     * Why is this static, taking an evalcontext? Because evalcontexts can exist independent
+     * of a team_evaluation.
      */
-    public static function questionnaire_locked_hint($reason, $user) {
+    public static function questionnaire_locked_hint($reason, $user, $evalcontext) {
 
         switch($reason) {
             case LOCKED_REASON_VISIBLE:
-                return $this->evalcontext->questionnaire_locked_hint($user);
+                return $evalcontext->questionnaire_locked_hint($user);
             case LOCKED_REASON_MARKED:
                 return get_string('lockedhintmarked', 'local_teameval');
         }

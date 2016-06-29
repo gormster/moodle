@@ -14,6 +14,8 @@ class team_evaluation_block implements renderable {
 
     public $context;
 
+    public $evalcontext;
+
     public $disabled;
 
     public $locked;
@@ -68,6 +70,7 @@ class team_evaluation_block implements renderable {
 
             $this->teameval = $teameval;
             $this->context = $teameval->get_context();
+            $this->evalcontext = $teameval->get_evaluation_context();
 
             $cancreate = has_capability('local/teameval:createquestionnaire', $this->teameval->get_context());
             $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false);
@@ -75,7 +78,7 @@ class team_evaluation_block implements renderable {
             $cm = $teameval->get_coursemodule();
 
             // If the user can create questionnaires, then check against null (the general case).
-            if ($cm && $teameval->get_evaluation_context()->evaluation_permitted($cancreate ? null : $USER->id) == false) {
+            if ($cm && $this->evalcontext->evaluation_permitted($cancreate ? null : $USER->id) == false) {
 
                 $this->disabled = true;
 
@@ -98,7 +101,7 @@ class team_evaluation_block implements renderable {
                         list($reason, $user) = $this->locked;
                         $this->locked = true;
                         $this->lockedreason = team_evaluation::questionnaire_locked_reason($reason);
-                        $this->lockedhint = team_evaluation::questionnaire_locked_hint($reason, $user);
+                        $this->lockedhint = team_evaluation::questionnaire_locked_hint($reason, $user, $this->evalcontext);
                     }
 
                     if ($cancreate) {
