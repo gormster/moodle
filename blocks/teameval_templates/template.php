@@ -22,7 +22,7 @@ if ($id == 0) {
 	$context = context::instance_by_id($contextid);
 	require_capability('local/teameval:createquestionnaire', $context);
 	$teameval = team_evaluation::new_with_contextid($contextid);
-	$url = new moodle_url($url, ['id' => $teameval->id]);
+	$url = new moodle_url("/blocks/teameval_templates/template.php", ['id' => $teameval->id]);
 	$url->remove_params('contextid');
 	redirect($url);
 }
