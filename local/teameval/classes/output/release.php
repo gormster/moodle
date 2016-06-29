@@ -55,7 +55,7 @@ class release implements \renderable, \templatable {
 
             $g->users = [];
 
-            $users = groups_get_members($gid);
+            $users = $this->teameval->group_members($gid);
             foreach($users as $uid => $user) {
                 $u = new stdClass;
                 $u->id = $uid;

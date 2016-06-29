@@ -548,7 +548,7 @@ class team_evaluation {
      */ 
     protected function group_ready($groupid) {
 
-        $members = $this->_groups_get_members($groupid);
+        $members = $this->group_members($groupid);
         $questions = $this->get_questions();
 
         $ready = true;
@@ -678,7 +678,7 @@ class team_evaluation {
      */
     public function multipliers_for_group($groupid) {
 
-        $users = $this->_groups_get_members($groupid);
+        $users = $this->group_members($groupid);
         $scores = $this->get_scores();
 
         $multipliers = [];
@@ -759,7 +759,7 @@ class team_evaluation {
             return [];
         }
 
-        $members = $this->_groups_get_members($group->id);
+        $members = $this->group_members($group->id);
         
         if($include_self == false) {
             unset($members[$userid]);
@@ -773,14 +773,17 @@ class team_evaluation {
     }
 
     /**
-     * Cached version of groups_get_members.
+     * Cached and filtered version of groups_get_members.
      * @param type $groupid 
      * @return type
      */
-    private function _groups_get_members($groupid) {
+    public function group_members($groupid) {
         $groupcache = self::$groupcache;
         if (!isset($groupcache[$groupid])) {
-            $members = groups_get_members($groupid);   
+            $members = groups_get_members($groupid);
+            $members = array_filter($members, function($u) {
+                return has_capability('local/teameval:submitquestionnaire', $this->context, $u->id);
+            });
             $groupcache[$groupid] = $members; 
         } else {
             $members = $groupcache[$groupid];
@@ -955,7 +958,7 @@ class team_evaluation {
         if ($level == RELEASE_ALL) {
             $this->evalcontext->trigger_grade_update();
         } else if ($level == RELEASE_GROUP) {
-            $users = $this->_groups_get_members($target);
+            $users = $this->group_members($target);
             $this->evalcontext->trigger_grade_update(array_keys($users));
         } else if ($level == RELEASE_USER) {
             $this->evalcontext->trigger_grade_update([$target]);

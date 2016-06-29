@@ -17,7 +17,7 @@ class question_report implements \renderable, \templatable {
 	public function __construct(team_evaluation $teameval, question $question, $groupid) {
 
 		if ($groupid != null) {
-			$this->users = groups_get_members($groupid, user_picture::fields('u'));
+			$this->users = $teameval->group_members($groupid);
 		} else {
 			$this->users = $teameval->get_evaluation_context()->marking_users();
 		}

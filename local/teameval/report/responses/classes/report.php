@@ -38,7 +38,7 @@ class report implements \local_teameval\report {
         $groupmembers = [];
 
         foreach($allgroups as $gid => $grp) {
-        	$groupmembers[$gid] = groups_get_members($gid, user_picture::fields('u'));
+        	$groupmembers[$gid] = $this->teameval->group_members($gid);
         }
 
         foreach($responses as $r) {

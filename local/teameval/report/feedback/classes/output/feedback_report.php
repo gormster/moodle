@@ -29,7 +29,7 @@ class feedback_report implements \renderable, \templatable {
 
 		foreach($groups as $gid => $group) {
 
-			$members = groups_get_members($gid);
+			$members = $teameval->group_members($gid);
 			$this->members[$gid] = $members;
 
 			foreach($members as $uid => $user) {
