@@ -70,6 +70,42 @@ class backup_local_teameval_plugin extends backup_local_plugin {
 
 	}
 
+    protected function define_course_plugin_structure() {
+
+        // Modules will take care of themselves - we need to back up templates in this course
+
+        $plugin = $this->get_plugin_element();
+        $pluginwrapper = new backup_nested_element($this->get_recommended_name());
+        $plugin->add_child($pluginwrapper);
+
+        $teameval = new backup_nested_element('teameval', ['id'],
+            [
+                'title',
+                'enabled',
+                'public',
+                'autorelease',
+                'self',
+                'fraction',
+                'noncompletionpenalty',
+                'deadline'
+            ]);
+        $pluginwrapper->add_child($teameval);
+        $teameval->set_source_table('teameval', array('contextid' => backup::VAR_CONTEXTID));
+
+        $questions = new backup_nested_element('questions');
+        $question = new backup_nested_element('question', ['id'], ['qtype', 'questionid', 'ordinal']);
+        $questions->add_child($question);
+        $teameval->add_child($questions);
+        $question->set_source_table('teameval_questions', ['teamevalid' => backup::VAR_PARENTID], 'ordinal ASC');
+
+        $this->add_subplugin_structure('teamevalquestion', $question, true, 'local', 'teameval');
+
+        // templates don't have userdata so we are DONE.
+        
+        return $plugin;
+
+    }
+
 
 
 

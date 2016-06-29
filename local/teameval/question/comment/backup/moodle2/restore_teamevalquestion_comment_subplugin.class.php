@@ -3,7 +3,12 @@
 class restore_teamevalquestion_comment_subplugin extends restore_subplugin {
 
 	protected function define_question_subplugin_structure() {
-		$userinfo = $this->get_setting_value('userinfo');
+		try {
+			$userinfo = $this->get_setting_value('userinfo');	
+		} catch (base_plan_exception $e) {
+			$userinfo = false;
+		}
+		
 		$paths = [];
 
 		$paths[] = new restore_path_element('commentquestion', $this->get_pathfor('/commentquestion'));

@@ -36,8 +36,6 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 	protected function define_module_plugin_structure() {
         $userinfo = $this->get_setting_value('userinfo');
 
-        $paths = [];
-
         $teameval = new restore_path_element('teameval', $this->get_pathfor('/teameval'));
         $question = new restore_path_element('question', $this->get_pathfor('/teameval/questions/question'));
 
@@ -60,6 +58,19 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         return $paths;
 	}
 
+    protected function define_course_plugin_structure() {
+        $template = new restore_path_element('template', $this->get_pathfor('/teameval'));
+        $question = new restore_path_element('question', $this->get_pathfor('/teameval/questions/question'));
+
+        $question_subplugins = $this->add_subplugin_structure('teamevalquestion', $question, 'local', 'teameval');
+
+        $paths = [$template, $question];
+
+        $paths = array_merge($question_subplugins, $paths);
+
+        return $paths;
+    }
+
 	public function process_teameval($settings) {
 		global $DB;
 
@@ -77,6 +88,17 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 		$this->set_mapping('teameval', $oldid, $newid);
 	}
 
+    public function process_template($settings) {
+        global $DB;
+
+        $settings = (object)$settings;
+        $settings->contextid = $this->task->get_contextid();
+        $oldid = $settings->id;
+        $newid = $DB->insert_record('teameval', $settings);
+
+        $this->set_mapping('template', $oldid, $newid);
+    }
+
 	public function process_question($question) {
 		global $DB;
 		
@@ -86,7 +108,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         // we make the question ID a negative number, to eliminate the possibility of duplicate keys
         $question->questionid = -$question->questionid;
 
-		$question->teamevalid = $this->get_new_parentid('teameval');
+		$question->teamevalid = $this->get_new_parentid('teameval') ?: $this->get_new_parentid('template');
 		$newid = $DB->insert_record('teameval_questions', $question);
 
         $this->set_mapping('question', $oldid, $newid);

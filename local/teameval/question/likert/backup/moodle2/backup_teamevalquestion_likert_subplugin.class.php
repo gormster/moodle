@@ -4,7 +4,11 @@ class backup_teamevalquestion_likert_subplugin extends backup_subplugin {
 
 	public function define_question_subplugin_structure() {
 
-		$userinfo = $this->get_setting_value('userinfo');
+		try {
+			$userinfo = $this->get_setting_value('userinfo');
+		} catch (base_plan_exception $e) {
+			$userinfo = false;
+		}
 
 		$subplugin = $this->get_subplugin_element(null, '../../qtype', 'likert');
 
