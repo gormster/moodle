@@ -99,7 +99,7 @@ class searchable {
 					continue;
 				}
 				$sql[] = $DB->sql_like('tag', '?');
-				$params[] = $term;
+				$params[] = '%' . $DB->sql_like_escape($term) . '%';
 			}
 
 			//no searchable tags, no results
