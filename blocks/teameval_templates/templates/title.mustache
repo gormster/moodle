@@ -10,8 +10,17 @@
 {{#editable}}
 {{#js}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+	
+	$('#template-title-{{uniqid}} input').on('input', function() {
+		$('#template-title-{{uniqid}} button').prop('disabled', ($(this).val().trim().length == 0));
+	});
+
 	$('#template-title-{{uniqid}} button').click(function() {
-		var title = $('#template-title-{{uniqid}} input').val();
+		var title = $('#template-title-{{uniqid}} input').val().trim();
+
+		if (title.length == 0) {
+			Notification.alert("{{#str}} emptytitle, block_teameval_templates {{/str}}");
+		}
 
 		var button = $(this);
 		button.prop('disabled', true);
