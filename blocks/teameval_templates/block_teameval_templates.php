@@ -51,11 +51,11 @@ class block_teameval_templates extends block_base {
                 }
 
 			    foreach($all_teamevals as $teameval) {
-			    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id));
-		    		$url->param('contextid', $this->page->context->id);
+			    	$url = new moodle_url('/blocks/teameval_templates/template.php', array('id' => $teameval->id, 'contextid' => $this->page->context->id));
 
-                    $link = html_writer::link($url, $teameval->get_title());
-			    	$listitems[] = html_writer::tag('li', $link, ['class' => 'teameval-template-item']);
+			    	$link = html_writer::link($url, $teameval->get_title());
+		    		$li = html_writer::tag('li', $link, ['class' => 'teameval-template-item']);
+			    	$listitems[] = $li;
 			    }
 
 			    $lists[] = ['heading' => $context->get_context_name(), 'items' => $listitems];
@@ -72,8 +72,8 @@ class block_teameval_templates extends block_base {
 				    $class = 'expanded';
 				}
 
-                $content = html_writer::tag('h4', $context->get_context_name(), ['class' => 'collapse-label']);
-                $content .= html_writer::tag('ul', implode('\n', $listitems));
+                $content = html_writer::tag('h4', $heading, ['class' => 'collapse-label']);
+                $content .= html_writer::tag('ul', implode("\n", $listitems));
 
                 $this->content->text .= html_writer::tag('li', $content, ['class' => 'collapsible '.$class]);
 

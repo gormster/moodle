@@ -30,6 +30,11 @@
 	content: url([[pix:t/expanded]]);
 }
 
+.teameval-template-tree li.collapsible ul {
+	margin-left: 0;
+	list-style: none;
+}
+
 .teameval-template-tree li.collapsible.collapsed ul {
 	display: none;
 }
@@ -38,8 +43,9 @@
 	display: block;
 }
 
-.teameval-template-tree li.teameval-template-item {
-	list-style-image: url([[pix:local_teameval|icon]]);
+.teameval-template-tree li.teameval-template-item a:before {
+	content: url([[pix:local_teameval|icon]]);
+	padding-right: 5px;
 }
 
 .teameval-templates-add-to-module {
