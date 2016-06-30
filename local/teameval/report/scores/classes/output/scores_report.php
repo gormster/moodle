@@ -29,7 +29,7 @@ class scores_report implements \renderable, \templatable {
             $fullname = fullname($score->user);
             $evalscore = round($score->score, 2);
             $intergrade = $score->intermediategrade;
-            $noncomplete = round($score->noncompletionpenalty, 2);
+            $noncomplete = round($score->noncompletionpenalty * 100, 2);
             $finalgrade = $score->finalgrade;
             $ctx[] = ['userpic' => $userpic, 'fullname' => $fullname, 'score' => $evalscore, 'intermediategrade' => $intergrade, 'noncompletionpenalty' => $noncomplete, 'finalgrade' => $finalgrade];
         }
