@@ -2,8 +2,6 @@
 
 namespace local_teameval;
 
-require_once(dirname(dirname(__FILE__)) . '/lib.php');
-
 abstract class evaluation_context {
 
     // cm_info

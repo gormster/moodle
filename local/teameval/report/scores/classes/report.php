@@ -2,11 +2,10 @@
 
 namespace teamevalreport_scores;
 
-require_once("{$CFG->dirroot}/local/teameval/lib.php");
-
 use stdClass;
+use local_teameval;
 
-class report implements \local_teameval\report {
+class report implements local_teameval\report {
 
     protected $teameval;
 

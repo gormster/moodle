@@ -6,6 +6,7 @@ use plugin_renderer_base;
 use local_teameval\output\team_evaluation_block;
 use local_teameval\forms;
 use stdClass;
+use moodle_url;
 
 // TODO
 // This violates a number of renderer principles. There's a bunch of things here that should:
@@ -134,6 +135,10 @@ class renderer extends plugin_renderer_base {
         if ($questionnaire_locked) {
             $questionnairecontext['lockedreason'] = $block->lockedreason;
             $questionnairecontext['lockedhint'] = $block->lockedhint;
+        }
+
+        if (has_capability('local/teameval:viewtemplate', $context)) {
+            $questionnairecontext['download'] = moodle_url::make_pluginfile_url($context->id, 'local_teameval', 'template', $block->teameval->id, '/', $block->teameval->template_file_name());
         }
 
         $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', $questionnairecontext);

@@ -15,8 +15,6 @@ use local_searchable\searchable;
 use context;
 use context_module;
 
-require_once(dirname(dirname(__FILE__)) . '/lib.php');
-
 class external extends external_api {
 
     /* turn_on */

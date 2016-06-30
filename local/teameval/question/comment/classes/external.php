@@ -3,7 +3,6 @@
 namespace teamevalquestion_comment;
 
 require_once("$CFG->libdir/externallib.php");
-require_once("$CFG->dirroot/local/teameval/lib.php");
 
 use external_api;
 use external_function_parameters;
