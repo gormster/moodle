@@ -11,17 +11,34 @@ use file_picker;
 
 use local_teameval\team_evaluation;
 
-class templateio implements renderable, templatable {
+class add_question implements renderable, templatable {
 	
-	protected $download;
 
 	protected $teamevalid;
 
-	protected $showaddbutton;
+	protected $self;
+
+	protected $locked;
+
+	protected $subplugins;
+
+	protected $showtoolbox;
+
+	protected $download;
 
 	protected $filepickeroptions;
 
-	public function __construct(team_evaluation $teameval) {
+	public function __construct(team_evaluation $teameval, $questiontypes) {
+
+		$this->teamevalid = $teameval->id;
+
+		$this->self = $teameval->get_settings()->self;
+
+		$this->locked = $teameval->questionnaire_locked();
+
+		$this->subplugins = $questiontypes;
+
+		$this->showtoolbox = $teameval->num_questions() == 0;
 
 		$this->download = moodle_url::make_pluginfile_url(
 			$teameval->get_context()->id, 
@@ -30,11 +47,7 @@ class templateio implements renderable, templatable {
 			$teameval->id, 
 			'/', $teameval->template_file_name());
 
-		$this->teamevalid = $teameval->id;
-
-		$this->showaddbutton = ($teameval->questionnaire_locked() === false);
-
-		if ($this->showaddbutton) {
+		if ($this->locked == false) {
 			$options = new stdClass;
 	        $options->accepted_types = '*.mbz';
 	        $options->context = $teameval->get_context();
@@ -49,11 +62,18 @@ class templateio implements renderable, templatable {
 
 		$c = new stdClass;
 
-		$c->download = $this->download;
 		$c->teamevalid = $this->teamevalid;
-		$c->showaddbutton = $this->showaddbutton;
+		$c->self = $this->self;
+		$c->locked = $this->locked;
+		$c->subplugins = [];
+		foreach($this->subplugins as $plugin) {
+			$c->subplugins[] = ['name' => $plugin->name, 'displayname' => $plugin->displayname];
+		}
+		$c->subplugins = json_encode($c->subplugins);
+		$c->download = $this->download;
+		$c->showtoolbox = $this->showtoolbox;
 
-		if ($this->showaddbutton) {
+		if ($this->locked == false) {
 	        $filepicker = new file_picker($this->filepickeroptions);
 	        $c->filepicker = $output->render($filepicker);
 	        $c->filepickerid = $filepicker->options->client_id;

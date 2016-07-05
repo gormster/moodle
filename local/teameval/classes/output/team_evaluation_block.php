@@ -32,6 +32,8 @@ class team_evaluation_block implements renderable {
 
     public $settings;
 
+    public $addquestion;
+
     public $release;
 
     public $feedback;
@@ -77,8 +79,14 @@ class team_evaluation_block implements renderable {
 
             $cm = $teameval->get_coursemodule();
 
+            // If the user can submit and the teameval is not enabled, then hide it from them.
+            if ($cm && $cansubmit && ($this->teameval->get_settings()->enabled == false)) {
+
+                $this->disabled = true;
+
             // If the user can create questionnaires, then check against null (the general case).
-            if ($cm && $this->evalcontext->evaluation_permitted($cancreate ? null : $USER->id) == false) {
+            // Otherwise, we need to hide the questionnaire if evaluation is not currently permitted.
+            } else if ($cm && ($this->evalcontext->evaluation_permitted($cancreate ? null : $USER->id) == false)) {
 
                 $this->disabled = true;
 
@@ -90,7 +98,9 @@ class team_evaluation_block implements renderable {
                 $settings->id = $this->teameval->id;
                 $this->settings = $settings;
 
-                $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+                $questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+                $this->addquestion = new add_question($teameval, $questiontypes);
+
                 $this->questions = $this->teameval->get_questions();
 
                 if ($cm) {

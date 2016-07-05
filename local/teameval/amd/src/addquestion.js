@@ -274,12 +274,22 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			return _initialised.promise();
 		},
 
-		initialise: function(teamevalid, self, subplugins, locked) {
+		initialise: function(options) {
 
-			_id = teamevalid;
-			_self = self;
-			_subplugins = subplugins;
-			_locked = locked;
+			// available options
+			// containers: addButton, templateSearch, templateIO
+			// settings: id, self, locked, download, filepickerid, filepickeritemid, subplugins
+
+			_id = options.id;
+			_self = options.self;
+			_locked = options.locked;
+			_subplugins = options.subplugins;
+			_addButton = options.addButton;
+
+			// some locals. some of these might not be set.
+
+			var templateSearch = options.templateSearch;
+			var templateIO = options.templateIO;
 
 			// stupid javascript scoping
 
@@ -289,6 +299,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 			$('#local-teameval-questions .local-teameval-question').each(function() {
 				_this.addEditingControls($(this));
+			});
+
+			templateIO.find('.template-download').click(function() {
+				window.location.href = options.download;
 			});
 
 			if (!_locked) {
@@ -301,86 +315,90 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 					}
 				});
 
-				// We need some strings before we can render the button
+				_addButton.find('a').click(_this.preAddQuestion.bind(_this));
 
-				var context = {};
-				var promise = templates.render('local_teameval/add_question', context);
+				// SET UP SEARCH BAR
 
-				// we can't continue until we have some text!
-				promise.done(function(html) {
+				var templateAddButton = templateSearch.find('button');
+			    templateAddButton.click(_this.addFromTemplate.bind(_this));
+			    templateAddButton.prop('disabled', true);
 
-					var rslt = $(html);
+				_searchBar = templateSearch.find('input');
+				_searchBar.autocomplete({
+					minLength: 2,
+					source: function(request, response) {
+						var promises = ajax.call([{
+							methodname: 'local_teameval_template_search',
+							args: {
+								id: _id,
+								term: request.term
+							}
+						}]);
 
-					// Find the question container and add the button after it
-					var questionContainer = $('#local-teameval-questions');
-					questionContainer.after(rslt);
+						promises[0].done(function(results) {
+							response(results);
+						});
 
-					_addButton = rslt.filter('.local-teameval-add-question');
-					_addButton.find('a').click(_this.preAddQuestion.bind(_this));
-
-
-					var templateSearch = rslt.filter('.local-teameval-template-search');
-
-					var templateAddButton = templateSearch.find('button');
-				    templateAddButton.click(_this.addFromTemplate.bind(_this));
-				    templateAddButton.prop('disabled', true);
-
-					_searchBar = templateSearch.find('input');
-					_searchBar.autocomplete({
-						minLength: 2,
-						source: function(request, response) {
-							var promises = ajax.call([{
-								methodname: 'local_teameval_template_search',
-								args: {
-									id: _id,
-									term: request.term
-								}
-							}]);
-
-							promises[0].done(function(results) {
-								response(results);
-							});
-
-							promises[0].fail(notification.exception);
-						},
-						focus: function( event, ui ) {
+						promises[0].fail(notification.exception);
+					},
+					focus: function( event, ui ) {
+				        _searchBar.val( ui.item.title );
+				        return false;
+				      },
+					select: function( event, ui ) {
+						if (ui.item) {
 					        _searchBar.val( ui.item.title );
-					        return false;
-					      },
-						select: function( event, ui ) {
-							if (ui.item) {
-						        _searchBar.val( ui.item.title );
-						        _searchBar.data('template-id', ui.item.id);
-						        templateAddButton.prop('disabled', false);
-						    } else {
-						    	templateAddButton.prop('disabled', true);
-						    }
-					        return false;
-					      }
-					}).autocomplete( "instance" )._renderItem = function( ul, item ) {
-				      return $( "<li class='local-teameval-template-search-result'>" )
-				        .append( "<a class='title'>" + item.title + "</a><br>"+
-				        	"<span class='subtitle'>From <strong>" + item.from + "</strong> • " + 
-				        	"Matching tags: " + item.tags.join(', ') + "</span>" )
-				        .appendTo( ul );
-				    };
-
-				    _searchBar.focus(function() {
-				    	_searchBar.val('');
-				    	templateAddButton.prop('disabled', true);
-				    });
-
-				    _searchBar.change(function() {
-				    	templateAddButton.prop('disabled', true);
-				    });
-
-				    // FIRE INITIALISED
-				    if (!_initialised) {
-				    	_initialised = $.Deferred();
-				    }
-				    _initialised.resolve();
-					
+					        _searchBar.data('template-id', ui.item.id);
+					        templateAddButton.prop('disabled', false);
+					    } else {
+					    	templateAddButton.prop('disabled', true);
+					    }
+				        return false;
+				      }
 				});
+
+			    _searchBar.focus(function() {
+			    	_searchBar.val('');
+			    	templateAddButton.prop('disabled', true);
+			    });
+
+			    _searchBar.change(function() {
+			    	templateAddButton.prop('disabled', true);
+			    });
+
+			    _searchBar.autocomplete( "instance" )._renderItem = options.autocompleteRenderFunction;
+
+			    // SET UP TEMPLATE DOWNLOAD
+
+			    templateIO.find('.template-upload').click(function() {
+					var instance = M.core_filepicker.instances[options.filepickerid];
+					instance.options.formcallback = function(file) {
+						var promises = Ajax.call([{
+							methodname: 'local_teameval_upload_template',
+							args: {
+								'id': _id,
+								'itemid': options.filepickeritemid,
+								'file': file.file,
+							}
+						}]);
+
+						promises[0].done(function(questions) {
+							AddQuestion.initialised().done(function() {
+								AddQuestion.addQuestions(questions);
+							});
+						});
+
+						promises[0].fail(Notification.exception);
+					}
+					instance.show();
+				});
+
+			    // FIRE INITIALISED
+			    if (!_initialised) {
+			    	_initialised = $.Deferred();
+			    }
+			    _initialised.resolve();
+				
 
 			}
 

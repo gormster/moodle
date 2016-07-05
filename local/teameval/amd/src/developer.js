@@ -3,7 +3,7 @@ define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
     initialise: function() {
 
         var developerButtons = $('<div class="local-teameval-developer-buttons" />');
-        $('.local-teameval-questionnaire').append(developerButtons);
+        $('.local-teameval-containerbox').append(developerButtons);
 
         // Add a randomise button
         var randomiseButton = $('<button type="button">Randomise</button>');

@@ -1,7 +1,54 @@
+{{#locked}}
+<div class="local-teameval-template-io" id="local-teameval-template-io-{{uniqid}}">
+<button class="btn" type="button" class="template-download">{{#str}} downloadtemplate, local_teameval {{/str}}</button>
+</div>
+{{/locked}}
+{{^locked}}
 <div id="local-teameval-add-question-{{uniqid}}" class="local-teameval-add-question mdl-right">
 <a href="javascript:void(0);">{{#str}} addquestion, local_teameval {{/str}}</a>
 </div>
-<div class="local-teameval-template-search ui-front">
+<div class="local-teameval-template-toolbox collapsible{{#showtoolbox}} expanded{{/showtoolbox}}{{^showtoolbox}} collapsed{{/showtoolbox}}">
+<h4 class="collapsible-heading">{{#str}} templatesheading, local_teameval {{/str}}</h4>
+<div id="local-teameval-template-search-{{uniqid}}" class="local-teameval-template-search ui-front collapsing">
 <label>{{#str}} addquestionsfrom, local_teameval {{/str}}<input type="text" id="template-search-{{uniqid}}" /></label>
 <button type="btn btn-default">{{#str}} add {{/str}}</button>
 </div>
+<div class="local-teameval-template-io collapsing" id="local-teameval-template-io-{{uniqid}}">
+<button class="btn" type="button" class="template-download">{{#str}} downloadtemplate, local_teameval {{/str}}</button>
+<button class="btn" type="button" class="template-upload">{{#str}} uploadtemplate, local_teameval {{/str}}</button>
+</div>
+</div>
+{{/locked}}
+{{#js}}{{#_notset}}<script>{{/_notset}}
+require(['jquery', 'local_teameval/addquestion', 'local_teameval/collapsible'], function($, AddQuestion, Collapsible) {
+
+	AddQuestion.initialise({
+		addButton: $('#local-teameval-add-question-{{uniqid}}'),
+		templateSearch: $('#local-teameval-template-search-{{uniqid}}'),
+		templateIO: $('#local-teameval-template-io-{{uniqid}}'),
+		id: {{teamevalid}},
+		self: {{self}},
+		locked: {{locked}},
+		download: "{{download}}",
+		{{#filepickerid}}filepickerid: "{{filepickerid}}",
+		filepickeritemid: {{filepickeritemid}},{{/filepickerid}}
+		subplugins: {{{subplugins}}},
+		autocompleteRenderFunction: function( ul, item ) {
+			var fromStr = "{{#str}} fromtemplate, local_teameval {{/str}}";
+			var matchingTagsStr = "{{#str}} matchingtags, local_teameval {{/str}}";
+			fromStr.replace('{$a}', item.title);
+			matchingTagsStr.replace('{$a}', item.tags.join(', '));
+			return $( "<li class='local-teameval-template-search-result'>" )
+		        .append( "<a class='title'>" + item.title + "</a><br>"+
+	        	"<span class='subtitle'>" + fromStr + " • " + matchingTagsStr + "</span>" )
+		        .appendTo( ul );
+	    }
+	});
+
+	Collapsible.init({
+		'selector': '.local-teameval-template-toolbox',
+		'target': '.collapsible-heading'
+	});
+
+});
+{{/js}}

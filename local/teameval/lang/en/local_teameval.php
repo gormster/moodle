@@ -76,8 +76,13 @@
     $string['resetresponses'] = 'Delete all team evaluation responses';
     $string['resetquestionnaire'] = 'Delete all questions from team evaluation questionnaire';
 
+    $string['templatesheading'] = 'Templates toolbox';
+
     $string['addquestionsfrom'] = 'Add questions from template:';
     $string['downloadtemplate'] = 'Download questionnaire as template file';
     $string['uploadtemplate'] = 'Add questions from template file';
+
+    $string['fromtemplate'] = 'From <strong>{$a}</strong>';
+    $string['matchingtags'] = 'Matching tags: {$a}';
 
 ?>

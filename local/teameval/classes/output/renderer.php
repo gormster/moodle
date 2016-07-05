@@ -69,7 +69,7 @@ class renderer extends plugin_renderer_base {
         if (has_capability('local/teameval:createquestionnaire', $context)) {
             $questionnaire_locked = $block->locked;
 
-            $PAGE->requires->js_call_amd('local_teameval/addquestion', 'initialise', [$block->teameval->id, $block->settings->self, $block->questiontypes, $questionnaire_locked]);
+            $c->addquestion = $this->render($block->addquestion);
 
             // Results and Mark Release are only available to teamevals attached to modules
             if (isset($block->cm)) {
@@ -138,9 +138,10 @@ class renderer extends plugin_renderer_base {
             $questionnairecontext['lockedhint'] = $block->lockedhint;
         }
 
-        if (has_capability('local/teameval:viewtemplate', $context)) {
-            $questionnairecontext['templateio'] = $this->render(new templateio($block->teameval));
-        }
+        // TODO: put download button back
+        // if (has_capability('local/teameval:viewtemplate', $context)) {
+        //     $questionnairecontext['templateio'] = $this->render(new templateio($block->teameval));
+        // }
 
         $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', $questionnairecontext);
 
@@ -161,14 +162,14 @@ class renderer extends plugin_renderer_base {
         return $this->render_from_template('local_teameval/feedback', $context);
     }
 
-    public function render_templateio(templateio $templateio) {
+    public function render_add_question(add_question $addquestion) {
         global $PAGE;
-        $context = $templateio->export_for_template($this);
-        $options = $templateio->get_filepicker_options();
+        $context = $addquestion->export_for_template($this);
+        $options = $addquestion->get_filepicker_options();
         if ($options) {
             $PAGE->requires->js_init_call('M.core_filepicker.init', [$options], true);
         }
-        return $this->render_from_template('local_teameval/templateio', $context);
+        return $this->render_from_template('local_teameval/add_question', $context);
     }
 
 }
