@@ -79,6 +79,15 @@ $functions = [
         'type'          => 'write',
         'requiredcapability' => 'local/teameval:createquestionnaire',
 
+    ],
+
+    'local_teameval_upload_template' => [
+
+        'classname'     => 'local_teameval\external',
+        'methodname'    => 'upload_template',
+        'type'          => 'write',
+        'requiredcapability' => 'local/teameval:createquestionnaire',
+
     ]
     
 ]

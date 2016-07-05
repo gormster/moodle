@@ -106,7 +106,7 @@ class backup_local_teameval_plugin extends backup_local_plugin {
 
     }
 
-    protected function define_export_plugin_structure() {
+    protected function define_template_plugin_structure() {
 
         $plugin = $this->get_plugin_element();
         $pluginwrapper = new backup_nested_element($this->get_recommended_name());

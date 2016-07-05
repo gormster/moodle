@@ -7,6 +7,7 @@ use local_teameval\output\team_evaluation_block;
 use local_teameval\forms;
 use stdClass;
 use moodle_url;
+use file_picker;
 
 // TODO
 // This violates a number of renderer principles. There's a bunch of things here that should:
@@ -138,7 +139,7 @@ class renderer extends plugin_renderer_base {
         }
 
         if (has_capability('local/teameval:viewtemplate', $context)) {
-            $questionnairecontext['download'] = moodle_url::make_pluginfile_url($context->id, 'local_teameval', 'template', $block->teameval->id, '/', $block->teameval->template_file_name());
+            $questionnairecontext['templateio'] = $this->render(new templateio($block->teameval));
         }
 
         $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', $questionnairecontext);
@@ -158,6 +159,16 @@ class renderer extends plugin_renderer_base {
     public function render_feedback(feedback $feedback) {
         $context = $feedback->export_for_template($this);
         return $this->render_from_template('local_teameval/feedback', $context);
+    }
+
+    public function render_templateio(templateio $templateio) {
+        global $PAGE;
+        $context = $templateio->export_for_template($this);
+        $options = $templateio->get_filepicker_options();
+        if ($options) {
+            $PAGE->requires->js_init_call('M.core_filepicker.init', [$options], true);
+        }
+        return $this->render_from_template('local_teameval/templateio', $context);
     }
 
 }

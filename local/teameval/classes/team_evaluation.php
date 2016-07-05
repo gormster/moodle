@@ -1221,28 +1221,19 @@ class team_evaluation {
         return $this->get_title() . ".mbz";
     }
 
-    protected function mark_questionnaire_dirty() {
-        $fs = get_file_storage();
-        $empty = $fs->delete_area_files($this->context->id, 'local_teameval', 'template', $this->id);
-    }
-
-    protected function mark_results_dirty() {
-        $fs = get_file_storage();
-        $empty = $fs->delete_area_files($this->context->id, 'local_teameval', 'results', $this->cm->id);
-    }
-
     public function export_questionnaire() {
-        $fs = get_file_storage();
-        // $file = $fs->get_file($this->context->id, 'local_teameval', 'template', $this->id, '/', $this->template_file_name());
-
-        if (empty($file)) {
-            $task = new export_task('export', $this->id, $this->context->id, $this->template_file_name());
-            $task->build();
-            $task->execute();
-            $file = $task->file;
-        }
+        $task = new export_task('export', $this->id, $this->context->id, $this->template_file_name());
+        $task->build();
+        $task->execute();
+        $file = $task->file;
         
         return $file;
+    }
+
+    public function import_questionnaire($file) {
+        $task = new import_task('import', $this, $file);
+        $task->build();
+        $task->execute();
     }
 
 }

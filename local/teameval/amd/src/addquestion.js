@@ -25,6 +25,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
 	var _searchBar;
 
+	var _initialised;
+
 	return {
 
 		// Ask the user what kind of question they want to add
@@ -65,13 +67,12 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 		},
 
 		addQuestion: function(type) {
-			var _this = this;
 			var question = $('<li class="local-teameval-question" />');
 			question.data('questiontype', type);
 			var questionContainer = $('<div class="question-container" />');
 			question.append(questionContainer);
 			$('#local-teameval-questions').append(question);
-			_this.addEditingControls(question);
+			this.addEditingControls(question);
 			return question;
 		},
 
@@ -245,19 +246,32 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				}]);
 
 				promises[0].done(function(questions) {
-					for (var i = 0; i < questions.length; i++) {
-						var qdata = questions[i];
-						var question = _this.addQuestion(qdata.type);
-						question.data('questionid', qdata.questionid);
-						question.data('editingcontext', qdata.editingcontext);
-						question.data('submissioncontext', qdata.submissioncontext);
-						_this.showQuestion(question);
-					}
-					
+					_this.addQuestions(questions);
 				});
 
 				promises[0].fail(notification.exception);
 			}
+		},
+
+		addQuestions: function(questions) {
+			for (var i = 0; i < questions.length; i++) {
+				var qdata = questions[i];
+				var question = this.addQuestion(qdata.type);
+				question.data('questionid', qdata.questionid);
+				question.data('editingcontext', qdata.editingcontext);
+				question.data('submissioncontext', qdata.submissioncontext);
+				this.showQuestion(question);
+			}
+		},
+
+		// This might seem like a bit of a weird thing to put here
+		// but it's to avoid a race condition in dependent modules
+		// We only initialise once, after all.
+		initialised: function() {
+			if (!_initialised) {
+				_initialised = $.Deferred();
+			}
+			return _initialised.promise();
 		},
 
 		initialise: function(teamevalid, self, subplugins, locked) {
@@ -359,6 +373,12 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 				    _searchBar.change(function() {
 				    	templateAddButton.prop('disabled', true);
 				    });
+
+				    // FIRE INITIALISED
+				    if (!_initialised) {
+				    	_initialised = $.Deferred();
+				    }
+				    _initialised.resolve();
 					
 				});
 

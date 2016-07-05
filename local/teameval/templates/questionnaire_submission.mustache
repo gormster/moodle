@@ -22,12 +22,16 @@
 <div class="hint">{{{lockedhint}}}</div>
 </div>
 {{/locked}}
-{{#download}}
-<a href="{{download}}">Download this questionnaire as a template</a>
-{{/download}}
+{{{templateio}}}
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
-require(['jquery'], function($) {
+
+function testcallback() {
+	console.log("called back");
+	console.log(arguments);
+}
+
+require(['jquery', 'core/yui'], function($, Y) {
 
 	{{#questions}}
 		var el = $('#teameval-{{type}}-question-{{questionid}}-{{uniqid}}');
@@ -35,7 +39,7 @@ require(['jquery'], function($) {
 		el.data('questiontype', '{{type}}');
 		el.data('submissioncontext', {{{submissioncontext}}});
 		el.data('editingcontext', {{{editingcontext}}});
-	{{/questions}}
+	{{/questions}}	
 
 });
 {{/js}}

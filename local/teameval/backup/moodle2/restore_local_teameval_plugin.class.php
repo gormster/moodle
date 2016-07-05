@@ -31,6 +31,9 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 
 
 
+    protected $addtoteameval = 0;
+
+    protected $ordinalbase = 0;
 
 
 	protected function define_module_plugin_structure() {
@@ -71,6 +74,29 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         return $paths;
     }
 
+    protected function define_template_plugin_structure() {
+        try {
+            $this->addtoteameval = $this->get_setting_value('addtoteameval');
+            $this->ordinalbase = $this->get_setting_value('ordinalbase');
+        } catch (base_plan_exception $e) {
+            // do nothing
+        }
+
+        $paths = [];
+
+        if ($this->addtoteameval === 0) {
+            $paths[] = new restore_path_element('template', $this->get_pathfor('/teameval'));
+        }
+        $question = new restore_path_element('question', $this->get_pathfor('/teameval/questions/question'));
+        $paths[] = $question;
+
+        $question_subplugins = $this->add_subplugin_structure('teamevalquestion', $question, 'local', 'teameval');
+
+        $paths = array_merge($question_subplugins, $paths);
+
+        return $paths;
+    }
+
 	public function process_teameval($settings) {
 		global $DB;
 
@@ -101,6 +127,8 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 
 	public function process_question($question) {
 		global $DB;
+
+        $this->step->log('processing question!', backup::LOG_DEBUG);
 		
         $question = (object)$question;
         $oldid = $question->id;
@@ -108,7 +136,15 @@ class restore_local_teameval_plugin extends restore_local_plugin {
         // we make the question ID a negative number, to eliminate the possibility of duplicate keys
         $question->questionid = -$question->questionid;
 
-		$question->teamevalid = $this->get_new_parentid('teameval') ?: $this->get_new_parentid('template');
+        // when we're importing questions in to an existing teameval, we need to rebase ordinals
+        // if we're not, then ordinalbase should be 0
+        $question->ordinal += $this->ordinalbase;
+
+        if ($this->addtoteameval > 0) {
+            $question->teamevalid = $this->addtoteameval;
+        } else {
+    		$question->teamevalid = $this->get_new_parentid('teameval') ?: $this->get_new_parentid('template');
+        }
 		$newid = $DB->insert_record('teameval_questions', $question);
 
         $this->set_mapping('question', $oldid, $newid);
@@ -117,7 +153,12 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 	protected function post_process_question() {
 		global $DB;
 		//fix question ids
-		$teamevalid = $this->get_new_parentid('teameval');
+        if ($this->addtoteameval > 0) {
+            $teamevalid = $this->addtoteameval;
+        } else {
+    		$teamevalid = $this->get_new_parentid('teameval') ?: $this->get_new_parentid('template');
+        }
+
 		$questions = $DB->get_records('teameval_questions', ['teamevalid' => $teamevalid]);
 		foreach($questions as $question) {
             // we saved this as a negative number, so we have to un-negate it
@@ -184,6 +225,14 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 	protected function after_execute_module() {
 		$this->post_process_question();
 	}
+
+    protected function after_execute_course() {
+        $this->post_process_question();
+    }
+
+    protected function after_execute_template() {
+        $this->post_process_question();
+    }
 
 
 

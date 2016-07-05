@@ -127,7 +127,7 @@ class export_step extends backup_structure_step {
 		$root->set_source_array([$source]);
 
 		$plugin = new backup_local_teameval_plugin('local', 'teameval', $optigroup, $this);
-		$plugin->define_plugin_structure('export');
+		$plugin->define_plugin_structure('template');
 
 		return $root;
 	}

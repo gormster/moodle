@@ -14,6 +14,7 @@ use stdClass;
 use local_searchable\searchable;
 use context;
 use context_module;
+use context_user;
 
 class external extends external_api {
 
@@ -361,6 +362,117 @@ class external extends external_api {
     }
 
     public static function add_from_template_is_allowed_from_ajax() { return true; }
+
+    /* upload_template */
+
+    public static function upload_template_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'team eval id'),
+            'file' => new external_value(PARAM_FILE, 'file name'),
+            'itemid' => new external_value(PARAM_INT, 'draft file item id')
+        ]);
+    }
+
+    public static function upload_template_returns() {
+        return self::add_from_template_returns();
+    }
+
+    public static function upload_template($id, $file, $itemid) {
+        global $USER;
+
+        self::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
+
+        // for reasons I don't totally get the draft files implementation is pretty weak
+        // there's no function to just get a named file out of draft files...
+        $fs = get_file_storage();
+        $usercontext = context_user::instance($USER->id);
+
+        $file = $fs->get_file($usercontext->id, 'user', 'draft', $itemid, '/', $file);
+
+        if (empty($file)) {
+            throw new invalid_parameter_exception('File did not upload correctly.');
+        }
+
+        $teameval = new team_evaluation($id);
+
+        $oldquestions = $teameval->num_questions();
+
+        $teameval->import_questionnaire($file);
+
+        $newquestions = array_slice($teameval->get_questions(), $oldquestions);
+
+        $returns = [];
+        foreach($newquestions as $q) {
+            $r = new stdClass;
+            $r->type = $q->type;
+            $r->questionid = $q->questionid;
+            $r->submissioncontext = $q->question->submission_view($USER->id);
+            $r->editingcontext = $q->question->editing_view();
+            $returns[] = $r;
+        }
+
+        return $returns;
+
+    }
+
+    public static function upload_template_is_allowed_from_ajax() { return true; }
+
+    /******************
+    * HELPER FUNCTIONS*
+    ******************/
+
+    /**
+     * Throw an exception if team eval does not exist or if capabilities are not met
+     * @param int|array $id Either straight integer or array of id type (id, cmid, contextid) => int id
+     * @param array $caps Array of capabilities to test.
+     * @param array $options An array of optional extra tests.
+     * @return type
+     */
+    protected static function guard_teameval_capability($id, $caps = [], $options = []) {
+
+        $context = null;
+
+        /* OPTIONS
+        require_exists (bool): require that the teameval already exists. only checked when passed a cmid.
+        */
+        $require_exists = isset($options['require_exists']) ? $options['require_exists'] : false;
+
+        if (is_numeric($id)) {
+            $id = ['id' => $id];
+        }
+
+        $type = key($id);
+        $id = current($id);
+
+        switch($type) {
+            case 'id':
+                if(!team_evaluation::exists($id)) {
+                    throw new invalid_parameter_exception("Teameval does not exist");
+                }
+                $teameval = new team_evaluation($id);
+                $context = $teameval->get_context();
+                break;
+            case 'cmid':
+                if ($require_exists && !team_evaluation::exists(null, $id)) {
+                    throw new invalid_parameter_exception("Teameval does not exist");
+                }
+                $cm = get_course_and_cm_from_cmid($id)[1];
+                $context = $cm->context;
+                break;
+            case 'contextid':
+                $context = context::instance_by_id($id);
+                break;
+            default:
+                throw new coding_exception('$id must be integer or array with key in (id, cmid, contextid)');
+        }
+
+        foreach($caps as $cap) {
+            require_capability($cap, $context);
+        }
+
+    }
+
+
 }
 
 ?>

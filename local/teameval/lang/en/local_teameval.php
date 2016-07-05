@@ -77,5 +77,7 @@
     $string['resetquestionnaire'] = 'Delete all questions from team evaluation questionnaire';
 
     $string['addquestionsfrom'] = 'Add questions from template:';
+    $string['downloadtemplate'] = 'Download questionnaire as template file';
+    $string['uploadtemplate'] = 'Add questions from template file';
 
 ?>
