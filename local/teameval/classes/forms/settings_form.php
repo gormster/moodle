@@ -37,7 +37,7 @@ class settings_form extends ajaxform {
 
         $mform->addElement('select', 'noncompletionpenalty', get_string('noncompletionpenalty', 'local_teameval'), $percents);
 
-        $mform->addElement('date_time_selector', 'deadline', get_string('deadline', 'local_teameval'));
+        $mform->addElement('date_time_selector', 'deadline', get_string('deadline', 'local_teameval'), ['optional' => true]);
 
         $mform->addElement('submit', 'submit', get_string('save', 'local_teameval'));
 

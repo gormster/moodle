@@ -128,7 +128,7 @@ class renderer extends plugin_renderer_base {
         }
 
         $deadline = null;
-        if (isset($block->settings->deadline)) {
+        if ($block->settings->deadline > 0) {
             $deadline = userdate($block->settings->deadline);
         }
 
