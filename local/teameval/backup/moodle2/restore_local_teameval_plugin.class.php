@@ -167,7 +167,9 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 			if ($question->questionid) {
 				$DB->update_record('teameval_questions', $question);
 			} else {
-				$DB->delete_records('teameval_questions', ['id' => $question->id]);
+                if ($question->ordinal >= $this->ordinalbase) { // this question should have restored, but failed
+    				$DB->delete_records('teameval_questions', ['id' => $question->id]);
+                }
 			}
 		}
 	}

@@ -416,6 +416,11 @@ class team_evaluation {
         return $DB->count_records("teameval_questions", array("teamevalid" => $this->id));
     }
 
+    public function last_ordinal() {
+        global $DB;
+        return $DB->get_field("teameval_questions", "MAX(ordinal)", ['teamevalid' => $this->id]);
+    }
+
     protected function get_bare_questions() {
         global $DB;
         return $DB->get_records("teameval_questions", array("teamevalid" => $this->id), "ordinal ASC");

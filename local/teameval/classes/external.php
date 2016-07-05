@@ -395,6 +395,10 @@ class external extends external_api {
 
         $teameval = new team_evaluation($id);
 
+        if ($teameval->questionnaire_locked() !== false) {
+            throw new invalid_parameter_exception('Questionnaire is locked.');
+        }
+
         $oldquestions = $teameval->num_questions();
 
         $teameval->import_questionnaire($file);

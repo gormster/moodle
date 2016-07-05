@@ -53,7 +53,7 @@ class import_task extends restore_task {
 		$this->define_settings();
 
 		$this->get_setting('addtoteameval')->set_value($teameval->id);
-		$this->get_setting('ordinalbase')->set_value($teameval->num_questions());
+		$this->get_setting('ordinalbase')->set_value(($teameval->num_questions() > 0) ? $teameval->last_ordinal() + 1 : 0);
 	}
 
 	function build() {

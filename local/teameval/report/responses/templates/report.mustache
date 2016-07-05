@@ -90,9 +90,6 @@ var requirements = ['jquery', 'core/templates'].concat(modules);
 
 require(requirements, function($, Templates) {
 
-    console.log(initCalls);
-    console.log(requirements);
-
     var resolvedModules = Array.prototype.slice.call(arguments);
 
     $.each(initCalls, function(module, calls) {
