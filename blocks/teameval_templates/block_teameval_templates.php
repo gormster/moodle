@@ -18,7 +18,7 @@ class block_teameval_templates extends block_base {
 
     function get_required_javascript() {
         parent::get_required_javascript();
-        $this->page->requires->js_call_amd('local_teameval/collapsible', 'init', [['target' => '.collapse-label']]);
+        $this->page->requires->js_call_amd('local_teameval/collapsible', 'init', [['selector' => '.block_teameval_templates .collapsible', 'target' => '.collapse-label']]);
     }
 
     public function get_content() {
