@@ -34,13 +34,13 @@ class results implements renderable, templatable {
 		$this->current_plugin = $teameval->get_report_plugin()->name;
 		$this->report = $teameval->get_report();
 
-        $types = [];
+        $this->types = [];
         foreach($reporttypes as $plugininfo) {
             $type = ['name' => $plugininfo->displayname, 'plugin' => $plugininfo->name];
             if ($plugininfo->name == $this->current_plugin) {
                 $type['selected'] = true;
             }
-            $types[] = $type;
+            $this->types[] = $type;
         }
 	}
 
