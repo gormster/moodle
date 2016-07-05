@@ -246,6 +246,32 @@ li.local-teameval-template-search-result .subtitle {
     border-radius: 5px;
 }
 
+.local-teameval-containerbox .collapsible.collapsed .collapsing {
+    display: none;
+}
+
+.local-teameval-containerbox .collapsible.expanded .collapsing {
+    display: block;
+}
+
+.local-teameval-containerbox .collapsible .collapsible-heading {
+    font-size: 110%;
+    margin: 0;
+    cursor: pointer;
+}
+
+.local-teameval-containerbox .collapsible .collapsible-heading:before {
+    vertical-align: middle;
+}
+
+.local-teameval-containerbox .collapsible.collapsed .collapsible-heading:before {
+    content: url([[pix:t/collapsed]]);
+}
+
+.local-teameval-containerbox .collapsible.expanded .collapsible-heading:before {
+    content: url([[pix:t/expanded]]);
+}
+
 .local-teameval-results-selector {
     text-align: center;
     font-size: 125%;
@@ -398,6 +424,21 @@ li.local-teameval-template-search-result .subtitle {
     color: #A00;
     font-weight: bold;
     padding: 0.5em;
+}
+
+/* template/addquestion */
+
+.local-teameval-template-toolbox {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.local-teameval-template-io {
+    border-top: 1px solid #eee;
+    padding: 10px;
+    text-align: center;
 }
 
 /* template/feedback */

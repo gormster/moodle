@@ -90,7 +90,7 @@ $title = new output\title($teameval);
 echo $output->render($title);
 
 $teameval_renderer = $PAGE->get_renderer('local_teameval');
-$teameval_block = new \local_teameval\output\team_evaluation_block($teameval);
+$teameval_block = new \local_teameval\output\team_evaluation_block($teameval, $context);
 echo $teameval_renderer->render($teameval_block);
 
 

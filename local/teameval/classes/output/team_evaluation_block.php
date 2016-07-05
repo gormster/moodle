@@ -4,6 +4,7 @@ namespace local_teameval\output;
 
 use local_teameval\team_evaluation;
 use local_teameval\evaluation_context;
+use local_teameval\forms;
 use core_plugin_manager;
 use renderable;
 use context_module;
@@ -14,27 +15,23 @@ class team_evaluation_block implements renderable {
 
     public $context;
 
-    public $evalcontext;
-
     public $disabled;
 
-    public $locked;
-
-    public $lockedreason;
-
-    public $lockedhint;
-
-    public $questions;
-    
-    public $questiontypes;
+    public $questionnaire;
 
     public $teameval;
 
     public $settings;
 
+    public $addquestion;
+
+    public $results;
+
     public $release;
 
     public $feedback;
+
+    public $hiderelease;
 
     /**
      * @param int $cmid This is the cmid of the activity module this teameval belongs to
@@ -68,54 +65,87 @@ class team_evaluation_block implements renderable {
         // If teameval is not set, we just want to show the big button saying "Start Team Evaluation"
         if ($teameval) {
 
-            $this->teameval = $teameval;
+            $this->teameval = true;
             $this->context = $teameval->get_context();
-            $this->evalcontext = $teameval->get_evaluation_context();
 
-            $cancreate = has_capability('local/teameval:createquestionnaire', $this->teameval->get_context());
-            $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), null, false);
+            if ($context) {
+                // If we've been passed a viewing context that's not the same as the teameval context
+                // then we need to make sure it is a child context of the teameval context.
+                $child = in_array($this->context->id, $context->get_parent_context_ids());
+                if (!$child) {
+                    throw new moodle_exception('contextnotchild', 'local_teameval', '', ['child' => $context->get_context_name(), 'parent' => $this->context->get_context_name()]);
+                }
+            } else {
+                $context = $this->context;
+            }
+            
+            $evalcontext = $teameval->get_evaluation_context();
+
+            $canview = has_capability('local/teameval:viewtemplate', $context);
+            $canchangesettings = has_capability('local/teameval:changesettings', $this->context);
+            $cancreate = has_capability('local/teameval:createquestionnaire', $this->context);
+            $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->context, null, false);
+            $canreview = has_capability('local/teameval:viewallteams', $this->context);
+            $canrelease = has_capability('local/teameval:invalidateassessment', $this->context);
 
             $cm = $teameval->get_coursemodule();
 
+            // If the user can submit and the teameval is not enabled, then hide it from them.
+            if ($cm && $cansubmit && ($teameval->get_settings()->enabled == false)) {
+
+                $this->disabled = true;
+
             // If the user can create questionnaires, then check against null (the general case).
-            if ($cm && $this->evalcontext->evaluation_permitted($cancreate ? null : $USER->id) == false) {
+            // Otherwise, we need to hide the questionnaire if evaluation is not currently permitted.
+            } else if ($cm && ($evalcontext->evaluation_permitted($cancreate ? null : $USER->id) == false)) {
 
                 $this->disabled = true;
 
             } else {
 
-                $settings = $this->teameval->get_settings();
-                $settings->fraction *= 100;
-                $settings->noncompletionpenalty *= 100;
-                $settings->id = $this->teameval->id;
-                $this->settings = $settings;
+                $questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
+                if ($cancreate) {
+                    $this->addquestion = new add_question($teameval, $questiontypes);
+                } else if ($canview) {
+                    $this->downloadtemplate = new download_template($teameval);
+                }
 
-                $this->questiontypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalquestion");
-                $this->questions = $this->teameval->get_questions();
+                if ($cancreate || $canview || $cansubmit || $canreview) {
+                    $this->questionnaire = new questionnaire($teameval);
+                }
 
                 if ($cm) {
                     $this->cm = $cm;
 
-                    $this->locked = $teameval->questionnaire_locked();
-                    if ($this->locked !== false) {
-                        list($reason, $user) = $this->locked;
-                        $this->locked = true;
-                        $this->lockedreason = team_evaluation::questionnaire_locked_reason($reason);
-                        $this->lockedhint = team_evaluation::questionnaire_locked_hint($reason, $user, $this->evalcontext);
+                    // we actually only need to ever change settings in real team evals
+                
+                    if ($canchangesettings) {
+                        $settings = $teameval->get_settings();
+                        $settings->fraction *= 100;
+                        $settings->noncompletionpenalty *= 100;
+                        $settings->id = $teameval->id;
+
+                        $settingsform = new forms\settings_form();
+                        $settingsform->set_data($settings);
+                        
+                        $this->settings = $settingsform;
                     }
 
-                    if ($cancreate) {
-                        $this->reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
-                        $this->report = $this->teameval->get_report();
+                    if ($canreview) {
+                        $reporttypes = core_plugin_manager::instance()->get_plugins_of_type("teamevalreport");
+                        $this->results = new results($teameval, $reporttypes);
                     }
 
-                    $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
-                    $this->release = new release($this->teameval, $releases);
+                    if ($canrelease) {
+                        $releases = $DB->get_records('teameval_release', ['cmid' => $cm->id]);
+                        $this->release = new release($teameval, $releases);
+                        $this->hiderelease = $teameval->get_settings()->autorelease;
+                    }
 
                     if ($cansubmit) {
 
-                        if ($this->teameval->marks_available($USER->id)) {
-                            $this->feedback = new feedback($this->teameval, $USER->id); // more than 200ms
+                        if ($teameval->marks_available($USER->id)) {
+                            $this->feedback = new feedback($teameval, $USER->id); // more than 200ms
                         }
 
                     }

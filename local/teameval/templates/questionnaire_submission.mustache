@@ -22,17 +22,23 @@
 <div class="hint">{{{lockedhint}}}</div>
 </div>
 {{/locked}}
+{{{templateio}}}
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
-require(['jquery'], function($) {
+
+require(['jquery', 'local_teameval/submitquestion'], function($, SubmitQuestion) {
 
 	{{#questions}}
 		var el = $('#teameval-{{type}}-question-{{questionid}}-{{uniqid}}');
 		el.data('questionid', {{questionid}});
 		el.data('questiontype', '{{type}}');
 		el.data('submissioncontext', {{{submissioncontext}}});
-		el.data('editingcontext', {{{editingcontext}}});
+		{{#editingcontext}}el.data('editingcontext', {{{editingcontext}}}){{/editingcontext}};
 	{{/questions}}
+
+	{{#submission}}
+	SubmitQuestion.init({{cmid}});
+	{{/submission}}
 
 });
 {{/js}}
