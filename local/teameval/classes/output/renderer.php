@@ -3,7 +3,6 @@
 namespace local_teameval\output;
 
 use plugin_renderer_base;
-use local_teameval\output\team_evaluation_block;
 use local_teameval\forms;
 use stdClass;
 use moodle_url;
@@ -31,7 +30,6 @@ class renderer extends plugin_renderer_base {
             if (empty($block->context)) {
                 return '';
             }
-
             if (has_capability('local/teameval:changesettings', $context)) {
                 return $this->render_from_template('local_teameval/turn_on', ['cmid' => $context->instanceid]);
             }
@@ -53,100 +51,27 @@ class renderer extends plugin_renderer_base {
         
         $c = new stdClass; // template context
 
-        if (has_capability('local/teameval:changesettings', $context)) {
-            $settingsform = new forms\settings_form();
-            $settingsform->set_data($block->settings);
-            
-            if(isset($block->cm)) {
-                $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $settingsform->render()]);
-            }
+        if (isset($block->settings)) {
+            $c->settings = $this->render_from_template('local_teameval/settings', ['form' => $block->settings->render()]);
         }
 
-        // This should stay false unless you have createquestionnaire
-        // which is the only reason you would care about it being locked
-        $questionnaire_locked = false;
-
-        if (has_capability('local/teameval:createquestionnaire', $context)) {
-            $questionnaire_locked = $block->locked;
-
+        if (isset($block->addquestion)) {
             $c->addquestion = $this->render($block->addquestion);
-
-            // Results and Mark Release are only available to teamevals attached to modules
-            if (isset($block->cm)) {
-
-                $current_plugin = $block->teameval->get_report_plugin();
-                $report_renderer = $PAGE->get_renderer("teamevalreport_{$current_plugin->name}");
-                $report = $report_renderer->render($block->report);
-
-                $types = [];
-                foreach($block->reporttypes as $plugininfo) {
-                    $type = ['name' => $plugininfo->displayname, 'plugin' => $plugininfo->name];
-                    if ($plugininfo->name == $current_plugin->name) {
-                        $type['selected'] = true;
-                    }
-                    $types[] = $type;
-                }
-
-                $c->results = $this->render_from_template('local_teameval/results', ['types' => $types, 'report' => $report, 'cmid' => $block->cm->id]);
-
-                $c->release = $this->render_from_template('local_teameval/release', $block->release->export_for_template($this));
-
-            }
+        } else if (isset($block->downloadtemplate)) {
+            $c->addquestion = $this->render($block->downloadtemplate);
         }
 
-        $noncompletion = null;
-
-        if ($block->teameval->can_submit($USER->id)) {
-            $PAGE->requires->js_call_amd('local_teameval/submitquestion', 'initialise', [$block->cm->id]);
-
-        } else if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
-            // if we have this capability but can't submit then we need to communicate noncompletion
-            $completion = $block->teameval->user_completion($USER->id);
-            if ($completion < 1) {
-                $n = count($block->questions) - round($completion * count($block->questions));
-                $penalty = round($block->teameval->non_completion_penalty($USER->id) * 100, 2);
-                $noncompletion = ['n' => $n, 'penalty' => $penalty];
-            }
+        if (isset($block->results)) {
+            $c->results = $this->render($block->results);
         }
 
-        if (isset($block->feedback)) {
-            $c->feedback = $this->render($block->feedback);
+        if (isset($block->release)) {
+            $c->release = $this->render($block->release);
         }
 
-        $questions = [];
-        foreach($block->questions as $q) {
-            $locked = !$block->teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
-            $submissionview = $q->question->submission_view($USER->id, $locked);
-            $editingview = $q->question->editing_view($USER->id);
-            $questions[] = [
-                "content" => $this->render_from_template($q->submissiontemplate, $submissionview + ["_id" => $block->teameval->id]),
-                "type" => $q->plugininfo->name,
-                "questionid" => $q->questionid,
-                "submissioncontext" => json_encode($submissionview),
-                "editingcontext" => json_encode($editingview)
-                ];
-        }
+        $c->questionnaire = $this->render($block->questionnaire);
 
-        $deadline = null;
-        if ($block->settings->deadline > 0) {
-            $deadline = userdate($block->settings->deadline);
-        }
-
-        $questionnairecontext = ["questions" => $questions, "deadline" => $deadline, "noncompletion" => $noncompletion, 'locked' => $questionnaire_locked];
-        if ($questionnaire_locked) {
-            $questionnairecontext['lockedreason'] = $block->lockedreason;
-            $questionnairecontext['lockedhint'] = $block->lockedhint;
-        }
-
-        // TODO: put download button back
-        // if (has_capability('local/teameval:viewtemplate', $context)) {
-        //     $questionnairecontext['templateio'] = $this->render(new templateio($block->teameval));
-        // }
-
-        $c->questionnaire = $this->render_from_template('local_teameval/questionnaire_submission', $questionnairecontext);
-
-
-        $c->hiderelease = $block->settings->autorelease;
+        $c->hiderelease = $block->hiderelease;
         
         if (\local_teameval\is_developer()) {
             $PAGE->requires->js_call_amd('local_teameval/developer', 'initialise');
@@ -171,6 +96,22 @@ class renderer extends plugin_renderer_base {
         }
         return $this->render_from_template('local_teameval/add_question', $context);
     }
+
+    public function render_results(results $results) {
+        return $this->render_from_template('local_teameval/results', $results->export_for_template($this));
+    }
+
+    public function render_release(release $release) {
+        return $this->render_from_template('local_teameval/release', $release->export_for_template($this));
+    }
+
+    public function render_questionnaire(questionnaire $questionnaire) {
+        return $this->render_from_template('local_teameval/questionnaire_submission', $questionnaire->export_for_template($this));
+    }
+
+    public function render_download_template(download_template $downloadtemplate) {
+        return $this->render_from_template('local_teameval/download_template', $downloadtemplate->export_for_template($this));
+    }    
 
 }
 

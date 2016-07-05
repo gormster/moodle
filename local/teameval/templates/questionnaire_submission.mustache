@@ -26,20 +26,19 @@
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
 
-function testcallback() {
-	console.log("called back");
-	console.log(arguments);
-}
-
-require(['jquery', 'core/yui'], function($, Y) {
+require(['jquery', 'local_teameval/submitquestion'], function($, SubmitQuestion) {
 
 	{{#questions}}
 		var el = $('#teameval-{{type}}-question-{{questionid}}-{{uniqid}}');
 		el.data('questionid', {{questionid}});
 		el.data('questiontype', '{{type}}');
 		el.data('submissioncontext', {{{submissioncontext}}});
-		el.data('editingcontext', {{{editingcontext}}});
-	{{/questions}}	
+		{{#editingcontext}}el.data('editingcontext', {{{editingcontext}}}){{/editingcontext}};
+	{{/questions}}
+
+	{{#submission}}
+	SubmitQuestion.init({{cmid}});
+	{{/submission}}
 
 });
 {{/js}}

@@ -54,6 +54,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
     questionContainer.parent().addClass('incomplete');
     {{/incomplete}}
 
+    {{#_submission}}
     questionContainer.on('submit', function () {
 
         var comments = [];
@@ -84,7 +85,9 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
         });
 
     });
+    {{/_submission}}
 
+    {{#_editing}}
     questionContainer.on("delete", function () {
         var promises = ajax.call([{
             methodname: 'teamevalquestion_comment_delete_question',
@@ -96,6 +99,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
 
         return promises[0];
     });
+    {{/_editing}}
 
 });
 

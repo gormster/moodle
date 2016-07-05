@@ -181,6 +181,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			var questionType = question.data('questiontype');
 
 			submissionContext._id = _id;
+			submissioncontext._editing = true;
 
 			templates.render('teamevalquestion_'+questionType+'/submission_view', submissionContext).done(function(html, js) {
 

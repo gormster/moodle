@@ -85,4 +85,8 @@
     $string['fromtemplate'] = 'From <strong>{$a}</strong>';
     $string['matchingtags'] = 'Matching tags: {$a}';
 
+    // ERRORS
+
+    $string['contextnotchild'] = '{$a->child} is not a child of {$a->parent}.';
+
 ?>

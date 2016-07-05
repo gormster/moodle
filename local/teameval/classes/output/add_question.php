@@ -34,7 +34,7 @@ class add_question implements renderable, templatable {
 
 		$this->self = $teameval->get_settings()->self;
 
-		$this->locked = $teameval->questionnaire_locked();
+		$this->locked = $teameval->questionnaire_locked() !== false;
 
 		$this->subplugins = $questiontypes;
 
