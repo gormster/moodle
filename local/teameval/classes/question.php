@@ -20,13 +20,8 @@ interface question {
     every time your view is rendered.
 
     Keep that in mind - it will be run EVERY TIME YOUR VIEW IS RENDERED. Be performant,
-    and make sure not to install event handlers twice.
-
-    When the view is added to the DOM hierarchy, its container will have an attribute 
-    "data-script-marker". You can use this to find your question in the hierarchy from your
-    javascript. This attribute is removed as soon as your javascript has run - so if
-    you are doing anything asynchronous, grab a handle before you start, because you 
-    will never find it again.
+    and make sure not to install event handlers twice. Strongly consider using AMD so that
+    your code is cached.
 
     */
 
@@ -77,18 +72,39 @@ interface question {
      */
     public function plugin_name();
 
+    /**
+     * Does this contribute a numeric value towards the user's evaluation score? Return false if
+     * your question is either not a question (such as a structural element) or if it records
+     * feedback only.
+     * @return type
+     */
     public function has_value();
 
     /**
-     * Does this question contribute toward completion? has_value must be false if this is true.
+     * Does this question contribute toward completion? has_value must be false if this is false.
      * @return bool
      */
     public function has_completion();
 
+    /**
+     * The minimum value that can be returned from this question. Usually 0, even if a higher minimum is
+     * specified by the user; think: does the user expect 1 / 5 to be 20% or 0%? Do they expect 4 / 5
+     * to be 80% or 75%? Must be implemented if has_value is true;
+     * @return int
+     */
     public function minimum_value();
 
+    /**
+     * The maximum value that can be returned from this question. Must be greater than minimum_value,
+     * must be implemented if has_value is true.
+     * @return int
+     */
     public function maximum_value();
 
+    /**
+     * Return a brief, meaningful title for this question. This will be used in reports.
+     * @return type
+     */
     public function get_title();
 
     /**
@@ -105,8 +121,6 @@ interface question {
      * @return bool
      */
     public function is_feedback_anonymous();
-
-    public function render_for_report($groupid = null);
 
     /**
      * Make a new copy of this question. We handle calling should_update_question and update_question.
@@ -127,5 +141,13 @@ interface question {
      * @param array $questionids The plugin-local question ID you passed to should_update_question
      */
     public static function reset_userdata($questionids);
-    
+
+    /**
+     * Supported renderer subtypes. You should implement, at the very least, a plaintext renderer that
+     * returns a plaintext version of your plugin's renderable response objects - that is, anything
+     * that might be returned from opinion_of_readable or feedback_for_readable.
+     * 
+     * @see plugininfo\teamevalquestion
+     */
+    // public static function supported_renderer_subtypes();
 }
