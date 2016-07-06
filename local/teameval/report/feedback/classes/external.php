@@ -14,6 +14,8 @@ use invalid_parameter_exception;
 use context_module;
 use stdClass;
 
+
+use local_teameval;
 use local_teameval\team_evaluation;
 
 class external extends external_api {
@@ -37,11 +39,11 @@ class external extends external_api {
 	}
 
 	public static function update_states($cmid, $states) {
+		global $USER;
+
+		local_teameval\external::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
 
 		$teameval = team_evaluation::from_cmid($cmid);
-
-		global $USER;
-		require_capability('local/teameval:invalidateassessment', $teameval->get_context(), $USER->id);
 
 		foreach($states as $s) {
 			$teameval->rescind_feedback_for($s['questionid'], $s['markerid'], $s['targetid'], $s['state']);

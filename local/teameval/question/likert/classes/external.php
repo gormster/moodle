@@ -48,6 +48,8 @@ class external extends external_api {
 	public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
 		global $DB, $USER;
 
+		local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
+
 		$teameval = new team_evaluation($teamevalid);
 		$transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
@@ -114,6 +116,8 @@ class external extends external_api {
 	public static function delete_question($teamevalid, $id) {
 		global $DB, $USER;
 
+		local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
+
 		$teameval = new team_evaluation($teamevalid);
 
 		$transaction = $teameval->should_delete_question("likert", $id, $USER->id);
@@ -149,6 +153,8 @@ class external extends external_api {
 
 	public static function submit_response($teamevalid, $id, $marks) {
 		global $DB, $USER;
+
+		local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
 		$teameval = new team_evaluation($teamevalid);
 

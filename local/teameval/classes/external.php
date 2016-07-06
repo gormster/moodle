@@ -428,16 +428,18 @@ class external extends external_api {
      * @param array $options An array of optional extra tests.
      * @return type
      */
-    protected static function guard_teameval_capability($id, $caps = [], $options = []) {
+    public static function guard_teameval_capability($id, $caps = [], $options = []) {
 
         $context = null;
 
         /* OPTIONS
         must_exist (bool): require that the teameval already exists. only checked when passed a cmid.
         child_context (context): if this is a child context of the teameval context, use that context
+        doanything: Set this value for the doanything parameter of require_capbility
         */
         $must_exist = isset($options['must_exist']) ? $options['must_exist'] : false;
         $child_context = isset($options['child_context']) ? $options['child_context'] : null;
+        $doanything = isset($options['doanything']) ? $options['doanything'] : true;
 
         if (is_numeric($id)) {
             $id = ['id' => $id];
@@ -473,7 +475,7 @@ class external extends external_api {
         }
 
         foreach($caps as $cap) {
-            require_capability($cap, $context);
+            require_capability($cap, $context, null, $doanything);
         }
 
         return $context;

@@ -14,6 +14,7 @@ use invalid_parameter_exception;
 use context_module;
 use stdClass;
 
+use local_teameval;
 use local_teameval\team_evaluation;
 
 class external extends external_api {
@@ -37,9 +38,9 @@ class external extends external_api {
     }
 
     public static function update_question($teamevalid, $ordinal, $id, $title, $description, $anonymous, $optional) {
-        require_login();
-
         global $DB, $USER;
+
+        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
 
@@ -92,9 +93,9 @@ class external extends external_api {
     }
 
     public static function delete_question($teamevalid, $id) {
-        require_login();
-
         global $USER, $DB;
+        
+        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
 
@@ -132,8 +133,9 @@ class external extends external_api {
     }
 
     public static function submit_response($teamevalid, $id, $comments) {
-
         global $DB, $USER;
+
+        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
         $teameval = new team_evaluation($teamevalid);
 

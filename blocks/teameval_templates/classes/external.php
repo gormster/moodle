@@ -11,6 +11,7 @@ use external_multiple_structure;
 use invalid_parameter_exception;
 use moodle_exception;
 
+use local_teameval;
 use local_teameval\team_evaluation;
 use local_teameval\evaluation_context;
 use stdClass;
@@ -29,11 +30,9 @@ class external extends external_api {
 	}
 
 	public static function update_title($id, $title) {
-		require_login();
+		local_teameval\external::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
 
 		$teameval = new team_evaluation($id);
-
-		require_capability('local/teameval:createquestionnaire', $teameval->get_context());
 
 		$r = new stdClass;
 		$r->title = $title;
@@ -99,9 +98,8 @@ class external extends external_api {
 
 	public static function add_to_module($from, $to) {
 
-		if (!team_evaluation::exists($from)) {
-            throw new invalid_parameter_exception("Teameval does not exist");
-        }
+		$context = local_teameval\external::guard_teameval_capability(['cmid' => $to], ['local/teameval:createquestionnaire']);
+		local_teameval\external::guard_teameval_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $context]);
 
 		$cm = get_course_and_cm_from_cmid($to)[1];
 		$evalcontext = evaluation_context::context_for_module($cm);
@@ -110,34 +108,7 @@ class external extends external_api {
 			throw new invalid_parameter_exception("Activity does not support evaluation");
 		}
 
-		// Check that our user can see the source template
-
         $from = new team_evaluation($from);
-
-        // Okay - teamevals work in a weird way with contexts. You're not necessarily going to have
-        // permission in the actual template's context, but we need to make sure the context you're
-        // reading from is a child of that template's context.
-
-        // In this case, the context we care about is the destination context.
-
-        $ischild = in_array($from->get_context()->id, $cm->context->get_parent_context_ids(true));
-
-        if ($ischild) {
-        	$readcontext = $cm->context;
-		} else {
-			// If the template isn't a context, then there's still the chance you have read permission
-        	// in that template's context.
-			$readcontext = $from->get_context();        	
-		}
-
-        $canread = has_capability('blocks/teameval_templates:viewtemplate', $readcontext);
-
-        if (!$canread) {
-            require_capability('local/teameval:viewtemplate', $readcontext);
-        }
-
-        require_capability('local/teameval:createquestionnaire', $cm->context);
-
 
 		// We might be about to enabled evaluation on this activity, but we can still fail initialisation
 		// if the questionnaire will be immediately locked upon evaluation start. In that case, we should

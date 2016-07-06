@@ -14,7 +14,7 @@ $functions = [
         
         'classname'     => 'block_teameval_templates\external',
         'methodname'    => 'delete_template',
-        'type'          => 'write'
+        'type'          => 'delete'
         
     ],
 

@@ -243,7 +243,6 @@ class team_evaluation {
         //fetch settings if they're not set
         $this->get_settings();
 
-        //todo: validate
         foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'] as $i) {
             if (isset($settings->$i)) {
                 
@@ -1091,7 +1090,7 @@ class team_evaluation {
         if (($set == false) && ($record !== false)) {
             $DB->delete_records('teameval_release', (array)$record);
         }
-
+        
         $this->releases[] = $release;
 
         // figure who we need to trigger grades for
