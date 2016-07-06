@@ -14,6 +14,7 @@ use context;
 use coding_exception;
 use local_searchable\searchable;
 use moodle_url;
+use cache;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -110,13 +111,8 @@ class team_evaluation {
             }
 
         }
-        
 
         $this->get_settings();
-
-        $this->get_evaluation_context();
-
-        $this->get_releases();
     
     }
 
@@ -129,7 +125,12 @@ class team_evaluation {
         }
 
         if (! isset($this->evalcontext)) {
-            $this->evalcontext = evaluation_context::context_for_module($this->cm);
+            $cache = cache::make('local_teameval', 'evalcontext');
+            $this->evalcontext = $cache->get($this->cm->id);
+            if (empty($this->evalcontext)) {
+                $this->evalcontext = evaluation_context::context_for_module($this->cm);
+                $cache->set($this->cm->id, $this->evalcontext);
+            }
         }
 
         return $this->evalcontext;
@@ -172,10 +173,18 @@ class team_evaluation {
     
         global $DB;
 
+        $cache = cache::make('local_teameval', 'settings');
+
         // initialise settings if they're not already
         if (!isset($this->settings)) {
 
-            $this->settings = $DB->get_record('teameval', array('id' => $this->id));
+            // retrieve from MUC or from the database
+            if (isset($this->id)) {
+                $this->settings = $cache->get($this->id);
+                if (empty($this->settings)) {
+                    $this->settings = $DB->get_record('teameval', array('id' => $this->id));
+                }
+            }
             
             if ($this->settings === false) {
                 $settings = team_evaluation::default_settings();
@@ -193,10 +202,10 @@ class team_evaluation {
                 $this->settings = $settings;
             } else {
 
-                if ($this->settings->cmid) {
+                if (!empty($this->settings->cmid)) {
                     $this->cm = get_course_and_cm_from_cmid($this->settings->cmid)[1];
                     $this->context = context_module::instance($this->settings->cmid);
-                } else if ($this->settings->contextid) {
+                } else if (!empty($this->settings->contextid)) {
                     $this->context = context::instance_by_id($this->settings->contextid);
                 }
 
@@ -213,6 +222,8 @@ class team_evaluation {
                     $this->settings->deadline = (int)$this->settings->deadline;
                 }
             }
+
+            $cache->set($this->id, $this->settings);
 
             // these aren't really part of the settings
             unset($this->settings->id);
@@ -242,6 +253,14 @@ class team_evaluation {
         $record->id = $this->id;
         
         $DB->update_record('teameval', $record);
+        
+        // set contextid if cm is empty, set cmid if cm is full
+        $record->contextid = empty($this->cm) ? $this->context->id : null;
+        $record->cmid = empty($this->cm) ? null : $this->cm->id;
+
+        $cache = cache::make('local_teameval', 'settings');
+        $cache->set($this->id, $record);
+        
 
         // if this is a template or a public questionnaire
         if (($this->cm == null) || ($this->settings->public)) {
@@ -496,6 +515,14 @@ class team_evaluation {
      * @return false or an array of [LOCKED_REASON constant, user object]
      */
     public function questionnaire_locked() {
+
+        if (empty($this->cm)) {
+            // Templates are never locked
+            return false;
+        }
+
+        $this->get_evaluation_context();
+
         // The logic here is:
         
         // The questionnaire is locked if a single marking user has evaluation_permitted
@@ -629,6 +656,8 @@ class team_evaluation {
     public function get_evaluator() {
 
         if (! isset($this->evaluator)) {
+
+            $this->get_evaluation_context();
 
             $evaluators = core_plugin_manager::instance()->get_plugins_of_type("teamevaluator");
 
@@ -792,15 +821,15 @@ class team_evaluation {
     // interface to evalcontext
 
     public function group_for_user($userid) {
-        return $this->evalcontext->group_for_user($userid);
+        return $this->get_evaluation_context()->group_for_user($userid);
     }
 
     public function all_groups() {
-        return $this->evalcontext->all_groups();
+        return $this->get_evaluation_context()->all_groups();
     }
 
     public function marking_users() {
-        return $this->evalcontext->marking_users();
+        return $this->get_evaluation_context()->marking_users();
     }
 
     // convenience functions
@@ -1000,6 +1029,7 @@ class team_evaluation {
     public function release_marks_for($target, $level, $set) {
         global $DB;
 
+        $this->get_evaluation_context();
         $release = new stdClass;
         $release->cmid = $this->cm->id;
         $release->target = $target;
