@@ -8,6 +8,7 @@ use local_teameval\forms;
 use core_plugin_manager;
 use renderable;
 use context_module;
+use moodle_exception;
 
 class team_evaluation_block implements renderable {
 
@@ -71,7 +72,7 @@ class team_evaluation_block implements renderable {
             if ($context) {
                 // If we've been passed a viewing context that's not the same as the teameval context
                 // then we need to make sure it is a child context of the teameval context.
-                $child = in_array($this->context->id, $context->get_parent_context_ids());
+                $child = in_array($this->context->id, $context->get_parent_context_ids(true));
                 if (!$child) {
                     throw new moodle_exception('contextnotchild', 'local_teameval', '', ['child' => $context->get_context_name(), 'parent' => $this->context->get_context_name()]);
                 }
