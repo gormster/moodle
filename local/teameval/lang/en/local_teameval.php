@@ -84,6 +84,7 @@
 
     $string['fromtemplate'] = 'From <strong>{$a}</strong>';
     $string['matchingtags'] = 'Matching tags: {$a}';
+    $string['templatepreview'] = 'Adding {$a->numqs} questions from {$a->from}';
 
     // ERRORS
 

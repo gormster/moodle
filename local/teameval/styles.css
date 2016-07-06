@@ -123,6 +123,12 @@
     text-align: center;
 }
 
+.local-teameval-template-search .template-add-preview {
+    font-size: 80%;
+    color: #777;
+    font-style: italic;
+}
+
 .local-teameval-template-search .ui-autocomplete-loading {
     background: white url([[pix:core|i/loading_small]]) right center no-repeat;
 }

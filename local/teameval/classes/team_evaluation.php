@@ -1030,6 +1030,8 @@ class team_evaluation {
         global $DB;
 
         $this->get_evaluation_context();
+        $this->get_releases();
+
         $release = new stdClass;
         $release->cmid = $this->cm->id;
         $release->target = $target;

@@ -351,8 +351,10 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 					        _searchBar.val( ui.item.title );
 					        _searchBar.data('template-id', ui.item.id);
 					        templateAddButton.prop('disabled', false);
+					        options.templatePreviewFunction(ui.item);
 					    } else {
 					    	templateAddButton.prop('disabled', true);
+					    	options.templatePreviewFunction();
 					    }
 				        return false;
 				      }
@@ -361,10 +363,12 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 			    _searchBar.focus(function() {
 			    	_searchBar.val('');
 			    	templateAddButton.prop('disabled', true);
+			    	options.templatePreviewFunction();
 			    });
 
 			    _searchBar.change(function() {
 			    	templateAddButton.prop('disabled', true);
+			    	options.templatePreviewFunction();
 			    });
 
 			    _searchBar.autocomplete( "instance" )._renderItem = options.autocompleteRenderFunction;

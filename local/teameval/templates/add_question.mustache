@@ -11,6 +11,7 @@
 <h4 class="collapsible-heading">{{#str}} templatesheading, local_teameval {{/str}}</h4>
 <div id="local-teameval-template-search-{{uniqid}}" class="local-teameval-template-search ui-front collapsing">
 <label>{{#str}} addquestionsfrom, local_teameval {{/str}}<input type="text" id="template-search-{{uniqid}}" /></label>
+<div class="template-add-preview"></div>
 <button type="btn btn-default">{{#str}} add {{/str}}</button>
 </div>
 <div class="local-teameval-template-io collapsing" id="local-teameval-template-io-{{uniqid}}">
@@ -20,7 +21,7 @@
 </div>
 {{/locked}}
 {{#js}}{{#_notset}}<script>{{/_notset}}
-require(['jquery', 'local_teameval/addquestion', 'local_teameval/collapsible'], function($, AddQuestion, Collapsible) {
+require(['jquery', 'local_teameval/addquestion', 'local_teameval/collapsible', 'core/str'], function($, AddQuestion, Collapsible, Strings) {
 
 	AddQuestion.initialise({
 		addButton: $('#local-teameval-add-question-{{uniqid}}'),
@@ -34,15 +35,30 @@ require(['jquery', 'local_teameval/addquestion', 'local_teameval/collapsible'], 
 		filepickeritemid: {{filepickeritemid}},{{/filepickerid}}
 		subplugins: {{{subplugins}}},
 		autocompleteRenderFunction: function( ul, item ) {
-			var fromStr = "{{#str}} fromtemplate, local_teameval {{/str}}";
-			var matchingTagsStr = "{{#str}} matchingtags, local_teameval {{/str}}";
-			fromStr.replace('{$a}', item.title);
-			matchingTagsStr.replace('{$a}', item.tags.join(', '));
-			return $( "<li class='local-teameval-template-search-result'>" )
-		        .append( "<a class='title'>" + item.title + "</a><br>"+
-	        	"<span class='subtitle'>" + fromStr + " • " + matchingTagsStr + "</span>" )
-		        .appendTo( ul );
-	    }
+			var rslt = $( "<li class='local-teameval-template-search-result' />" );
+			var promise = Strings.get_strings([
+				{key: 'fromtemplate', component: 'local_teameval', param: item.from},
+				{key: 'matchingtags', component: 'local_teameval', param: item.tags.join(', ')}
+				]);
+
+			promise.done(function(s) {
+				rslt.append( "<a class='title'>" + item.title + "</a><br>"+
+	        	"<span class='subtitle'>" + s[0] + " • " + s[1] + "</span>" )
+	        	.appendTo( ul );
+			});
+			
+			return rslt;
+	    },
+	    templatePreviewFunction: function( item ) {
+            if (item) {
+    	    	var promise = Strings.get_string('templatepreview', 'local_teameval', {'from': item.title, 'numqs': item.numqs});
+    	    	promise.done(function(s) {
+    	    		$('#local-teameval-template-search-{{uniqid}} .template-add-preview').html(s);
+    	    	});
+            } else {
+                $('#local-teameval-template-search-{{uniqid}} .template-add-preview').empty();
+            }
+		}
 	});
 
 	Collapsible.init({

@@ -94,6 +94,7 @@ class renderer extends plugin_renderer_base {
         if ($options) {
             $PAGE->requires->js_init_call('M.core_filepicker.init', [$options], true);
         }
+        $PAGE->requires->strings_for_js(['fromtemplate', 'matchingtags', 'templatepreview'], 'local_teameval');
         return $this->render_from_template('local_teameval/add_question', $context);
     }
 
