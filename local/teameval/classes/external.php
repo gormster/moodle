@@ -74,7 +74,8 @@ class external extends external_api {
     }
 
     public static function update_settings_returns() {
-        return null;
+        $settingsform = new \local_teameval\forms\settings_form;
+        return $settingsform->returns();
     }
 
     public static function update_settings($form) {
@@ -93,7 +94,9 @@ class external extends external_api {
         $settings->noncompletionpenalty = $settings->noncompletionpenalty / 100.0;
 
         $teameval = new team_evaluation($settings->id);
-        $teameval->update_settings($settings);
+        $settings = $teameval->update_settings($settings);
+
+        return $settings;
     }
 
     public static function update_settings_is_allowed_from_ajax() { return true; }

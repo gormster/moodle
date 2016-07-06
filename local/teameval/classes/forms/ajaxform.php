@@ -15,17 +15,28 @@ use HTML_QuickForm_static;
 abstract class ajaxform extends moodleform {
 
     function external_parameters() {
-        $params = [];
         $mform = $this->_form;
-        foreach($mform->_elements as $el) {
+        $params = $this->elements_as_params($mform->_elements);
+        return new external_function_parameters([
+            'form' => new external_single_structure($params)
+        ]);
+    }
+
+    function returns() {
+        $mform = $this->_form;
+        $params = $this->elements_as_params($mform->_elements);
+        return new external_single_structure($params);
+    }
+
+    protected function elements_as_params($els) {
+        $params = [];
+        foreach($els as $el) {
             $name = $el->getName();
             if ((strlen($name) > 0) && ($this->is_data_element($el))) {
                 $params[$name] = $this->value_for_element($el);
             }
         }
-        return new external_function_parameters([
-            'form' => new external_single_structure($params)
-            ]);
+        return $params;
     }
 
     protected function is_data_element($el)
@@ -40,14 +51,7 @@ abstract class ajaxform extends moodleform {
 
     protected function value_for_element($element) {
         if ($element instanceof HTML_QuickForm_group) {
-            $els = $element->getElements();
-            $params = [];
-            foreach($els as $el) {
-                $name = $el->getName();
-                if ((strlen($name) > 0) && ($this->is_data_element($el))) {
-                    $params[$name] = $this->value_for_element($el);
-                }
-            }
+            $params = $this->elements_as_params($element->getElements());
             return new external_single_structure($params);
         } else {
             return new external_value(PARAM_RAW, 'AJAXFORM: ' . $element->getName());

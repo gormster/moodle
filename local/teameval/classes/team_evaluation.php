@@ -193,6 +193,7 @@ class team_evaluation {
                     unset($settings->title); // real teamevals don't have titles
                 } else if (isset($this->context)) {
                     $settings->contextid = $this->context->id;
+                    $settings->title = $this->available_title($settings->title);
                 } else {
                     throw new coding_exception("Team evaluation does not exist.");
                 }
@@ -245,10 +246,19 @@ class team_evaluation {
         //todo: validate
         foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'] as $i) {
             if (isset($settings->$i)) {
+                
+                // validation
+                switch($i) {
+                    case 'title':
+                        $settings->title = $this->available_title($settings->title);
+                        break;
+                }
+
                 $this->settings->$i = $settings->$i;
             }
         }
 
+        // insert that bad boy
         $record = clone $this->settings;
         $record->id = $this->id;
         
@@ -260,7 +270,6 @@ class team_evaluation {
 
         $cache = cache::make('local_teameval', 'settings');
         $cache->set($this->id, $record);
-        
 
         // if this is a template or a public questionnaire
         if (($this->cm == null) || ($this->settings->public)) {
@@ -272,6 +281,9 @@ class team_evaluation {
         if (isset($settings->fraction) || isset($settings->noncompletionpenalty)) {
             $this->get_evaluation_context()->trigger_grade_update();
         }
+
+        return $settings;
+
     }
 
     public function get_context() {
@@ -293,6 +305,38 @@ class team_evaluation {
         } else {
             return $this->get_context()->get_context_name();
         }
+    }
+
+    public function available_title($title) {
+        global $DB;
+
+        // if you haven't changed the title, then it's definitely available
+        if (isset($this->settings->title) && ($title == $this->settings->title)) {
+            return $title;
+        }
+
+        $contextid = $this->get_context()->id;
+
+        if ($DB->record_exists('teameval', ['cmid' => null, 'contextid' => $contextid, 'title' => $title])) {
+            $like = $DB->sql_like('title', '?');
+            $strip = preg_match('/(.*)\s[\d+]/', $title, $matches);
+            if ($strip) {
+                $title = $matches[1];
+            }
+            $records = $DB->get_records_select('teameval', $like . ' AND contextid = ? AND id != ?', [$title . '%', $contextid, $this->id], '', 'id, title');
+            $titles = [];
+            foreach($records as $r) {
+                $titles[] = $r->title;
+            }
+
+            // add numbers to the end of the title until it doesn't match one of the titles
+            $i = 2;
+            while(in_array("$title $i", $titles)) {
+                $i++;
+            }
+            return "$title $i";
+        }
+        return $title;
     }
 
     public function __get($k) {

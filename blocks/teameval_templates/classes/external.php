@@ -25,7 +25,7 @@ class external extends external_api {
 	}
 
 	public static function update_title_returns() {
-		return null;
+		return new external_value(PARAM_RAW, 'title after validation');
 	}
 
 	public static function update_title($id, $title) {
@@ -37,7 +37,9 @@ class external extends external_api {
 
 		$r = new stdClass;
 		$r->title = $title;
-		$teameval->update_settings($r);
+		$settings = $teameval->update_settings($r);
+
+		return $settings->title;
 	}
 
 	public static function update_title_is_allowed_from_ajax() { return true; }

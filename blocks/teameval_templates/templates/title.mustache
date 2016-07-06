@@ -8,7 +8,7 @@
 	{{/editable}}
 </div>
 {{#editable}}
-{{#js}}
+{{#js}}{{#_notset}}<script>{{/_notset}}
 require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
 	
 	$('#template-title-{{uniqid}} input').on('input', function() {
@@ -32,6 +32,10 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notifica
 				title: title
 			}
 		}]);
+
+		promises[0].done(function(newTitle) {
+			$('#template-title-{{uniqid}} input').val(newTitle);
+		});
 
 		promises[0].always(function() {
 			button.prop('disabled', false);
