@@ -25,4 +25,12 @@ class opinion_readable extends templatable implements renderable {
 		return $c;
 	}
 
+	public function export_for_plaintext() {
+		return "$this->val / $this->max";
+	}
+
+	public function export_for_csv() {
+		return $this->val;
+	}
+
 }

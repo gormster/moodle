@@ -6,6 +6,7 @@ require_once("{$CFG->dirroot}/local/teameval/lib.php");
 
 use user_picture;
 use stdClass;
+use csv_export_writer;
 
 class report implements \local_teameval\report {
 
@@ -22,6 +23,7 @@ class report implements \local_teameval\report {
         $allgroups = $this->teameval->get_evaluation_context()->all_groups();
 
         $responses = [];
+        $questiontypes = [];
 
         // this will end up looking like:
         // [ questioninfo => questioninfo, groups => [
@@ -33,6 +35,7 @@ class report implements \local_teameval\report {
         	$responseinfo->questioninfo = $q;
         	$responseinfo->groups = [];
         	$responses[] = $responseinfo;
+            $questiontypes[$q->type] = $q->type;
         }
 
         $groupmembers = [];
@@ -62,7 +65,58 @@ class report implements \local_teameval\report {
 	        }
         }
 
-        return new output\responses_report($responses);
+        $filename = 'questions_' . $this->teameval->get_title() . '.csv';
+        $downloadlink = $this->teameval->report_download_link('responses', $filename);
+
+        return new output\responses_report($responses, $questiontypes, $downloadlink);
+    }
+
+    public function export($filename) {
+
+        $info = pathinfo($filename);
+        $ext = $info['extension'];
+        list($fn, $realname) = explode('_', $info['filename'], 2);
+
+        $methodname = "export_{$fn}_{$ext}";
+
+        if (method_exists($this, $methodname)) {
+            $this->$methodname($info['filename']);
+        }
+
+        return false;
+
+    }
+
+    public function export_questions_csv($filename) {
+
+        $report = $this->generate_report();
+
+        $data = $report->export_for_csv();
+
+        $csv = new csv_export_writer();
+        $csv->set_filename($filename);
+
+        foreach($data as $question) {
+            $titlerow = [$question->title];
+            if (isset($question->max)) {
+                $titlerow[] = get_string('maxvalue', 'teamevalreport_responses');
+                $titlerow[] = $question->max;
+            }
+            $csv->add_data($titlerow);
+            $csv->add_data([]);
+            foreach($question->groups as $group) {
+                $csv->add_data(array_merge([$group->name], $group->header));
+                foreach($group->rows as $row) {
+                    $csv->add_data($row);
+                }
+                $csv->add_data([]);
+            }
+            $csv->add_data([]);
+            $csv->add_data([]);
+        }
+
+        $csv->download_file();
+
     }
 
 

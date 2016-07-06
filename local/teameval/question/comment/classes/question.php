@@ -122,6 +122,10 @@ class question implements \local_teameval\question {
         return new output\question_report($this->teameval, $this, $groupid);
     }
 
+    public static function supported_renderer_subtypes() {
+        return ['plaintext'];
+    }
+
     public static function delete_questions($ids) {
         global $DB;
 

@@ -305,6 +305,10 @@ class question implements \local_teameval\question {
         throw new coding_exception("not implemented");
     }
 
+    public static function supported_renderer_subtypes() {
+        return ['csv', 'plaintext'];
+    }
+
     public static function duplicate_question($questionid, $newteameval) {
         global $DB;
 

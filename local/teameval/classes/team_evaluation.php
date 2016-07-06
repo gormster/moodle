@@ -13,6 +13,7 @@ use context_module;
 use context;
 use coding_exception;
 use local_searchable\searchable;
+use moodle_url;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -729,24 +730,63 @@ class team_evaluation {
         return $this->score_to_multiplier($score, $userid);
     }
 
+    // REPORTS
+
     public function set_report_plugin($plugin) {
         set_user_preference(REPORT_PLUGIN_PREFERENCE, $plugin);
     }
 
-    public function get_report_plugin() {
-        $plugin = get_user_preferences(REPORT_PLUGIN_PREFERENCE, 'scores');
+    public function get_report_plugin($plugin = null) {
+        if ($plugin == null) {
+            $plugin = get_user_preferences(REPORT_PLUGIN_PREFERENCE, 'scores');
+        }
         return core_plugin_manager::instance()->get_plugin_info("teamevalreport_$plugin");
     }
 
-    public function get_report() {
+    public function get_report($plugin = null) {
         // TODO: site-wide default report
-        $plugininfo = $this->get_report_plugin();
+
+        $plugininfo = $this->get_report_plugin($plugin);
         $cls = $plugininfo->get_report_class();
 
         $report = new $cls($this);
 
         return $report->generate_report();
     }
+
+    public function report_download_link($plugin, $filename) {
+        if(empty($this->cm)) {
+            throw new coding_exception("Cannot download report for template.");
+        }
+
+        return moodle_url::make_pluginfile_url(
+            $this->get_context()->id, 
+            'local_teameval', 
+            'report', 
+            $this->cm->id,
+            "/$plugin/", $filename);
+    }
+
+    public static function plugin_supports_renderer_subtype($plugin, $subtype = null) {
+        $plugininfo = core_plugin_manager::instance()->get_plugin_info($plugin);
+        $supported_subtypes = [];
+
+        if (method_exists($plugininfo, 'supported_renderer_subtypes')) {
+            $supported_subtypes = $plugininfo->supported_renderer_subtypes();
+        }
+
+        if ($subtype == null) {
+            return $supported_subtypes;
+        }
+
+        if (is_array($subtype)) {
+            return array_intersect($subtype, $supported_subtypes);
+        }
+
+        return in_array($subtype, $supported_subtypes);
+    }
+
+    
 
 
     // interface to evalcontext

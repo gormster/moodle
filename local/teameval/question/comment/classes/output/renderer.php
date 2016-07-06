@@ -2,7 +2,9 @@
 
 namespace teamevalquestion_comment\output;
 
-class renderer extends \plugin_renderer_base {
+use plugin_renderer_base;
+
+class renderer extends plugin_renderer_base {
 
 	public function render_response_report(response_report $report) {
 		$data = $report->export_for_template($this);

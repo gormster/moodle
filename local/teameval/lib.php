@@ -31,6 +31,29 @@ function local_teameval_pluginfile($course, $cm, $context, $filearea, $args, $fo
 
     }
 
+    if ($filearea == 'report') {
+
+        require_login($course);
+
+        require_capability('local/teameval:viewallteams', $context);
+
+        if (count($args) != 3) {
+            return false;
+        }
+
+        list($cmid, $reportplugin, $filename) = $args;
+
+        if (team_evaluation::exists(null, $cmid)) {
+            $teameval = team_evaluation::from_cmid($cmid);
+            $plugininfo = $teameval->get_report_plugin($reportplugin);
+            $cls = $plugininfo->get_report_class();
+            $report = new $cls($teameval);
+            
+            $report->export($filename);
+        }
+
+    }
+
     return false;
 
 }

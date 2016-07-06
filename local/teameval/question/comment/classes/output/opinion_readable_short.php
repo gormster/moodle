@@ -30,6 +30,10 @@ class opinion_readable_short extends templatable implements renderable {
 		return $c;
 	}
 
+	public function export_for_plaintext() {
+		return $this->comment;
+	}
+
 	public function amd_init_call() {
 		return ["teamevalquestion_comment/opinion_readable_short", "init"];
 	}

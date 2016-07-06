@@ -78,6 +78,7 @@
 </table>
 {{/groups}}
 {{/questions}}
+<button type="button" id="teamevalreport-responses-download-{{uniqid}}">{{#str}} download, teamevalreport_responses {{/str}}</button>
 </div>
 {{#js}}{{#_notset}}<script>{{/_notset}}
 
@@ -99,6 +100,10 @@ require(requirements, function($, Templates) {
             m[c]();
         }
     });
+
+    $('#teamevalreport-responses-download-{{uniqid}}').click(function() {
+        window.location.href = "{{downloadlink}}";
+    })
 
 });
 {{/js}}
