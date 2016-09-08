@@ -7,6 +7,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'turn_on',
         'type'          => 'write',
+        'ajax'          => true,
         
     ],
 
@@ -14,7 +15,8 @@ $functions = [
         
         'classname'     => 'local_teameval\external',
         'methodname'    => 'get_settings',
-        'type'          => 'read'
+        'type'          => 'read',
+        'ajax'          => true,
         
     ],
     
@@ -23,6 +25,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'update_settings',
         'type'          => 'write',
+        'ajax'          => true,
         
     ],
 
@@ -31,6 +34,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'questionnaire_set_order',
         'type'          => 'write',
+        'ajax'          => true,
 
     ],
 
@@ -39,6 +43,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'report',
         'type'          => 'read',
+        'ajax'          => true,
 
     ],
 
@@ -47,6 +52,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'release',
         'type'          => 'write',
+        'ajax'          => true,
 
     ],
 
@@ -55,6 +61,7 @@ $functions = [
         'classname'     => 'local_teameval\external',
         'methodname'    => 'get_release',
         'type'          => 'read',
+        'ajax'          => true,
 
     ],
 
@@ -62,7 +69,8 @@ $functions = [
 
         'classname'     => 'local_teameval\external',
         'methodname'    => 'template_search',
-        'type'          => 'read'
+        'type'          => 'read',
+        'ajax'          => true,
 
     ],
 
@@ -72,6 +80,7 @@ $functions = [
         'methodname'    => 'add_from_template',
         'type'          => 'write',
         'requiredcapability' => 'local/teameval:createquestionnaire',
+        'ajax'          => true,
 
     ],
 
@@ -81,6 +90,7 @@ $functions = [
         'methodname'    => 'upload_template',
         'type'          => 'write',
         'requiredcapability' => 'local/teameval:createquestionnaire',
+        'ajax'          => true,
 
     ]
     

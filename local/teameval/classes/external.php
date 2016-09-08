@@ -38,8 +38,6 @@ class external extends external_api {
         $teameval->update_settings($settings);
     }
 
-    public static function turn_on_is_allowed_from_ajax() { return true; }
-
     /* get_settings */
 
     public static function get_settings_parameters() {
@@ -63,8 +61,6 @@ class external extends external_api {
         $teameval = team_evaluation::from_cmid($cmid);
         return $teameval->get_settings();
     }
-
-    public static function get_settings_is_allowed_from_ajax() { return true; }
 
     /* update_settings */
 
@@ -99,8 +95,6 @@ class external extends external_api {
         return $settings;
     }
 
-    public static function update_settings_is_allowed_from_ajax() { return true; }
-
     /* questionnaire_set_order */
 
     public static function questionnaire_set_order_parameters() {
@@ -124,8 +118,6 @@ class external extends external_api {
         $teameval = new team_evaluation($id);
         $teameval->questionnaire_set_order($order);
     }
-
-    public static function questionnaire_set_order_is_allowed_from_ajax() { return true; }
 
     /* report */
 
@@ -172,8 +164,6 @@ class external extends external_api {
 
     }
 
-    public static function report_is_allowed_from_ajax() { return true; }
-
     /* release */
 
     public static function release_parameters() {
@@ -204,8 +194,6 @@ class external extends external_api {
         
     }
 
-    public static function release_is_allowed_from_ajax() { return true; }
-
     /* get_release */
 
     public static function get_release_parameters() {
@@ -231,8 +219,6 @@ class external extends external_api {
 
         return array_values($DB->get_records('teameval_release', ['cmid' => $cmid]));
     }
-
-    public static function get_release_is_allowed_from_ajax() { return true; }
 
     /* template_search */
 
@@ -306,8 +292,6 @@ class external extends external_api {
 
     }
 
-    public static function template_search_is_allowed_from_ajax() { return true; }
-
     /* add_from_template */
 
     public static function add_from_template_parameters() {
@@ -356,8 +340,6 @@ class external extends external_api {
         return $returns;
 
     }
-
-    public static function add_from_template_is_allowed_from_ajax() { return true; }
 
     /* upload_template */
 
@@ -415,8 +397,6 @@ class external extends external_api {
 
     }
 
-    public static function upload_template_is_allowed_from_ajax() { return true; }
-
     /******************
     * HELPER FUNCTIONS*
     ******************/
@@ -429,6 +409,7 @@ class external extends external_api {
      * @return type
      */
     public static function guard_teameval_capability($id, $caps = [], $options = []) {
+        global $PAGE;
 
         $context = null;
 
@@ -469,6 +450,8 @@ class external extends external_api {
             default:
                 throw new coding_exception('$id must be integer or array with key in (id, cmid, contextid)');
         }
+
+        $PAGE->set_context($context);
 
         if ($child_context && in_array($context->id, $child_context->get_parent_context_ids(true))) {
             $context = $child_context;
