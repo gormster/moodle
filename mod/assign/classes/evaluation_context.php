@@ -14,11 +14,18 @@ class evaluation_context extends \local_teameval\evaluation_context {
 	public function evaluation_permitted($userid = null) {
 		$enabled = $this->assign->get_instance()->teamsubmission;
 		if ($userid) {
-			$groupsub = $this->assign->get_group_submission($userid, 0, false);
-			if (($groupsub == false) || 
-				($groupsub->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) ||
-				($this->assign->submission_empty($groupsub))) {
-				$enabled = false;
+			if ($this->assign->is_any_submission_plugin_enabled()) {
+				$groupsub = $this->assign->get_group_submission($userid, 0, false);
+				if (($groupsub == false) || 
+					($groupsub->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) ||
+					($this->assign->submission_empty($groupsub))) {
+					$enabled = false;
+				}
+			} else {
+				$grade = $this->assign->get_user_grade($userid, false);
+		        if (!($grade && $grade->grade !== null && $grade->grade >= 0)) {
+		        	$enabled = false;
+		        }
 			}
 		}
 		return $enabled;
