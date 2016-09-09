@@ -249,6 +249,9 @@ abstract class evaluation_context {
                     $grade->rawgrade = min(max(0, $grade->rawgrade), 100);
                     $feedbacks = $teameval->all_feedback($userid);
                     if(count($feedbacks)) {
+                        if (empty($grade->feedbacks)) {
+                            $grade->feedback = "";
+                        }
                         $grade->feedback .= $this->format_feedback($feedbacks);
                     }
                 } else {
