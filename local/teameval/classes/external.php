@@ -13,6 +13,7 @@ use invalid_parameter_exception;
 use stdClass;
 use local_searchable\searchable;
 use context;
+use context_system;
 use context_module;
 use context_user;
 
@@ -65,16 +66,25 @@ class external extends external_api {
     /* update_settings */
 
     public static function update_settings_parameters() {
+        global $PAGE; // we need to set the context to construct a moodleform
+        $PAGE->set_context(context_system::instance()); 
+
         $settingsform = new \local_teameval\forms\settings_form;
         return $settingsform->external_parameters();
     }
 
     public static function update_settings_returns() {
+        global $PAGE;
+        $PAGE->set_context(context_system::instance());
+
         $settingsform = new \local_teameval\forms\settings_form;
+        error_log(print_r($settingsform->returns(), true));
         return $settingsform->returns();
     }
 
     public static function update_settings($form) {
+        global $PAGE;
+        $PAGE->set_context(context_system::instance());
 
         $settingsform = new \local_teameval\forms\settings_form();
         $settingsform->process_data($form);
