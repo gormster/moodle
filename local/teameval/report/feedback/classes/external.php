@@ -79,8 +79,4 @@ class external extends external_api {
 
     }
 
-    public static function update_states_is_allowed_from_ajax() {
-        return true;
-    }
-
 }

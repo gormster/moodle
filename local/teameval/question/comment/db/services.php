@@ -6,7 +6,8 @@ $functions = [
         
         'classname'     => 'teamevalquestion_comment\external',
         'methodname'    => 'update_question',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
         
     ],
 
@@ -14,7 +15,8 @@ $functions = [
         
         'classname'     => 'teamevalquestion_comment\external',
         'methodname'    => 'delete_question',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
         
     ],
 
@@ -22,7 +24,8 @@ $functions = [
 
         'classname'     => 'teamevalquestion_comment\external',
         'methodname'    => 'submit_response',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
 
     ]
 

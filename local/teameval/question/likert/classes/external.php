@@ -99,8 +99,6 @@ class external extends external_api {
 
     }
 
-    public static function update_question_is_allowed_from_ajax() { return true; }
-
     /* delete_question */
 
     public static function delete_question_parameters() {
@@ -130,8 +128,6 @@ class external extends external_api {
 
         $teameval->delete_question($transaction);
     }
-
-    public static function delete_question_is_allowed_from_ajax() { return true; }
 
     /* submit_response */
 
@@ -173,7 +169,5 @@ class external extends external_api {
             $response->update_response($formdata);
         }
     }
-
-    public static function submit_response_is_allowed_from_ajax() { return true; }
 
 }

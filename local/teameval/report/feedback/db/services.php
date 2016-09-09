@@ -6,7 +6,8 @@ $functions = [
         
         'classname'     => 'teamevalreport_feedback\external',
         'methodname'    => 'update_states',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
         
     ]
 
