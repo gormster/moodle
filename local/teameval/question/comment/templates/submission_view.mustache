@@ -46,7 +46,7 @@ require(['jquery', 'core/ajax', 'core/notification'], function($, ajax, notifica
             questionContainer.parent().removeClass('incomplete');
         }
 
-        return incomplete;
+        return incomplete.length > 0;
     }
     {{/optional}}{{/locked}}
 
