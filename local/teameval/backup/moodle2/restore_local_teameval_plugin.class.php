@@ -2,9 +2,8 @@
 
 class restore_local_teameval_plugin extends restore_local_plugin {
 
-    // I have to do all this bullshit
-    // Because prepare_pathelements is private
-    // for no bloody reason
+    // This is necessary because add_subplugin_structure is declared protected.
+    // So there's a lot of working around that fact.
     public function define_plugin_structure($connectionpoint) {
         if (!$connectionpoint instanceof restore_path_element) {
             throw new restore_step_exception('restore_path_element_required', $connectionpoint);
@@ -100,7 +99,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
     public function process_teameval($settings) {
         global $DB;
 
-        // it fucking boggles my mind that this is necessary
+        // it boggles my mind that this is necessary
         // but sometimes this function is called with an object
         // and sometimes with an array
         $settings = (object)$settings;
@@ -242,7 +241,7 @@ class restore_local_teameval_plugin extends restore_local_plugin {
 
 
 
-    // This is copied from Moodle 3. Remove it when possible.
+    // As above, because this is declared protected on backup_structure_step.
 
     protected function add_subplugin_structure($subplugintype, $element, $plugintype, $pluginname) {
         global $CFG;

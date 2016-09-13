@@ -85,7 +85,7 @@ class import_task extends restore_task {
     }
 
     // These three functions all get called in the first task
-    // but we're not mapping any of this shit so return zeroes
+    // but we're not mapping any of this so return zeroes
     public function get_old_courseid() {
         return 0;
     }

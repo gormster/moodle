@@ -146,7 +146,7 @@ class backup_local_teameval_plugin extends backup_local_plugin {
 
 
 
-    // This is imported from a future version of Moodle. Remove it once we upgrade.
+    // Because, for some reason, add_subplugin_structure is declared protected.
 
     protected function add_subplugin_structure($subplugintype, $element, $multiple, $plugintype = null, $pluginname = null) {
         global $CFG;
