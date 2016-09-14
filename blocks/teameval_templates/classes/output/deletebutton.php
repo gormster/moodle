@@ -9,20 +9,20 @@ use renderer_base;
 
 class deletebutton implements templatable, renderable {
 
-	protected $templateid;
+        protected $templateid;
 
-	protected $contexturl;
+        protected $contexturl;
 
-	public function __construct($teameval) {
-		$this->templateid = $teameval->id;
-		$this->contexturl = $teameval->get_context()->get_url();
-	}
+        public function __construct($teameval) {
+                $this->templateid = $teameval->id;
+                $this->contexturl = $teameval->get_context()->get_url();
+        }
 
-	public function export_for_template(renderer_base $output) {
-		$c = new stdClass;
-		$c->templateid = $this->templateid;
-		$c->contexturl = $this->contexturl->out();
-		return $c;
-	}
+        public function export_for_template(renderer_base $output) {
+                $c = new stdClass;
+                $c->templateid = $this->templateid;
+                $c->contexturl = $this->contexturl->out();
+                return $c;
+        }
 
 }
