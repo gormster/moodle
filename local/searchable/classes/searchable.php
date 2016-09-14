@@ -59,7 +59,7 @@ class searchable {
 		$todelete = [];
 		foreach($currentweights as $record) {
 
-			$tag = $currenttags[$record->tagid];
+			$tag = $currenttags[$record->tagid]->tag;
 
 			if (empty($weights[$tag])) {
 				$todelete[] = $record->id;
@@ -79,10 +79,6 @@ class searchable {
 		}
 
 		$DB->delete_records_list('searchable_objects', 'id', $todelete);
-
-		foreach($weights as $tag => $weight) {
-			self::set_weight($objecttype, $objectid, $tag, $weight);
-		}
 
 	}
 
