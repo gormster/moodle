@@ -6,7 +6,8 @@ $functions = [
         
         'classname'     => 'block_teameval_templates\external',
         'methodname'    => 'update_title',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
         
     ],
 
@@ -14,7 +15,8 @@ $functions = [
         
         'classname'     => 'block_teameval_templates\external',
         'methodname'    => 'delete_template',
-        'type'          => 'delete'
+        'type'          => 'delete',
+        'ajax'          => true,
         
     ],
 
@@ -22,7 +24,8 @@ $functions = [
         
         'classname'     => 'block_teameval_templates\external',
         'methodname'    => 'add_to_module',
-        'type'          => 'write'
+        'type'          => 'write',
+        'ajax'          => true,
         
     ],
 

@@ -38,8 +38,6 @@ class external extends external_api {
 		return $settings->title;
 	}
 
-	public static function update_title_is_allowed_from_ajax() { return true; }
-
 	/* delete_template */
 
 	public static function delete_template_parameters() {
@@ -77,8 +75,6 @@ class external extends external_api {
 		}
 
 	}
-
-	public static function delete_template_is_allowed_from_ajax() { return true; }
 
 	/* add_to_module */
 
@@ -144,7 +140,5 @@ class external extends external_api {
         return $redirect->out();
 
 	}
-
-	public static function add_to_module_is_allowed_from_ajax() { return true; }
 
 }
