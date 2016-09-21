@@ -12,77 +12,77 @@ use stdClass;
 
 class addtomodule implements templatable, renderable {
 
-        protected $id;
+    protected $id;
 
-        protected $sections;
+    protected $sections;
 
-        protected $module;
+    protected $module;
 
-        public function __construct(team_evaluation $template, $courseid, $userid = null, $cmid = null) {
+    public function __construct(team_evaluation $template, $courseid, $userid = null, $cmid = null) {
 
-                $this->id = $template->id;
+        $this->id = $template->id;
 
-                $this->sections = [];
+        $this->sections = [];
 
-                $modinfo = get_fast_modinfo($courseid);
+        $modinfo = get_fast_modinfo($courseid);
 
-                if ($cmid) {
+        if ($cmid) {
 
-                        $cm = $modinfo->get_cm($cmid);
-                        if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
-                                $module = new stdClass;
-                                $module->name = $cm->name;
-                                $module->cmid = $cm->id;
-                                $this->module = $module;
+            $cm = $modinfo->get_cm($cmid);
+            if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
+                $module = new stdClass;
+                $module->name = $cm->name;
+                $module->cmid = $cm->id;
+                $this->module = $module;
+            }
+
+        } else {
+
+            foreach($modinfo->sections as $sectionnumber => $cmids) {
+                $modules = [];
+
+                foreach($cmids as $cmid) {
+                    $cm = $modinfo->get_cm($cmid);
+                    if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
+                        $evalcontext = evaluation_context::context_for_module($cm, false);
+                        if ($evalcontext && $evalcontext->evaluation_permitted()) {
+                            $module = new stdClass;
+                            $module->name = $cm->name;
+                            $module->cmid = $cm->id;
+                            $modules[] = $module;
                         }
-
-                } else {
-
-                        foreach($modinfo->sections as $sectionnumber => $cmids) {
-                                $modules = [];
-
-                                foreach($cmids as $cmid) {
-                                        $cm = $modinfo->get_cm($cmid);
-                                        if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
-                                                $evalcontext = evaluation_context::context_for_module($cm, false);
-                                                if ($evalcontext && $evalcontext->evaluation_permitted()) {
-                                                        $module = new stdClass;
-                                                        $module->name = $cm->name;
-                                                        $module->cmid = $cm->id;
-                                                        $modules[] = $module;
-                                                }
-                                        }
-                                }
-
-                                if (count($modules)) {
-                                        $sectioninfo = $modinfo->get_section_info($sectionnumber);
-
-                                        $section = new stdClass;
-                                        $section->label = $sectioninfo->name ?: get_section_name($courseid, $sectionnumber);
-                                        $section->modules = $modules;
-
-                                        $this->sections[] = $section;
-                                }
-
-                        }
-
+                    }
                 }
 
-        }
+                if (count($modules)) {
+                    $sectioninfo = $modinfo->get_section_info($sectionnumber);
 
-        public function is_empty() {
-                return empty($this->module) && (count($this->sections) == 0);
-        }
+                    $section = new stdClass;
+                    $section->label = $sectioninfo->name ?: get_section_name($courseid, $sectionnumber);
+                    $section->modules = $modules;
 
-        public function export_for_template(renderer_base $output) {
-                $c = new stdClass;
-                $c->id = $this->id;
-                if (isset($this->module)) {
-                        $c->module = $this->module;
-                } else {
-                        $c->sections = $this->sections;
+                    $this->sections[] = $section;
                 }
-                return $c;
+
+            }
+
         }
+
+    }
+
+    public function is_empty() {
+        return empty($this->module) && (count($this->sections) == 0);
+    }
+
+    public function export_for_template(renderer_base $output) {
+        $c = new stdClass;
+        $c->id = $this->id;
+        if (isset($this->module)) {
+            $c->module = $this->module;
+        } else {
+            $c->sections = $this->sections;
+        }
+        return $c;
+    }
 
 }
