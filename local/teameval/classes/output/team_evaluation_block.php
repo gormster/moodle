@@ -82,12 +82,12 @@ class team_evaluation_block implements renderable {
             
             $evalcontext = $teameval->get_evaluation_context();
 
-            $canview = has_capability('local/teameval:viewtemplate', $context);
-            $canchangesettings = has_capability('local/teameval:changesettings', $this->context);
-            $cancreate = has_capability('local/teameval:createquestionnaire', $this->context);
-            $cansubmit = has_capability('local/teameval:submitquestionnaire', $this->context, null, false);
-            $canreview = has_capability('local/teameval:viewallteams', $this->context);
-            $canrelease = has_capability('local/teameval:invalidateassessment', $this->context);
+            $canview = team_evaluation::check_capability($context, ['local/teameval:viewtemplate']);
+            $canchangesettings = team_evaluation::check_capability($this->context, ['local/teameval:changesettings']);
+            $cancreate = team_evaluation::check_capability($this->context, ['local/teameval:createquestionnaire']);
+            $cansubmit = team_evaluation::check_capability($this->context, ['local/teameval:submitquestionnaire']);
+            $canreview = team_evaluation::check_capability($this->context, ['local/teameval:viewallteams']);
+            $canrelease = team_evaluation::check_capability($this->context, ['local/teameval:invalidateassessment']);
 
             $cm = $teameval->get_coursemodule();
 

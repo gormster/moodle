@@ -5,6 +5,7 @@ $string['teamevaltemplates'] = 'Team Evaluation Templates';
 $string['teameval_templates:addinstance'] = 'Add a new Team Evaluation Templates block';
 $string['teameval_templates:viewtemplate'] = 'View Team Evaluation templates';
 $string['teameval_templates:deletetemplate'] = 'Delete Team Evaluation templates';
+$string['teameval_templates:myaddinstance'] = 'Add a new Team Evaluation Templates block to your Dashboard';
 
 $string['newtemplate'] = 'New Template';
 $string['newtemplateheading'] = 'New Team Evaluation Template';

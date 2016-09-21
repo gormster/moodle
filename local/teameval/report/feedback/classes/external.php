@@ -41,7 +41,7 @@ class external extends external_api {
     public static function update_states($cmid, $states) {
         global $USER;
 
-        local_teameval\external::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
 
         $teameval = team_evaluation::from_cmid($cmid);
 

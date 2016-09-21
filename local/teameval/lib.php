@@ -7,7 +7,7 @@ function local_teameval_pluginfile($course, $cm, $context, $filearea, $args, $fo
     if ($filearea == 'template') {
         require_login($course);
 
-        require_capability('local/teameval:viewtemplate', $context);
+        team_evaluation::guard_capability($context, ['local/teameval:viewtemplate']);
 
         if (count($args) != 2) {
             return false;

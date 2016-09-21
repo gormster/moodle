@@ -1,6 +1,18 @@
 <?php
     $capabilities = array(
  
+    'block/teameval_templates:myaddinstance' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'user' => CAP_ALLOW,
+            'student' => CAP_PREVENT
+        ),
+
+        'clonepermissionsfrom' => 'moodle/my:manageblocks'
+
+    ),
+
     'block/teameval_templates:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
  
@@ -13,19 +25,6 @@
         ),
  
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
-    ),
-
-    'block/teameval_templates:viewtemplate' => array( 
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'coursecreator' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-
     ),
 
     'block/teameval_templates:deletetemplate' => array(

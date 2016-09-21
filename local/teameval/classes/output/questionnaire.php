@@ -75,7 +75,7 @@ class questionnaire implements renderable, templatable {
 
         $this->editing = false;
 
-        if (has_capability('local/teameval:createquestionnaire', $context)) {
+        if (team_evaluation::check_capability($context, ['local/teameval:createquestionnaire'])) {
             $this->editing = true;
             $this->locked = $teameval->questionnaire_locked();
             if (!empty($this->locked)) {

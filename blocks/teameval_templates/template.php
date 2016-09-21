@@ -19,8 +19,7 @@ if (($id == 0) && ($contextid == 0)) {
 if ($id == 0) {
     // make a new teameval template
     // you'll need createquestionnaire in this context
-    $context = context::instance_by_id($contextid);
-    require_capability('local/teameval:createquestionnaire', $context);
+    team_evaluation::guard_capability(['contextid' => $contextid], ['local/teameval:createquestionnaire']);
     $teameval = team_evaluation::new_with_contextid($contextid);
     $url = new moodle_url("/blocks/teameval_templates/template.php", ['id' => $teameval->id]);
     $url->remove_params('contextid');
@@ -79,7 +78,7 @@ require_login($courseid);
 
 // We're using $context here, because you actually only need the ability in any CHILD context of the context
 // In other words, any course in a category, any module in a course, etc.
-require_capability('block/teameval_templates:viewtemplate', $context);
+team_evaluation::guard_capability($context, ['local/teameval:viewtemplate']);
 
 $PAGE->navbar->add($title);
 
@@ -91,12 +90,13 @@ echo $output->render($title);
 
 $teameval_renderer = $PAGE->get_renderer('local_teameval');
 $teameval_block = new \local_teameval\output\team_evaluation_block($teameval, $context);
+
 echo $teameval_renderer->render($teameval_block);
 
 
 // If we've set a course ID, then we might want to add these questions to a course modules
 if ($courseid) {
-    $addtomodule = new output\addtomodule($teameval, $courseid, $USER->id, $cmid);
+    $addtomodule = new output\addtomodule($teameval, $courseid, $cmid);
     if (!$addtomodule->is_empty()) {
         echo $output->render($addtomodule);
     }
@@ -105,7 +105,7 @@ if ($courseid) {
 // If we're a bigshot user capable of deletion OR
 // if we've just made this template and it still has no questions
 
-if (has_capability('block/teameval_templates:deletetemplate', $teameval->get_context()) ||
+if (team_evaluation::check_capability($teameval->get_context(), ['block/teameval_templates:deletetemplate']) ||
     ($teameval->num_questions() == 0)) {
     $deletebutton = new output\deletebutton($teameval);
     echo $output->render($deletebutton);

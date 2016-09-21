@@ -21,7 +21,7 @@ class searchable {
                 $id = $DB->insert_record('searchable_tags', $tagrecord);
                 $tagrecord->id = $id;
             }
-            $tagcache->set($tag, $id);
+            $tagcache->set($tag, $tagrecord->id);
         }
 
         return $id;
@@ -79,6 +79,11 @@ class searchable {
         }
 
         $DB->delete_records_list('searchable_objects', 'id', $todelete);
+
+        // We've already removed the tags we're deleting and updating, so now we just insert the new ones
+        foreach($weights as $tag => $weight) {
+             self::set_weight($objecttype, $objectid, $tag, $weight);
+        }
 
     }
 

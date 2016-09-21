@@ -26,7 +26,7 @@ class renderer extends plugin_renderer_base {
             if (empty($block->context)) {
                 return '';
             }
-            if (has_capability('local/teameval:changesettings', $context)) {
+            if (team_evaluation::check_capability($context, ['local/teameval:changesettings'])) {
                 return $this->render_from_template('local_teameval/turn_on', ['cmid' => $context->instanceid]);
             }
 
@@ -37,7 +37,7 @@ class renderer extends plugin_renderer_base {
 
         if ($block->disabled) {
 
-            if (has_capability('local/teameval:changesettings', $context)) {
+            if (team_evaluation::check_capability($context, ['local/teameval:changesettings'])) {
                 return $this->render_from_template('local_teameval/disabled', []);
             }
 

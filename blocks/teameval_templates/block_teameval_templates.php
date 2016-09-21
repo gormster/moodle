@@ -9,12 +9,11 @@ class block_teameval_templates extends block_base {
     }
 
     function applicable_formats() {
-          return array(
-            'all' => true, 
-            'mod' => false,
-            'my' => false
-          );
-        }
+      return array(
+        'all' => true, 
+        'mod' => false
+      );
+    }
 
     function get_required_javascript() {
         parent::get_required_javascript();
@@ -22,10 +21,11 @@ class block_teameval_templates extends block_base {
     }
 
     public function get_content() {
-        if (has_capability('block/teameval_templates:viewtemplate', $this->page->context) || has_capability('local/teameval:createquestionnaire', $this->page->context)) {
+        global $OUTPUT, $USER;
 
-            global $OUTPUT;
-                
+        // throughout we'll be using check|guard_capability for its ability to manage dashboard contexts
+        if (team_evaluation::check_capability($this->page->context, ['local/teameval:viewtemplate'])) {
+
             // if ($this->content !== null) {
             //   return $this->content;
             // }
@@ -81,12 +81,13 @@ class block_teameval_templates extends block_base {
 
             $this->content->text .= html_writer::end_tag('ul');
 
-            if (has_capability('local/teameval:createquestionnaire', $this->page->context)) {
+            if (team_evaluation::check_capability($this->page->context, ['local/teameval:createquestionnaire'])) {
                 $url = new moodle_url('/blocks/teameval_templates/template.php', array('contextid' => $this->page->context->id));
                 $this->content->footer = html_writer::link($url, $OUTPUT->pix_icon('t/add', '') . get_string('newtemplate', 'block_teameval_templates'));
             }
 
             return $this->content;
+
         }
      
         $empty = new stdClass;

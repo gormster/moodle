@@ -27,7 +27,7 @@ class external extends external_api {
     }
 
     public static function update_title($id, $title) {
-        local_teameval\external::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($id);
 
@@ -91,8 +91,8 @@ class external extends external_api {
 
     public static function add_to_module($from, $to) {
 
-        $context = local_teameval\external::guard_teameval_capability(['cmid' => $to], ['local/teameval:createquestionnaire']);
-        local_teameval\external::guard_teameval_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $context]);
+        $context = team_evaluation::guard_capability(['cmid' => $to], ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $context]);
 
         $cm = get_course_and_cm_from_cmid($to)[1];
         $evalcontext = evaluation_context::context_for_module($cm);

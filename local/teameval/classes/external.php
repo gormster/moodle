@@ -9,6 +9,7 @@ use external_format_value;
 use external_single_structure;
 use external_multiple_structure;
 use invalid_parameter_exception;
+use required_capability_exception;
 
 use stdClass;
 use local_searchable\searchable;
@@ -32,7 +33,7 @@ class external extends external_api {
     }
 
     public static function turn_on($cmid) {
-        self::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:changesettings']);
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:changesettings']);
         $teameval = team_evaluation::from_cmid($cmid);
         $settings = new stdClass;
         $settings->enabled = true;
@@ -90,7 +91,7 @@ class external extends external_api {
         $settingsform->process_data($form);
         $settings = $settingsform->get_data();
 
-        self::guard_teameval_capability($settings->id, ['local/teameval:changesettings']);
+        team_evaluation::guard_capability($settings->id, ['local/teameval:changesettings']);
 
         $settings->public = $settings->public ? true : false;
         $settings->enabled = $settings->enabled ? true : false;
@@ -124,7 +125,7 @@ class external extends external_api {
     }
 
     public static function questionnaire_set_order($id, $order) {
-        self::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
         $teameval = new team_evaluation($id);
         $teameval->questionnaire_set_order($order);
     }
@@ -149,7 +150,7 @@ class external extends external_api {
     public static function report($cmid, $plugin) {
         global $USER, $PAGE;
 
-        self::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
 
         $teameval = team_evaluation::from_cmid($cmid);
         $teameval->set_report_plugin($plugin);
@@ -194,7 +195,7 @@ class external extends external_api {
     }
 
     public static function release($cmid, $release) {
-        self::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:invalidateassessment'], ['must_exist' => true]);
 
         $teameval = team_evaluation::from_cmid($cmid);
 
@@ -225,7 +226,7 @@ class external extends external_api {
     public static function get_release($cmid) {
         global $DB;
 
-        self::guard_teameval_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
 
         return array_values($DB->get_records('teameval_release', ['cmid' => $cmid]));
     }
@@ -255,12 +256,12 @@ class external extends external_api {
     public static function template_search($id, $term) {
         global $DB;
 
-        $context = self::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
+        $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
 
         // now, search!
 
         $query = str_word_count($term, 1);
-        $query = array_map("strtolower", $query);
+        $query = array_map("local_teameval\\team_evaluation::tagify", $query);
         $results = [];
 
         $offset = 0;
@@ -271,7 +272,9 @@ class external extends external_api {
 
             foreach($newresults as $result) {
                 try {
-                    self::guard_teameval_capability($result->objectid, ['local/teameval:viewtemplate'], ['child_context' => $context]);
+                    team_evaluation::guard_capability($result->objectid, ['local/teameval:viewtemplate'], ['child_context' => $context]);
+
+                    error_log("check passed");
 
                     $teameval = new team_evaluation($result->objectid);
                     $numqs = $teameval->num_questions();
@@ -325,8 +328,8 @@ class external extends external_api {
     public static function add_from_template($from, $to) {
         global $USER;
 
-        $childcontext = self::guard_teameval_capability($to, ['local/teameval:createquestionnaire'], ['must_exist' => true]);
-        self::guard_teameval_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $childcontext, 'must_exist' => true]);
+        $childcontext = team_evaluation::guard_capability($to, ['local/teameval:createquestionnaire'], ['must_exist' => true]);
+        team_evaluation::guard_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $childcontext, 'must_exist' => true]);
 
         $from = new team_evaluation($from);
         $to = new team_evaluation($to);
@@ -368,7 +371,7 @@ class external extends external_api {
     public static function upload_template($id, $file, $itemid) {
         global $USER;
 
-        self::guard_teameval_capability($id, ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
 
         // for reasons I don't totally get the draft files implementation is pretty weak
         // there's no function to just get a named file out of draft files...
@@ -404,74 +407,6 @@ class external extends external_api {
         }
 
         return $returns;
-
-    }
-
-    /******************
-    * HELPER FUNCTIONS*
-    ******************/
-
-    /**
-     * Throw an exception if team eval does not exist or if capabilities are not met
-     * @param int|array $id Either straight integer or array of id type (id, cmid, contextid) => int id
-     * @param array $caps Array of capabilities to test.
-     * @param array $options An array of optional extra tests.
-     * @return type
-     */
-    public static function guard_teameval_capability($id, $caps = [], $options = []) {
-        global $PAGE;
-
-        $context = null;
-
-        /* OPTIONS
-        must_exist (bool): require that the teameval already exists. only checked when passed a cmid.
-        child_context (context): if this is a child context of the teameval context, use that context
-        doanything: Set this value for the doanything parameter of require_capbility
-        */
-        $must_exist = isset($options['must_exist']) ? $options['must_exist'] : false;
-        $child_context = isset($options['child_context']) ? $options['child_context'] : null;
-        $doanything = isset($options['doanything']) ? $options['doanything'] : true;
-
-        if (is_numeric($id)) {
-            $id = ['id' => $id];
-        }
-
-        $type = key($id);
-        $id = current($id);
-
-        switch($type) {
-            case 'id':
-                if(!team_evaluation::exists($id)) {
-                    throw new invalid_parameter_exception("Teameval does not exist");
-                }
-                $teameval = new team_evaluation($id);
-                $context = $teameval->get_context();
-                break;
-            case 'cmid':
-                if ($must_exist && !team_evaluation::exists(null, $id)) {
-                    throw new invalid_parameter_exception("Teameval does not exist");
-                }
-                $cm = get_course_and_cm_from_cmid($id)[1];
-                $context = $cm->context;
-                break;
-            case 'contextid':
-                $context = context::instance_by_id($id);
-                break;
-            default:
-                throw new coding_exception('$id must be integer or array with key in (id, cmid, contextid)');
-        }
-
-        $PAGE->set_context($context);
-
-        if ($child_context && in_array($context->id, $child_context->get_parent_context_ids(true))) {
-            $context = $child_context;
-        }
-
-        foreach($caps as $cap) {
-            require_capability($cap, $context, null, $doanything);
-        }
-
-        return $context;
 
     }
 

@@ -14,8 +14,8 @@ class title implements templatable, renderable {
     protected $contextid;
     protected $editable;
 
-    public function __construct(team_evaluation $teameval, $userid = null) {
-        $this->editable = has_capability('local/teameval:changesettings', $teameval->get_context(), $userid);
+    public function __construct(team_evaluation $teameval) {
+        $this->editable = team_evaluation::check_capability($teameval, ['local/teameval:changesettings']);
         $this->title = $teameval->get_settings()->title;
         $this->id = $teameval->id;
     }

@@ -11,10 +11,12 @@ use core_plugin_manager;
 use stdClass;
 use context_module;
 use context;
-use coding_exception;
 use local_searchable\searchable;
 use moodle_url;
 use cache;
+
+use coding_exception;
+use invalid_parameter_exception;
 
 define(__NAMESPACE__ . '\REPORT_PLUGIN_PREFERENCE', 'local_teameval_report_plugin');
 
@@ -85,6 +87,101 @@ class team_evaluation {
             return $DB->record_exists('teameval', ['contextid' => $cmid]);
         }
         return $DB->record_exists('teameval', ['id' => $id]);
+    }
+
+    /******************
+    * HELPER FUNCTIONS*
+    ******************/
+
+    /**
+     * Throw an exception if team eval does not exist or if capabilities are not met
+     * @param int|array $id Either straight integer or array of id type (id, cmid, contextid) => int id
+     * @param array $caps Array of capabilities to test.
+     * @param array $options An array of optional extra tests.
+     * @return type
+     */
+    public static function guard_capability($id, $caps = [], $options = []) {
+        global $USER;
+
+        $context = null;
+
+        /* OPTIONS
+        must_exist (bool): require that the teameval already exists. only checked when passed a cmid.
+        child_context (context): if this is a child context of the teameval context, use that context
+        doanything: Set this value for the doanything parameter of require_capbility
+        check: Just test capabilities instead of requiring them
+        */
+        $must_exist = isset($options['must_exist']) ? $options['must_exist'] : false;
+        $child_context = isset($options['child_context']) ? $options['child_context'] : null;
+        $doanything = isset($options['doanything']) ? $options['doanything'] : true;
+        $check = isset($options['check']) ? $options['check'] : false;
+
+        if ($id instanceof context) {
+            $context = $id;
+        } else if ($id instanceof team_evaluation) {
+            $context = $id->get_context();
+        } else {
+
+            if (is_numeric($id)) {
+                $id = ['id' => $id];
+            }
+
+            $type = key($id);
+            $id = current($id);
+
+            switch($type) {
+                case 'id':
+                    if(!self::exists($id)) {
+                        throw new invalid_parameter_exception("Teameval does not exist");
+                    }
+                    $teameval = new self($id);
+                    $context = $teameval->get_context();
+                    break;
+                case 'cmid':
+                    if ($must_exist && !self::exists(null, $id)) {
+                        throw new invalid_parameter_exception("Teameval does not exist");
+                    }
+                    $cm = get_course_and_cm_from_cmid($id)[1];
+                    $context = $cm->context;
+                    break;
+                case 'contextid':
+                    $context = context::instance_by_id($id);
+                    break;
+                default:
+                    throw new coding_exception('$id must be integer or array with key in (id, cmid, contextid)');
+            }
+
+        }
+
+        if ($child_context && in_array($context->id, $child_context->get_parent_context_ids(true))) {
+            $context = $child_context;
+        }
+
+        if (($context->contextlevel == CONTEXT_USER) && ($context->instanceid == $USER->id)) {
+            // user can do anything in their dashboard's context
+            return $context;
+        }
+
+        
+        if ($check) {
+            if (has_all_capabilities($caps, $context, null, $doanything)) {
+                return $context;
+            } else {
+                return null;
+            }
+        } 
+
+        foreach($caps as $cap) {
+            require_capability($cap, $context, null, $doanything);
+        }
+
+        return $context;
+
+    }
+
+    public static function check_capability($id, $caps = [], $options = []) {
+        $options['check'] = true;
+        return self::guard_capability($id, $caps, $options) !== null;
     }
 
     /**
@@ -367,7 +464,7 @@ class team_evaluation {
     public function should_update_question($type, $id, $userid) {
         global $DB;
 
-        if (has_capability('local/teameval:createquestionnaire', $this->context, $userid)) {
+        if (team_evaluation::check_capability($this->context, ['local/teameval:createquestionnaire'])) {
             if (empty($id) && ($this->questionnaire_locked() !== false)) {
                 // you can't add or delete questions when the questionnaire is locked
                 return null;
@@ -424,7 +521,7 @@ class team_evaluation {
     public function should_delete_question($type, $id, $userid) {
         global $DB;
 
-        if (has_capability('local/teameval:createquestionnaire', $this->context, $userid)) {
+        if (team_evaluation::check_capability($this->context, ['local/teameval:createquestionnaire'])) {
             if ($this->questionnaire_locked() !== false) {
                 // you can't add or delete questions when the questionnaire is locked
                 return null;
@@ -564,7 +661,7 @@ class team_evaluation {
 
         global $DB, $USER;
 
-        require_capability('local/teameval:createquestionnaire', $this->context);
+        team_evaluation::guard_capability($this->context, ['local/teameval:createquestionnaire']);
 
         //first assert that $order contains ALL the question IDs and ONLY the question IDs of this teameval
         $records = $DB->get_records("teameval_questions", array("teamevalid" => $this->id), '', 'id, qtype, questionid');
@@ -1080,7 +1177,7 @@ class team_evaluation {
         }
 
         foreach($titletags as $tag) {
-            $tag = strtolower($tag);
+            $tag = self::tagify($tag);
             if (empty($weights[$tag])) {
                 $weights[$tag] = 0;
             }
@@ -1089,7 +1186,7 @@ class team_evaluation {
 
         $contexttags = str_word_count($this->context->get_context_name(), 1);
         foreach($contexttags as $tag) {
-            $tag = strtolower($tag);
+            $tag = self::tagify($tag);
             if (empty($weights[$tag])) {
                 $weights[$tag] = 0;
             }
@@ -1097,6 +1194,10 @@ class team_evaluation {
         }
 
         searchable::set_weights('teameval', $this->id, $weights);
+    }
+
+    public static function tagify($tag) {
+        return preg_replace('/[^a-zA-Z0-9_]/i', '', strtolower($tag));
     }
 
     public static function templates_for_context($contextid) {
@@ -1111,7 +1212,7 @@ class team_evaluation {
         global $USER;
 
         $questions = $template->get_questions();
-        $base = $this->last_ordinal();
+        $base = $this->last_ordinal() + 1;
 
         foreach($questions as $ordinal => $question) {
             $transaction = $this->should_update_question($question->type, 0, $USER->id);
@@ -1123,7 +1224,7 @@ class team_evaluation {
                     $this->update_question($transaction, $base + $ordinal);
                 } else {
                     $exc = new coding_exception("Question type $question->type does not implement duplicate_question correctly.");
-                    $transaction->rollback($exc);
+                    $transaction->transaction->rollback($exc);
                 }
             }
         }

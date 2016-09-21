@@ -13,6 +13,7 @@ use external_multiple_structure;
 use invalid_parameter_exception;
 use context_module;
 use stdClass;
+use moodle_exception;
 
 use local_teameval;
 use local_teameval\team_evaluation;
@@ -49,7 +50,7 @@ class external extends external_api {
     public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
         global $DB, $USER;
 
-        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
         $transaction = $teameval->should_update_question("likert", $id, $USER->id);
@@ -115,7 +116,7 @@ class external extends external_api {
     public static function delete_question($teamevalid, $id) {
         global $DB, $USER;
 
-        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:createquestionnaire']);
+        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
 
@@ -151,7 +152,7 @@ class external extends external_api {
     public static function submit_response($teamevalid, $id, $marks) {
         global $DB, $USER;
 
-        local_teameval\external::guard_teameval_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
+        team_evaluation::guard_capability($teamevalid, ['local/teameval:submitquestionnaire'], ['doanything' => false]);
 
         $teameval = new team_evaluation($teamevalid);
 

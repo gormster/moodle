@@ -18,7 +18,7 @@ class addtomodule implements templatable, renderable {
 
     protected $module;
 
-    public function __construct(team_evaluation $template, $courseid, $userid = null, $cmid = null) {
+    public function __construct(team_evaluation $template, $courseid, $cmid = null) {
 
         $this->id = $template->id;
 
@@ -29,7 +29,7 @@ class addtomodule implements templatable, renderable {
         if ($cmid) {
 
             $cm = $modinfo->get_cm($cmid);
-            if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
+            if(team_evaluation::check_capability($cm->context, ['local/teameval:createquestionnaire'])) {
                 $module = new stdClass;
                 $module->name = $cm->name;
                 $module->cmid = $cm->id;
@@ -43,7 +43,7 @@ class addtomodule implements templatable, renderable {
 
                 foreach($cmids as $cmid) {
                     $cm = $modinfo->get_cm($cmid);
-                    if(has_capability('local/teameval:createquestionnaire', $cm->context, $userid)) {
+                    if(team_evaluation::check_capability($cm->context, ['local/teameval:createquestionnaire'])) {
                         $evalcontext = evaluation_context::context_for_module($cm, false);
                         if ($evalcontext && $evalcontext->evaluation_permitted()) {
                             $module = new stdClass;
