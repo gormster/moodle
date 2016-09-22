@@ -3,7 +3,7 @@
 namespace mod_assign;
 
 class evaluation_context extends \local_teameval\evaluation_context {
-    
+
     protected $assign;
 
     public function __construct(\assign $assign) {
@@ -16,7 +16,7 @@ class evaluation_context extends \local_teameval\evaluation_context {
         if ($userid) {
             if ($this->assign->is_any_submission_plugin_enabled()) {
                 $groupsub = $this->assign->get_group_submission($userid, 0, false);
-                if (($groupsub == false) || 
+                if (($groupsub == false) ||
                     ($groupsub->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) ||
                     ($this->assign->submission_empty($groupsub))) {
                     $enabled = false;
@@ -44,7 +44,7 @@ class evaluation_context extends \local_teameval\evaluation_context {
 
     public function marking_users($fields = 'u.id') {
         $grouping = $this->assign->get_instance()->teamsubmissiongroupingid;
-        
+
         $groups = groups_get_all_groups($this->assign->get_course()->id, 0, $grouping, 'g.id');
 
         // we want only group IDs

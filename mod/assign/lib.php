@@ -174,7 +174,7 @@ function assign_reset_course_form_definition(&$mform) {
     $mform->addElement('header', 'assignheader', get_string('modulenameplural', 'assign'));
     $name = get_string('deleteallsubmissions', 'assign');
     $mform->addElement('advcheckbox', 'reset_assign_submissions', $name);
-    
+
     $teameval_plugin = core_plugin_manager::instance()->get_plugin_info('local_teameval');
     if ($teameval_plugin) {
         \mod_assign\evaluation_context::reset_course_form_definition($mform);
@@ -490,7 +490,7 @@ function assign_print_overview($courses, &$htmlarray) {
                 $basestr .= '<div class="info">' . $strcutoffdate . ': ' . $userdate . '</div>';
             }
         }
-        
+
 
         // Show only relevant information.
         if (!empty($submitdetails)) {
