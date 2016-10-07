@@ -1,6 +1,10 @@
 <?php
 
 namespace teamevalquestion_comment;
+
+use coding_exception;
+use stdClass;
+use local_teameval\team_evaluation;
     
 class question implements \local_teameval\question {
 
@@ -8,13 +12,13 @@ class question implements \local_teameval\question {
 
     protected $teameval;
 
-    protected $title;
+    protected $_title;
 
-    protected $description;
+    protected $_description;
 
-    protected $anonymous;
+    protected $_anonymous;
 
-    protected $optional;
+    protected $_optional;
 
     public function __construct(\local_teameval\team_evaluation $teameval, $questionid = null) {
         global $DB;
@@ -25,60 +29,51 @@ class question implements \local_teameval\question {
         if ($questionid > 0) {
             $record = $DB->get_record('teamevalquestion_comment', array("id" => $questionid));
 
-            $this->title            = $record->title;
-            $this->description      = $record->description;
-            $this->anonymous        = (bool)$record->anonymous;
-            $this->optional         = (bool)$record->optional;
+            $this->_title            = $record->title;
+            $this->_description      = $record->description;
+            $this->_anonymous        = (bool)$record->anonymous;
+            $this->_optional         = (bool)$record->optional;
 
         } else {
 
             // set defaults
-            $this->anonymous        = false;
-            $this->optional         = false;
+            $this->_anonymous        = false;
+            $this->_optional         = false;
 
         }
     }
 
-    public function submission_view($userid, $locked = false) {
-        $context = ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional];
- 
-
-        if(has_capability('local/teameval:submitquestionnaire', $this->teameval->get_context(), $userid, false)) {
-            $teammates = $this->teameval->teammates($userid);
-            $context['users'] = [];
-
-            foreach($teammates as $t) {
-                $response = new response($this->teameval, $this, $userid);
-                $comment = $response->comment_on($t->id);
-
-                $c = ['userid' => $t->id, 'name' => fullname($t)];
-                if (! is_null($comment)) { 
-                    $c['comment'] = $comment;
-                }
-                if ($t->id == $userid) {
-                    $c['self'] = true;
-                    $c['name'] = get_string('yourself', 'local_teameval');
-                }
-                $context['users'][] = $c;
-            }
-            $context['locked'] = $locked;
-
-            if ($locked) {
-                $context['incomplete'] = !$response->marks_given();
-            }
-
-        } else {
-            $context['users'] = [['userid' => 0, 'name' => 'Example User']];
-            if ($this->teameval->get_settings()->self) {
-                array_unshift($context['users'], ['userid' => $userid, 'name' => get_string('yourself', 'local_teameval'), 'self' => true]);
-            }
+    public function __get($name) {
+        if (in_array($name, ["title", "description", "anonymous", "optional"])) {
+            $priv = "_$name";
+            return $this->$priv;
         }
+        throw new coding_exception("Bad access ($name)");
+    }
 
-        return $context;
+    public function submission_view($locked = false) {
+        return new output\submission_view($this, $this->teameval, $locked);
     }
 
     public function editing_view() {
-        return ['id' => $this->id, 'title' => $this->title, 'description' => $this->description, 'anonymous' => $this->anonymous, 'optional' => $this->optional, 'locked' => $this->any_response_submitted()];
+        return new output\editing_view($this, $this->any_response_submitted());
+    }
+
+    public function context_data($locked = false) {
+        global $PAGE;
+
+        $context = new stdClass;
+        $output = $PAGE->get_renderer('local_teameval');
+        
+        if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'])) {
+            $context->editingcontext = $this->editing_view()->export_for_template($output);
+            $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
+        } else if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'], ['doanything' => false])) {
+            $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
+        }
+
+        return $context;
+        
     }
 
     public function any_response_submitted() {

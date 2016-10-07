@@ -17,6 +17,8 @@ class questionnaire implements renderable, templatable {
 
     protected $deadline;
 
+    protected $selfassessment;
+
     protected $submission;
 
     protected $editing;
@@ -42,18 +44,20 @@ class questionnaire implements renderable, templatable {
 
         foreach($teameval->get_questions() as $q) {
             $locked = !$teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
-            $submissionview = $q->question->submission_view($USER->id, $locked);
-            $editingview = $q->question->editing_view($USER->id);
+            $submissionview = $q->question->submission_view($locked);
+
+            $contextdata = $q->question->context_data();
             $this->questions[] = [
-                "template" => $q->submissiontemplate,
                 "type" => $q->plugininfo->name,
                 "questionid" => $q->questionid,
-                "submissioncontext" => $submissionview,
-                "editingcontext" => $editingview
+                "submissionview" => $submissionview,
+                "context" => $contextdata
                 ];
         }
 
         $this->deadline = $teameval->get_settings()->deadline;
+
+        $this->selfassessment = $teameval->get_settings()->self;
 
         $this->noncompletion = null;
 
@@ -88,23 +92,27 @@ class questionnaire implements renderable, templatable {
     }
 
     public function export_for_template(renderer_base $output) {
+        global $PAGE;
 
         $c = new stdClass;
 
+        $renderers = [];
+
         $c->questions = [];
         foreach($this->questions as $q) {
-            $q['content'] = $output->render_from_template($q['template'], $q['submissioncontext'] + 
-                ["_id" => $this->id, '_submission' => $this->submission, '_editing' => $this->editing]);
-
-            $q['submissioncontext'] = json_encode($q['submissioncontext']);
-
-            if ($this->editing) {
-                $q['editingcontext'] = json_encode($q['editingcontext']);
-            } else {
-                unset($q['editingcontext']);
+            $qtype = $q['type'];
+            
+            if (empty($renderers[$qtype])) {
+                $renderers[$qtype] = $PAGE->get_renderer('teamevalquestion_' . $qtype);
             }
 
-            unset($q['template']);
+            $renderer = $renderers[$qtype];
+
+            $q['content'] = $renderer->render($q['submissionview']);
+
+            $q['context'] = json_encode($q['context']);
+
+            unset($q['submissionview']);
             
             $c->questions[] = $q;
         }
@@ -121,6 +129,9 @@ class questionnaire implements renderable, templatable {
         if ($this->submission) {
             $c->cmid = $this->cmid;
         }
+
+        $c->teamevalid = $this->id;
+        $c->selfassessment = $this->selfassessment;
 
         if (!empty($this->locked)) {
             $c->locked = true;

@@ -16,4 +16,14 @@ class renderer extends plugin_renderer_base {
         return parent::render_from_template('teamevalquestion_comment/opinion_readable_short', $data);
     }
 
+    public function render_submission_view(submission_view $view) {
+        $data = $view->export_for_template($this);
+        return parent::render_from_template('teamevalquestion_comment/submission_view', $data);
+    }
+
+    public function render_editing_view(editing_view $view) {
+        $data = $view->export_for_template($this);
+        return parent::render_from_template('teamevalquestion_comment/editing_view', $data);
+    }
+
 }

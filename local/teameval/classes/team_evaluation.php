@@ -95,7 +95,7 @@ class team_evaluation {
 
     /**
      * Throw an exception if team eval does not exist or if capabilities are not met
-     * @param int|array $id Either straight integer or array of id type (id, cmid, contextid) => int id
+     * @param int|array|context|team_evaluation $id Either straight integer or array of id type (id, cmid, contextid) => int id
      * @param array $caps Array of capabilities to test.
      * @param array $options An array of optional extra tests.
      * @return type

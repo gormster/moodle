@@ -48,11 +48,13 @@ class external extends external_api {
     }
 
     public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
-        global $DB, $USER;
+        global $DB, $USER, $PAGE;
 
         team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
+        $PAGE->set_context($teameval->get_context());
+        
         $transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
         if ($transaction == null) {
@@ -96,7 +98,8 @@ class external extends external_api {
 
         $question = new question($teameval, $transaction->id);
 
-        return ["id" => $id, "submissionContext" => json_encode($question->submission_view($USER->id))];
+        $output = $PAGE->get_renderer('teamevalquestion_likert');
+        return ["id" => $transaction->id, "submissionContext" => json_encode($question->submission_view()->export_for_template($output))];
 
     }
 

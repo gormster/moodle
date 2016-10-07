@@ -248,15 +248,18 @@ class external extends external_api {
                 'from' => new external_value(PARAM_RAW, 'template location'),
                 'tags' => new external_multiple_structure(
                     new external_value(PARAM_RAW, 'matching tags')
-                )
+                ),
+                'numqs' => new external_value(PARAM_INT, 'number of questions'),
             ])
         );
     }
 
     public static function template_search($id, $term) {
-        global $DB;
+        global $DB, $PAGE;
 
         $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+
+        $PAGE->set_context($context);
 
         // now, search!
 
@@ -319,17 +322,18 @@ class external extends external_api {
             new external_single_structure([
                 'type' => new external_value(PARAM_PLUGIN, 'question type'),
                 'questionid' => new external_value(PARAM_INT, 'question id'),
-                'submissioncontext' => new external_value(PARAM_RAW, 'json encoded submission context'),
-                'editingcontext' => new external_value(PARAM_RAW, 'json encoded editing context')
+                'context' => new external_value(PARAM_RAW, 'json encoded context data'),
             ])
         );
     }
 
     public static function add_from_template($from, $to) {
-        global $USER;
+        global $USER, $PAGE;
 
         $childcontext = team_evaluation::guard_capability($to, ['local/teameval:createquestionnaire'], ['must_exist' => true]);
         team_evaluation::guard_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $childcontext, 'must_exist' => true]);
+
+        $PAGE->set_context($childcontext);
 
         $from = new team_evaluation($from);
         $to = new team_evaluation($to);
@@ -345,8 +349,7 @@ class external extends external_api {
             $r = new stdClass;
             $r->type = $q->type;
             $r->questionid = $q->questionid;
-            $r->submissioncontext = $q->question->submission_view($USER->id);
-            $r->editingcontext = $q->question->editing_view();
+            $r->context = json_encode($q->question->context_data());
             $returns[] = $r;
         }
 
@@ -369,9 +372,11 @@ class external extends external_api {
     }
 
     public static function upload_template($id, $file, $itemid) {
-        global $USER;
+        global $USER, $PAGE;
 
-        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+        $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+
+        $PAGE->set_context($context);
 
         // for reasons I don't totally get the draft files implementation is pretty weak
         // there's no function to just get a named file out of draft files...
@@ -401,8 +406,7 @@ class external extends external_api {
             $r = new stdClass;
             $r->type = $q->type;
             $r->questionid = $q->questionid;
-            $r->submissioncontext = $q->question->submission_view($USER->id);
-            $r->editingcontext = $q->question->editing_view();
+            $r->context = json_encode($q->question->context_data());
             $returns[] = $r;
         }
 
