@@ -17,8 +17,7 @@ class renderer extends plugin_renderer_base {
     }
 
     public function render_editing_view(editing_view $view) {
-        $data = $view->export_for_template($this);
-        return parent::render_from_template('teamevalquestion_likert/editing_view', $data);
+        return $view->form->render();
     }
 
 }
