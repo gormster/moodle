@@ -54,6 +54,10 @@ class settings_form extends ajaxform {
             $el = $mform->getElement("meanings[$i]");
             $el->removeAttribute('class');
         }
+
+        if (!empty($this->_customdata['locked'])) {
+            $mform->freeze('range');
+        }
     }
 
     function get_errors() {
