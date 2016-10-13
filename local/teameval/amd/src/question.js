@@ -16,7 +16,10 @@ for use within your plugin.
  * @param questionID {int|null} The question ID for this question
  * @param context {Object|null} Context data provided by your question subclass
  */
-function Question(container, teameval, self, editable, questionID, context) {}
+
+define([], function() {
+
+function Question(container, teameval, contextid, self, editable, questionID, context) {}
 
 /**
  * Replace the contents of container with the submitter's view.
@@ -48,3 +51,7 @@ Question.prototype.delete = function() {};
  * @return {Promise} A promise that resolves when the response has been submitted.
  */
 Question.prototype.submit = function() {};
+
+return Question;
+
+});
