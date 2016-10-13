@@ -78,8 +78,13 @@ function local_teameval_output_fragment_ajaxform($args) {
         $serialiseddata = json_decode($args['jsonformdata']);
         parse_str($serialiseddata, $formdata);
     }
+
+    $customdata = [];
+    if (!empty($args['customdata'])) {
+        $customdata = json_decode($args['customdata'], true);
+    }
     
-    $form = new $class();
+    $form = new $class(null, $customdata);
     $form->set_data($formdata);
 
     return $form->render();
