@@ -28,12 +28,10 @@ class settings_form extends ajaxform {
         $mform->addElement('editor', 'description', get_string('description', 'teamevalquestion_likert'));
         $mform->setType('description', PARAM_RAW);
 
-        $minlabel = $mform->createElement('static', 'min_label', null, get_string('minval', 'teamevalquestion_likert'));
         $minval = $mform->createElement('select', 'min', get_string('minval', 'teamevalquestion_likert'), [0 => '0', 1 => '1']);
-        $maxlabel = $mform->createElement('static', 'max_label', null, get_string('maxval', 'teamevalquestion_likert'));
         $maxval = $mform->createElement('select', 'max', get_string('maxval', 'teamevalquestion_likert'), [3 => '3', 4 => '4', 5 => '5', 6 => '6', 7 => '7', 8 => '8', 9 => '9', 10 => '10']);
 
-        $group =& $mform->addGroup([$minlabel, $minval, $maxlabel, $maxval], 'range', get_string('scorerange', 'teamevalquestion_likert'));
+        $group =& $mform->addGroup([$minval, $maxval], 'range', get_string('scorerange', 'teamevalquestion_likert'), get_string('minmaxconjunction', 'teamevalquestion_likert'));
         $mform->setDefault('range', ['min' => 1, 'max' => 5]);
 
         $mform->addElement('header', 'meanings_header', get_string('meanings', 'teamevalquestion_likert'));
