@@ -25,18 +25,7 @@ class external extends external_api {
     public static function update_question_parameters() {
         return new external_function_parameters([
             'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
-            'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
-            'title' => new external_value(PARAM_TEXT, 'title of question'),
-            'description' => new external_value(PARAM_RAW, 'description of question'),
-            'minval' => new external_value(PARAM_INT, 'minimum value'),
-            'maxval' => new external_value(PARAM_INT, 'maximum value'),
-            'meanings' => new external_multiple_structure(
-                new external_single_structure([
-                    'value' => new external_value(PARAM_INT, 'value meaning represents'),
-                    'meaning' => new external_value(PARAM_TEXT, 'meaning of value')
-                ])
-            )
+            'formdata' => new external_value(PARAM_RAW, 'form data'),
         ]);
     }
 
@@ -47,13 +36,25 @@ class external extends external_api {
             ]);
     }
 
-    public static function update_question($teamevalid, $ordinal, $id, $title, $description, $minval, $maxval, $meanings) {
+    public static function update_question($teamevalid, $formdata) {
         global $DB, $USER, $PAGE;
-
-        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
 
         $teameval = new team_evaluation($teamevalid);
         $PAGE->set_context($teameval->get_context());
+
+        team_evaluation::guard_capability($teameval, ['local/teameval:createquestionnaire']);
+
+        $parsedformdata = [];
+        parse_str($formdata, $parsedformdata);
+        $form = new forms\settings_form(null, null, 'post', '', null, true, $parsedformdata);
+
+        if ($form->validate_defined_fields(true) == false) {
+            throw new moodle_exception('invalidform', '', '', $form->get_errors());
+        }
+
+        $data = $form->get_data();
+
+        $id = $data->id;
         
         $transaction = $teameval->should_update_question("likert", $id, $USER->id);
 
@@ -71,17 +72,16 @@ class external extends external_api {
         $record = ($id > 0) ? $DB->get_record('teamevalquestion_likert', array('id' => $id)) : new stdClass;
         
         //update the values
-        $record->title = $title;
-        $record->description = $description;
+        $record->title = $data->title;
+        $record->description = $data->description['text'];
         if ($any_response_submitted == false) {
-            $record->minval = min(max(0, $minval), 1); //between 0 and 1
-            $record->maxval = min(max(3, $maxval), 10); //between 3 and 10
+            $record->minval = min(max(0, $data->range['min']), 1); //between 0 and 1
+            $record->maxval = min(max(3, $data->range['max']), 10); //between 3 and 10
         }
 
         $record->meanings = new stdClass;
-        foreach ($meanings as $m) {
-            $val = $m['value'];
-            $record->meanings->$val = $m['meaning'];
+        foreach ($data->meanings as $k => $m) {
+            $record->meanings->$k = $m;
         }
 
         $record->meanings = json_encode($record->meanings);
@@ -94,7 +94,7 @@ class external extends external_api {
         }
         
         //finally tell the teameval we're done
-        $teameval->update_question($transaction, $ordinal);
+        $teameval->update_question($transaction, $data->ordinal);
 
         $question = new question($teameval, $transaction->id);
 

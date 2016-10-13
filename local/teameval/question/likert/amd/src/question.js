@@ -1,16 +1,17 @@
-define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'], function($, Templates, Ajax, Strings, Notification) {
+define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification', 'core/fragment'], function($, Templates, Ajax, Strings, Notification, Fragment) {
 
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         this.container = container
         this.questionID = questionID;
 
         this._teameval = teameval;
+        this._contextid = contextid;
         this._self = self;
         this._editable = editable;
 
         var context = context || {};
         this._submissioncontext = context.submissioncontext || {}; 
-        this._editingcontext = context.editingcontext || {_newquestion: true};
+        this._editingcontext = context.editingcontext || {};
 
         this._meanings = {};
     };
@@ -25,11 +26,21 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'
 
     LikertQuestion.prototype.editingView = function() {
         this._editingcontext._id = this._teameval;
-        this._editingcontext._self = this._self;
-        var promise = Templates.render('teamevalquestion_likert/editing_view', this._editingcontext);
+
+        var params = {
+            'form': '\\teamevalquestion_likert\\forms\\settings_form',
+            'jsonformdata': JSON.stringify($.param(this._editingcontext))
+        };
+
+        var promise = Fragment.loadFragment('local_teameval', 'ajaxform', this._contextid, params);
+
         promise.done(function(html, js) {
             Templates.replaceNodeContents(this.container, html, js);
+            this.container.find('[name="range[min]"], [name="range[max]"]').change(this.updateMeanings.bind(this));
         }.bind(this));
+
+        promise.fail(Notification.exception);
+
         return promise;
     };
 
@@ -37,31 +48,26 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'
         this.updateMeanings();
 
         var deferred = $.Deferred();
-        var data = { teamevalid: this._teameval };
+
+        this.container.find('[name=ordinal]').val(ordinal);
+
         if (this.questionID) {
-            data.id = this.questionID
+            this.container.find('[name=id]').val(this.questionID);
         }
-        data.ordinal = ordinal;
-        data.title = this.container.find('[name=title]').val();
-        data.description = this.container.find('[name=description]').val();
-        data.minval = parseInt(this.container.find('[name=minval]').val());
-        data.maxval = parseInt(this.container.find('[name=maxval]').val());
-        data.meanings = $.map(this._meanings, function(v, k) {
-            if ((k < data.minval) || (k > data.maxval)) return;
-            return {'value': k, 'meaning':v}; 
-        });
+
+        var form = this.container.find('form');
 
         // validate data
-        this.validateData(data).then(function() {
+        this.validateData(form).then(function() {
 
             var promises = Ajax.call([{
                 methodname: 'teamevalquestion_likert_update_question',
-                args: data
+                args: {'teamevalid': this._teameval, 'formdata': form.serialize()}
             }]);
 
             return promises[0];
                 
-        }).done(function(result) {
+        }.bind(this)).done(function(result) {
             
             this.questionID = result.id;
             this._submissioncontext = JSON.parse(result.submissionContext);
@@ -129,40 +135,37 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'
     };
 
     LikertQuestion.prototype.updateMeanings = function() {
-        var minval = parseInt(this.container.find('[name=minval]').val())
-        var maxval = parseInt(this.container.find('[name=maxval]').val());
+        var minval = parseInt(this.container.find('[name="range[min]"]').val())
+        var maxval = parseInt(this.container.find('[name="range[max]"]').val());
 
-        var meaningsList = this.container.find('ol[name=meanings]');
+        console.log(minval, maxval);
 
-        // fetch our current meanings
-        var _this = this;
-        meaningsList.children('li').each( function(idx) {
-            _this._meanings[this.value] = $(this).find('input').val();
-        });
+        for (var i = 0; i <= 10; i++) {
+            var meaning = this.container.find('[name="meanings['+i+']"]');
+            this._meanings[i] = meaning.val();
 
-        if (!this._editingcontext.locked) {
-            // make new textboxes
-
-            meaningsList.empty();
-
-            for(var i = minval; i <= maxval; i++) {
-                var li = $('<li />');
-                var textbox = $('<input type="text">');
-                if(this._meanings[i]) {
-                    textbox.val(this._meanings[i]);
+            if (!this._editingcontext.locked) {
+                if (this._meanings[i]) {
+                    meaning.val(this._meanings[i]);
                 }
-                li.append(textbox);
-                li.prop('value', i);
-                meaningsList.append(li);
+                if ((i >= minval) && (i <= maxval)) {
+                    meaning.closest('.fitem').addBack().removeClass('hidden');
+                    console.log("showing "+i);
+                } else {
+                    meaning.closest('.fitem').addBack().addClass('hidden');
+                    console.log("hiding "+i);
+                }
             }
         }
     }
 
-    LikertQuestion.prototype.validateData = function(data) {
+    LikertQuestion.prototype.validateData = function(form) {
 
         var deferred = $.Deferred();
+
+        var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
         
-        if ((data.title.trim().length == 0) && (data.description.trim().length == 0)) {
+        if ((data('title').trim().length == 0) && (data('description').trim().length == 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_likert').done(function(str) {
                 deferred.reject({invalid: true, errors: { title: str, description: str} });
             });
