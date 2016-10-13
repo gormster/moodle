@@ -17,9 +17,13 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define([], function() {
+define(['jquery', 'core/fragment', 'core/Notification'], function($, Fragment, Notification) {
 
-function Question(container, teameval, contextid, self, editable, questionID, context) {}
+function Question(container, teameval, contextid, self, editable, questionID, context) {
+    this.questionID = questionID
+    this.container = container
+    this.contextid = contextid
+}
 
 /**
  * Replace the contents of container with the submitter's view.
@@ -51,6 +55,31 @@ Question.prototype.delete = function() {};
  * @return {Promise} A promise that resolves when the response has been submitted.
  */
 Question.prototype.submit = function() {};
+
+/**
+ * Convenience function to get an Ajaxform and replace the container contents with it
+ * @param  {string} The fully-qualified class name of the form
+ * @param  {string} The form data to feed to set_data
+ * @param  {customdata} The custom data to give as a the second parameter in the form's constructor
+ * @return {promise} A promise that will resolve when the fragment is loaded
+ */
+Question.prototype.editForm = function(form, formdata, customdata) {
+    var params = {
+        'form': form
+        'jsonformdata': JSON.stringify(formdata),
+        'customdata': JSON.stringify(customdata)
+    };
+
+    var promise = Fragment.loadFragment('local_teameval', 'ajaxform', this.contextid, params);
+
+    promise.done(function(html, js) {
+        Templates.replaceNodeContents(this.container, html, js);
+    }.bind(this));
+
+    promise.fail(Notification.exception);
+
+    return promise;
+}
 
 return Question;
 

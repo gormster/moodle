@@ -1,17 +1,18 @@
-define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification', 'core/fragment'], function($, Templates, Ajax, Strings, Notification, Fragment) {
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str', 'core/notification', 'core/fragment'], function($, Question, Templates, Ajax, Strings, Notification, Fragment) {
 
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
-        this.container = container
-        this.questionID = questionID;
+        Question.apply(this, arguments);
 
         this._teameval = teameval;
-        this._contextid = contextid;
         this._self = self;
         this._editable = editable;
 
         var context = context || {};
         this._submissioncontext = context.submissioncontext || {}; 
         this._editingcontext = context.editingcontext || {};
+        this._editinglocked = context.editinglocked || false;
+
+        this._editingcontext._id = this._teameval;
 
         this._meanings = {};
     };
@@ -25,21 +26,11 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'
     };
 
     LikertQuestion.prototype.editingView = function() {
-        this._editingcontext._id = this._teameval;
+        var promise = Question.editForm('\\teamevalquestion_likert\\forms\\settings_form', $.param(this._editingcontext), {'locked': this._editinglocked});
 
-        var params = {
-            'form': '\\teamevalquestion_likert\\forms\\settings_form',
-            'jsonformdata': JSON.stringify($.param(this._editingcontext))
-        };
-
-        var promise = Fragment.loadFragment('local_teameval', 'ajaxform', this._contextid, params);
-
-        promise.done(function(html, js) {
-            Templates.replaceNodeContents(this.container, html, js);
+        promise.done(function() {
             this.container.find('[name="range[min]"], [name="range[max]"]').change(this.updateMeanings.bind(this));
-        }.bind(this));
-
-        promise.fail(Notification.exception);
+        });
 
         return promise;
     };
@@ -144,7 +135,7 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'
             var meaning = this.container.find('[name="meanings['+i+']"]');
             this._meanings[i] = meaning.val();
 
-            if (!this._editingcontext.locked) {
+            if (!this._editinglocked) {
                 if (this._meanings[i]) {
                     meaning.val(this._meanings[i]);
                 }
