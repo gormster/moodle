@@ -1,6 +1,6 @@
 define(['jquery', 'core/templates', 'core/ajax', 'core/str', 'core/notification'], function($, Templates, Ajax, Strings, Notification) {
 
-    function LikertQuestion(container, teameval, self, editable, questionID, context) {
+    function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         this.container = container
         this.questionID = questionID;
 

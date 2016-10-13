@@ -33,12 +33,16 @@ class questionnaire implements renderable, templatable {
 
     protected $id;
 
+    protected $contextid;
+
     public function __construct(team_evaluation $teameval) {
         global $USER;
 
         $context = $teameval->get_context();
         
         $this->id = $teameval->id;
+
+        $this->contextid = $context->id;
 
         $this->questions = [];
 
@@ -131,6 +135,7 @@ class questionnaire implements renderable, templatable {
         }
 
         $c->teamevalid = $this->id;
+        $c->contextid = $this->contextid;
         $c->selfassessment = $this->selfassessment;
 
         if (!empty($this->locked)) {

@@ -1,6 +1,6 @@
 define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'], function($, Ajax, Templates, Notification, Strings){
 
-    function CommentQuestion(container, teameval, self, editing, questionID, context) {
+    function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
         this.container = container;
         this.questionID = questionID;
 

@@ -15,6 +15,8 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
     var _id;
 
+    var _contextid;
+
     var _subplugins;
 
     var _self;
@@ -85,7 +87,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
 
             var d = $.Deferred();
             require(['teamevalquestion_'+type+'/question'], function(QuestionClass) {
-                var qObject = new QuestionClass(questionContainer, _id, _self, true, questionID, context);
+                var qObject = new QuestionClass(questionContainer, _id, _contextid, _self, true, questionID, context);
                 questionContainer.data("question", qObject);
                 d.resolve(question);
             });
@@ -287,6 +289,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             // settings: id, self, locked, download, filepickerid, filepickeritemid, subplugins
 
             _id = options.id;
+            _contextid = options.contextid;
             _self = options.self;
             _locked = options.locked;
             _subplugins = options.subplugins;

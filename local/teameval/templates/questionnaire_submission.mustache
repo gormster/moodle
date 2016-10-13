@@ -52,7 +52,7 @@ require(['jquery', 'local_teameval/submitquestion'], function($, SubmitQuestion)
         el.data('questionid', {{questionid}});
 
         var container = el.children('.question-container');
-        container.data('question', new QuestionClass(container, {{teamevalid}}, {{selfassessment}}, {{editing}}, {{questionid}}, {{{context}}}));
+        container.data('question', new QuestionClass(container, {{teamevalid}}, {{contextid}}, {{selfassessment}}, {{editing}}, {{questionid}}, {{{context}}}));
     });
     {{/questions}}
 
