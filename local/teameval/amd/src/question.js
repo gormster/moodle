@@ -17,7 +17,7 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define(['jquery', 'core/fragment', 'core/notification', 'core/templates'], function($, Fragment, Notification, Templates) {
+define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'], function($, Fragment, Notification, Templates, Ajax) {
 
 function Question(container, teameval, contextid, self, editable, questionID, context) {
     this.teameval = teameval;
@@ -70,7 +70,23 @@ Question.prototype.save = function(ordinal) {};
  * Delete the question in Moodle. You must use should_delete_question/delete_question.
  * @return {Promise} A promise that resolves when the question has been deleted.
  */
-Question.prototype.delete = function() {};
+Question.prototype.delete = function() {
+    if (this.questionID) {
+        if (this.pluginName) {
+            var promises = Ajax.call([{
+                methodname: 'teamevalquestion_'+this.pluginName+'_delete_question',
+                args: {
+                    teamevalid: this.teameval,
+                    id: this.questionID
+                }
+            }]);
+
+            return promises[0];
+        }
+    }
+    // No ID, never been saved
+    return $.Deferred().resolve();
+};
 
 /**
  * Submit this response to Moodle. You should check if the user can submit using can_submit_response.
@@ -130,14 +146,59 @@ Question.prototype.editForm = function(form, formdata, customdata) {
     return promise;
 }
 
-Question.prototype.saveForm = function(form, options) {
+Question.prototype.submitForm = function(form, method, args) {
+    var promise = this.validateData(form).then(function() {
+
+        args.formdata = form.serialize();
+
+        var promises = Ajax.call([{
+            methodname: method,
+            args: args
+        }]);
+
+        return promises[0];
+            
+    }.bind(this));
+
+    promise.fail(function(error) {
+
+        if (error && error.errorcode) {
+            Notification.exception(error);
+        }
+
+    }.bind(this));
+
+    return promise;
+}
+
+Question.prototype.saveForm = function(form, ordinal, options, callback) {
     var defaults = {
         ordinalName: 'ordinal',
         questionIDName: 'id',
+        methodname: 'teamevalquestion_'+this.pluginName+'_update_question',
+        args: {'teamevalid': this.teameval},
+        resolveWithID: true
     };
+
+    var options = $.extend({}, defaults, options);
+
+    this.container.find('[name='+options.ordinalName+']').val(ordinal);
+
+    if (this.questionID) {
+        this.container.find('[name='+options.questionIDName+']').val(this.questionID);
+    }
+
+    return this.submitForm(form, options.methodname, options.args).then(function(result) {
+        this.questionID = result.id;
+        if (callback) {
+            callback(result);
+        }
+        return options.resolveWithID ? result.id : result;
+    }.bind(this));
 };
 
 Question.prototype.validateData = function(form) {
+
     return $.Deferred().resolve().promise();
 };
 

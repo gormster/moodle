@@ -32,66 +32,12 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
     LikertQuestion.prototype.save = function(ordinal) {
         this.updateMeanings();
 
-        var deferred = $.Deferred();
-
-        this.container.find('[name=ordinal]').val(ordinal);
-
-        if (this.questionID) {
-            this.container.find('[name=id]').val(this.questionID);
-        }
-
         var form = this.container.find('form');
 
-        // validate data
-        this.validateData(form).then(function() {
-
-            debugger;
-            var promises = Ajax.call([{
-                methodname: 'teamevalquestion_likert_update_question',
-                args: {'teamevalid': this.teameval, 'formdata': form.serialize()}
-            }]);
-
-            return promises[0];
-                
-        }.bind(this)).done(function(result) {
-            
-            this.questionID = result.id;
+        return this.saveForm(form, ordinal, {}, function(result) {
             this._submissioncontext = JSON.parse(result.submissionContext);
-            deferred.resolve(result.id);
-
-        }.bind(this)).fail(function(error) {
-
-            if (error.invalid) {
-                for (var k in error.errors) {
-                    this.container.find('[name='+k+']')
-                    .closest('.control-group').addClass('error').end()
-                    .next('.help-inline').text(error.errors[k]);
-                }
-            } else {
-                Notification.exception(error);
-            }
-
-            deferred.reject();
-
         }.bind(this));
 
-        return deferred.promise();
-    };
-
-    LikertQuestion.prototype.delete = function() {
-        if (this.questionID) {
-            var promises = Ajax.call([{
-                methodname: 'teamevalquestion_likert_delete_question',
-                args: {
-                    teamevalid: this.teameval,
-                    id: this.questionID
-                }
-            }]);
-
-            return promises[0];
-        }
-        // No ID, never been saved
-        return $.Deferred().resolve();
     };
 
     LikertQuestion.prototype.submit = function() {
@@ -149,7 +95,11 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         
         if ((data('title').trim().length == 0) && (data('description').trim().length == 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_likert').done(function(str) {
-                deferred.reject({invalid: true, errors: { title: str, description: str} });
+                this.container.find('[name=title]')
+                    .closest('.control-group').addClass('error').end()
+                    .next('.help-inline').text(error.errors[k]);
+            
+                deferred.reject();
             });
         } else {
             deferred.resolve();
