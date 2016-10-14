@@ -17,9 +17,10 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define(['jquery', 'core/fragment', 'core/Notification'], function($, Fragment, Notification) {
+define(['jquery', 'core/fragment', 'core/notification', 'core/templates'], function($, Fragment, Notification, Templates) {
 
 function Question(container, teameval, contextid, self, editable, questionID, context) {
+    this.teameval = teameval;
     this.questionID = questionID
     this.container = container
     this.contextid = contextid
@@ -29,13 +30,34 @@ function Question(container, teameval, contextid, self, editable, questionID, co
  * Replace the contents of container with the submitter's view.
  * @return {Promise} A promise that resolves when the view has changed.
  */
-Question.prototype.submissionView = function() {}
+Question.prototype.submissionView = function() {
+    // Default implementation: either return a value from submissionTemplate or define your pluginName
+    var submissionTemplate = this.submissionTemplate();
+    if (submissionTemplate) {
+        var submissionContext = this.submissionContext();
+        var promise = Templates.render(submissionTemplate, submissionContext);
+        promise.done(function(html, js) {
+            Templates.replaceNodeContents(this.container, html, js);
+        }.bind(this));
+        return promise;
+    }
+}
 
 /**
  * Replace the contents of container with the editing view.
  * @return {Promise} A promise that resolves when the view has changed.
  */
-Question.prototype.editingView = function() {}
+Question.prototype.editingView = function() {
+    var editingTemplate = this.editingTemplate();
+    if (editingTemplate) {
+        var editingContext = this.editingContext();
+        var promise = Templates.render(editingTemplate, editingContext);
+        promise.done(function(html, js) {
+            Templates.replaceNodeContents(this.container, html, js);
+        }.bind(this));
+        return promise;
+    }
+}
     
 /**
  * Save question data back to the database in Moodle. You must use should_update_question/update_question.
@@ -56,6 +78,33 @@ Question.prototype.delete = function() {};
  */
 Question.prototype.submit = function() {};
 
+
+// The following are convenience methods or helpers for default implementations
+
+
+// Override any of these four methods to use the built-in templating system
+Question.prototype.submissionTemplate = function() {
+    if (this.pluginName) {
+        return 'teamevalquestion_'+this.pluginName+'/submission_view';
+    }
+    return null;
+};
+
+Question.prototype.submissionContext = function() {
+    return {};
+};
+
+Question.prototype.editingTemplate = function() {
+    if (this.pluginName) {
+        return 'teamevalquestion_'+this.pluginName+'/editing_view';
+    }
+    return null;
+};
+
+Question.prototype.editingContext = function() {
+    return {};
+};
+
 /**
  * Convenience function to get an Ajaxform and replace the container contents with it
  * @param  {string} The fully-qualified class name of the form
@@ -65,7 +114,7 @@ Question.prototype.submit = function() {};
  */
 Question.prototype.editForm = function(form, formdata, customdata) {
     var params = {
-        'form': form
+        'form': form,
         'jsonformdata': JSON.stringify(formdata),
         'customdata': JSON.stringify(customdata)
     };
@@ -80,6 +129,17 @@ Question.prototype.editForm = function(form, formdata, customdata) {
 
     return promise;
 }
+
+Question.prototype.saveForm = function(form, options) {
+    var defaults = {
+        ordinalName: 'ordinal',
+        questionIDName: 'id',
+    };
+};
+
+Question.prototype.validateData = function(form) {
+    return $.Deferred().resolve().promise();
+};
 
 return Question;
 

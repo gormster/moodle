@@ -3,7 +3,6 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
 
-        this._teameval = teameval;
         this._self = self;
         this._editable = editable;
 
@@ -12,27 +11,22 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         this._editingcontext = context.editingcontext || {};
         this._editinglocked = context.editinglocked || false;
 
-        this._editingcontext._id = this._teameval;
+        this._editingcontext._id = this.teameval;
 
         this._meanings = {};
+
+        this.pluginName = 'likert';
     };
 
-    LikertQuestion.prototype.submissionView = function() {
-        var promise = Templates.render('teamevalquestion_likert/submission_view', this._submissioncontext);
-        promise.done(function(html, js) {
-            Templates.replaceNodeContents(this.container, html, js);
-        }.bind(this));
-        return promise;
-    };
+    LikertQuestion.prototype = new Question;
+
+    LikertQuestion.prototype.submissionContext = function() { return this._submissioncontext };
 
     LikertQuestion.prototype.editingView = function() {
-        var promise = Question.editForm('\\teamevalquestion_likert\\forms\\settings_form', $.param(this._editingcontext), {'locked': this._editinglocked});
-
-        promise.done(function() {
+        return this.editForm('\\teamevalquestion_likert\\forms\\settings_form', $.param(this._editingcontext), {'locked': this._editinglocked})
+        .done(function() {
             this.container.find('[name="range[min]"], [name="range[max]"]').change(this.updateMeanings.bind(this));
-        });
-
-        return promise;
+        }.bind(this));
     };
 
     LikertQuestion.prototype.save = function(ordinal) {
@@ -51,9 +45,10 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         // validate data
         this.validateData(form).then(function() {
 
+            debugger;
             var promises = Ajax.call([{
                 methodname: 'teamevalquestion_likert_update_question',
-                args: {'teamevalid': this._teameval, 'formdata': form.serialize()}
+                args: {'teamevalid': this.teameval, 'formdata': form.serialize()}
             }]);
 
             return promises[0];
@@ -88,7 +83,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
             var promises = Ajax.call([{
                 methodname: 'teamevalquestion_likert_delete_question',
                 args: {
-                    teamevalid: this._teameval,
+                    teamevalid: this.teameval,
                     id: this.questionID
                 }
             }]);
@@ -112,7 +107,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         var promises = ajax.call([{
             methodname: 'teamevalquestion_likert_submit_response',
             args: {
-                teamevalid: this._teameval,
+                teamevalid: this.teameval,
                 id: this.questionID,
                 marks: marks
             }
@@ -129,8 +124,6 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         var minval = parseInt(this.container.find('[name="range[min]"]').val())
         var maxval = parseInt(this.container.find('[name="range[max]"]').val());
 
-        console.log(minval, maxval);
-
         for (var i = 0; i <= 10; i++) {
             var meaning = this.container.find('[name="meanings['+i+']"]');
             this._meanings[i] = meaning.val();
@@ -141,10 +134,8 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
                 }
                 if ((i >= minval) && (i <= maxval)) {
                     meaning.closest('.fitem').addBack().removeClass('hidden');
-                    console.log("showing "+i);
                 } else {
                     meaning.closest('.fitem').addBack().addClass('hidden');
-                    console.log("hiding "+i);
                 }
             }
         }

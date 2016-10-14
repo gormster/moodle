@@ -12,6 +12,8 @@ $form = new \teamevalquestion_likert\forms\settings_form();
 
 $PAGE->set_url(new moodle_url('/local/teameval/question/likert/view.php', ['id' => $id]));
 
+$form->add_action_buttons();
+
 echo $OUTPUT->header();
 $form->display();
 echo $OUTPUT->footer();
