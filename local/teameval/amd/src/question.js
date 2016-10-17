@@ -149,7 +149,7 @@ Question.prototype.editForm = function(form, formdata, customdata) {
 Question.prototype.submitForm = function(form, method, args) {
     var promise = this.validateData(form).then(function() {
 
-        args.formdata = form.serialize();
+        args.formdata = $(form).serialize();
 
         var promises = Ajax.call([{
             methodname: method,
@@ -182,10 +182,10 @@ Question.prototype.saveForm = function(form, ordinal, options, callback) {
 
     var options = $.extend({}, defaults, options);
 
-    this.container.find('[name='+options.ordinalName+']').val(ordinal);
+    $(form).find('[name='+options.ordinalName+']').val(ordinal);
 
     if (this.questionID) {
-        this.container.find('[name='+options.questionIDName+']').val(this.questionID);
+        $(form).find('[name='+options.questionIDName+']').val(this.questionID);
     }
 
     return this.submitForm(form, options.methodname, options.args).then(function(result) {
