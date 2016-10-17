@@ -16,6 +16,28 @@ use HTML_QuickForm_static;
 
 abstract class ajaxform extends moodleform {
 
+    public function __construct($action=null, $customdata=null, $method='post', $target='', $attributes=null, $editable=true,
+                                $ajaxformdata=null) {
+        if (empty($attributes['id'])) {
+            $attributes['id'] = 'mform-' . uniqid();
+        }
+        parent::__construct($action, $customdata, $method, $target, $attributes, $editable, $ajaxformdata);
+    }
+
+    /**
+     * Call after definition() or definition_after_data() to fix element IDs to avoid duplicate IDs.
+     */
+    function fix_ids() {
+        $mform = $this->_form;
+
+        $uniq = uniqid();
+        foreach ($mform->_elements as $key => $el) {
+            $el->_generateId();
+            $id = $el->getAttribute('id') . $uniq;
+            $el->updateAttributes(['id' => $id]);
+        }
+    }
+
     function external_parameters() {
         $mform = $this->_form;
         $params = $this->elements_as_params($mform->_elements);
@@ -79,6 +101,12 @@ abstract class ajaxform extends moodleform {
                 break;
         }
         return $cleantype;
+    }
+
+    public function get_form_identifier() {
+        $ident = parent::get_form_identifier();
+
+        return $ident + uniqid();
     }
 
     function process_data($json) {
