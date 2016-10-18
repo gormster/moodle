@@ -1,103 +1,62 @@
-define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'], function($, Ajax, Templates, Notification, Strings){
+define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'], function($, Question, Ajax, Templates, Notification, Strings, Formparse){
 
     function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
-        this.container = container;
-        this.questionID = questionID;
+        Question.apply(this, arguments);
 
-        this._teameval = teameval;
         this._self = self;
         this._editing = editing;
 
         var context = context || {};
         this._editingcontext = context.editingcontext || {_newquestion: true};
+        this._editinglocked = context.editinglocked || false;
         this._submissioncontext = context.submissioncontext || {};
+
+        this.pluginName = 'comment';
     }
 
+    CommentQuestion.prototype = new Question;
+
+    CommentQuestion.prototype.submissionContext = function() { return this._submissioncontext; }
+
     CommentQuestion.prototype.submissionView = function() {
-        var promise = Templates.render('teamevalquestion_comment/submission_view', this._submissioncontext);
-        promise.done(function(html, js) {
-            Templates.replaceNodeContents(this.container, html, js);
-        }.bind(this));
-        return promise;
-    };
+        console.log(this._submissioncontext);
+        return Question.prototype.submissionView.apply(this, arguments);
+    }
+    
+    CommentQuestion.prototype.editingContext = function() { return this._editingcontext; }
 
     CommentQuestion.prototype.editingView = function() {
-        var promise = Templates.render('teamevalquestion_comment/editing_view', this._editingcontext);
-        promise.done(function(html, js) {
-            Templates.replaceNodeContents(this.container, html, js);
-        }.bind(this));
-        return promise;
-    };
+        console.debug($.param(this._editingcontext));
+        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form', $.param(this._editingcontext), {'locked': this._editinglocked});
+    }
 
     CommentQuestion.prototype.save = function(ordinal) {
-        var deferred = $.Deferred();
+        var form = this.container.find('form');
 
-        var data = { teamevalid: this._teameval };
-        if (this.questionID) {
-            data.id = this.questionID;
-        }
-        data.ordinal = ordinal;
+        var data = Formparse.serializeObject(form);
 
-        data.title = this.container.find('[name=title]').val();
-        data.description = this.container.find('[name=description]').val();
-        data.anonymous = this.container.find('[name=anonymous]').prop('checked');
-        data.optional = this.container.find('[name=optional]').prop('checked');
-
-        // validate that data
-        validateData(data).then(function() {
-
-            // remove all error states
-            $('.control-group').removeClass('error');
-            $('.help-inline').empty();
-
-            var promises = Ajax.call([{
-                methodname: 'teamevalquestion_comment_update_question',
-                args: data
-            }]);
-
-            return promises[0];
-
-        }).then(function(result) {
-
-            data.id = result;
+        return this.saveForm(form, ordinal).then(function(result) {
 
             return Strings.get_strings([
                 {key: 'exampleuser', component: 'local_teameval'},
                 {key: 'yourself', component: 'local_teameval'}
-            ]);
+            ]).then(function(str) {
 
-        }.bind(this)).done(function(str) {
-
-            var demoUsers = [{ userid: 0, name: str[0] }];
-            if (this._self) {
-                demoUsers.unshift({userid: -1, name: str[1], self: true});
-            }
-
-            this._submissioncontext = $.extend({}, data, {
-                users: demoUsers
-            });
-
-            this._editingcontext = data;
-
-            deferred.resolve(data.id);
-
-        }.bind(this)).fail(function(error) {
-
-            if (error.invalid) {
-                for (var k in error.errors) {
-                    this.container.find('[name='+k+']')
-                    .closest('.control-group').addClass('error').end()
-                    .next('.help-inline').text(error.errors[k]);
+                var demoUsers = [{ userid: 0, name: str[0] }];
+                if (this._self) {
+                    demoUsers.unshift({userid: -1, name: str[1], self: true});
                 }
-            } else {
-                Notification.exception(error);
-            }
 
-            deferred.reject();
+                this._submissioncontext = $.extend({}, data, {
+                    users: demoUsers,
+                });
+                this._submissioncontext.description = data.description.text;
 
+                this._editingcontext = data;
+
+                return result;
+            }.bind(this));
         }.bind(this));
-
-        return deferred;
     };
 
     function validateData(data) {
@@ -128,7 +87,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
         var promises = Ajax.call([{
             methodname: 'teamevalquestion_comment_submit_response',
             args: {
-                teamevalid: this._teameval,
+                teamevalid: this.teameval,
                 id: this.questionID,
                 comments: comments
             }
@@ -163,7 +122,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
         var promises = Ajax.call([{
             methodname: 'teamevalquestion_comment_delete_question',
             args: {
-                teamevalid: this._teameval,
+                teamevalid: this.teameval,
                 id: this.questionID
             }
         }]);

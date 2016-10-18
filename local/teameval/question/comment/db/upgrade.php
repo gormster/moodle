@@ -41,4 +41,8 @@ function xmldb_teamevalquestion_comment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2016100700, 'teamevalquestion', 'comment');
     }
 
+    if ($oldversion < 2016101400) {
+        upgrade_plugin_savepoint(true, 2016101400, 'teamevalquestion', 'comment');
+    }
+
 }

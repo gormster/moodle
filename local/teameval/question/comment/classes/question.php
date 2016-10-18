@@ -59,6 +59,17 @@ class question implements \local_teameval\question {
         return new output\editing_view($this, $this->any_response_submitted());
     }
 
+    public function edit_form_data() {
+        $data = [
+            'id' => $this->id, 
+            'title' => $this->title, 
+            'description' => ['text' => $this->description, 'format' => FORMAT_HTML],
+        ];
+        if ($this->anonymous) $data['anonymous'] = true;
+        if ($this->optional) $data['optional'] = true;
+        return $data;
+    }
+
     public function context_data($locked = false) {
         global $PAGE;
 
@@ -66,7 +77,8 @@ class question implements \local_teameval\question {
         $output = $PAGE->get_renderer('local_teameval');
         
         if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'])) {
-            $context->editingcontext = $this->editing_view()->export_for_template($output);
+            $context->editingcontext = $this->edit_form_data();
+            $context->editinglocked = $this->any_response_submitted();
             $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);
         } else if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'], ['doanything' => false])) {
             $context->submissioncontext = $this->submission_view($locked)->export_for_template($output);

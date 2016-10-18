@@ -14,6 +14,7 @@ use invalid_parameter_exception;
 use context_module;
 use stdClass;
 use coding_exception;
+use moodle_exception;
 
 use local_teameval;
 use local_teameval\team_evaluation;
@@ -25,12 +26,7 @@ class external extends external_api {
     public static function update_question_parameters() {
         return new external_function_parameters([
             'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'ordinal' => new external_value(PARAM_INT, 'ordinal of question'),
-            'id' => new external_value(PARAM_INT, 'id of question', VALUE_DEFAULT, 0),
-            'title' => new external_value(PARAM_TEXT, 'title of question'),
-            'description' => new external_value(PARAM_RAW, 'description of question'),
-            'anonymous' => new external_value(PARAM_BOOL, 'question is anonymous'),
-            'optional' => new external_value(PARAM_BOOL, 'question is optional')
+            'formdata' => new external_value(PARAM_RAW, 'encoded form data')
         ]);
     }
 
@@ -38,12 +34,28 @@ class external extends external_api {
         return new external_value(PARAM_INT, 'id of question');
     }
 
-    public static function update_question($teamevalid, $ordinal, $id, $title, $description, $anonymous, $optional) {
-        global $DB, $USER;
+    public static function update_question($teamevalid, $formdata) {
+        global $DB, $USER, $PAGE;
 
-        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
+        $context = team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
+        $PAGE->set_context($context);
 
         $teameval = new team_evaluation($teamevalid);
+
+        $parsedformdata = [];
+        parse_str($formdata, $parsedformdata);
+        $form = new forms\edit_form(null, null, 'post', '', null, true, $parsedformdata);
+
+        if (!$form->is_submitted()) {
+            throw new moodle_exception('formnotsubmitted', '', '', $parsedformdata);
+        }
+
+        $data = $form->get_data();
+        if ($form->validate_defined_fields(true) == false) {
+            throw new moodle_exception("forminvalid", '', '', $parsedformdata);
+        }
+
+        $id = $data->id;
 
         $any_response_submitted = false;
         if ($id > 0) {
@@ -59,11 +71,11 @@ class external extends external_api {
 
         $record = ($id > 0) ? $DB->get_record('teamevalquestion_comment', array('id' => $id)) : new stdClass;
 
-        $record->title = $title;
-        $record->description = $description;
+        $record->title = $data->title;
+        $record->description = $data->description['text'];
         if ($any_response_submitted == false) {
-            $record->anonymous = $anonymous;
-            $record->optional = $optional;
+            $record->anonymous = $data->anonymous;
+            $record->optional = $data->optional;
         }
 
         if ($id > 0) {
@@ -72,7 +84,7 @@ class external extends external_api {
             $transaction->id = $DB->insert_record('teamevalquestion_comment', $record);
         }
 
-        $teameval->update_question($transaction, $ordinal);
+        $teameval->update_question($transaction, $data->ordinal);
 
         return $transaction->id;
 
