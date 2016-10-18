@@ -23,6 +23,7 @@ class external extends external_api {
 
     /* update_question */
 
+    // Since we need to modify the return value, we import this function aliased
     use traits\question\update_from_form {
         update_question as update_question_internal;
     }
@@ -69,6 +70,7 @@ class external extends external_api {
     public static function update_question($teamevalid, $formdata) {
         global $DB, $USER, $PAGE;
 
+        // Call the function imported from the update_from_form trait
         $id = static::update_question_internal($teamevalid, $formdata);
 
         $teameval = new team_evaluation($teamevalid);

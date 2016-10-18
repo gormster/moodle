@@ -11,6 +11,14 @@ use moodle_exception;
 
 use local_teameval\team_evaluation;
 
+/*
+
+This trait is designed to work with the default implementation of delete() in question.js.
+
+All you need to implement is plugin_name() and delete_records().
+
+ */
+
 interface simple_delete_interface {
     static function plugin_name();
 
