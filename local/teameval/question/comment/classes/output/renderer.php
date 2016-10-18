@@ -2,6 +2,7 @@
 
 namespace teamevalquestion_comment\output;
 
+use teamevalquestion_comment\forms;
 use plugin_renderer_base;
 
 class renderer extends plugin_renderer_base {
@@ -22,8 +23,9 @@ class renderer extends plugin_renderer_base {
     }
 
     public function render_editing_view(editing_view $view) {
-        $data = $view->export_for_template($this);
-        return parent::render_from_template('teamevalquestion_comment/editing_view', $data);
+        $form = new forms\edit_form(null, ['locked' => $view->locked]);
+        $form->set_data($view->formdata);
+        return $form->render();
     }
 
 }

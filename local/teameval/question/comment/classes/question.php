@@ -5,8 +5,12 @@ namespace teamevalquestion_comment;
 use coding_exception;
 use stdClass;
 use local_teameval\team_evaluation;
+
+use local_teameval\traits;
     
 class question implements \local_teameval\question {
+
+    use traits\question\no_value;
 
     public $id;
 
@@ -56,7 +60,7 @@ class question implements \local_teameval\question {
     }
 
     public function editing_view() {
-        return new output\editing_view($this, $this->any_response_submitted());
+        return new output\editing_view($this->edit_form_data(), $this->any_response_submitted());
     }
 
     public function edit_form_data() {
@@ -97,10 +101,6 @@ class question implements \local_teameval\question {
         return 'comment';
     }
 
-    public function has_value() {
-        return false;
-    }
-
     public function has_completion() {
         return $this->optional == false;
     }
@@ -111,14 +111,6 @@ class question implements \local_teameval\question {
 
     public function is_feedback_anonymous() {
         return $this->anonymous;
-    }
-
-    public function minimum_value() {
-        return 0;
-    }
-
-    public function maximum_value() {
-        return 0;
     }
 
     public function get_title() {

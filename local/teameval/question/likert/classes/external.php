@@ -17,60 +17,32 @@ use moodle_exception;
 
 use local_teameval;
 use local_teameval\team_evaluation;
+use local_teameval\traits;
 
 class external extends external_api {
 
     /* update_question */
 
-    public static function update_question_parameters() {
-        return new external_function_parameters([
-            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'formdata' => new external_value(PARAM_RAW, 'form data'),
-        ]);
+    use traits\question\update_from_form {
+        update_question as update_question_internal;
     }
 
-    public static function update_question_returns() {
-        return new external_single_structure([
-            "id" => new external_value(PARAM_INT, 'id of question'),
-            "submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
-            ]);
+    protected static function plugin_name() {
+        return 'likert';
     }
 
-    public static function update_question($teamevalid, $formdata) {
-        global $DB, $USER, $PAGE;
+    protected static function form_class() {
+        return '\teamevalquestion_likert\forms\settings_form';
+    }
 
-        $teameval = new team_evaluation($teamevalid);
-        $PAGE->set_context($teameval->get_context());
-
-        team_evaluation::guard_capability($teameval, ['local/teameval:createquestionnaire']);
-
-        $parsedformdata = [];
-        parse_str($formdata, $parsedformdata);
-        $form = new forms\settings_form(null, null, 'post', '', null, true, $parsedformdata);
-
-        if ($form->validate_defined_fields(true) == false) {
-            throw new moodle_exception('invalidform', '', '', $form->get_errors());
-        }
-
-        $data = $form->get_data();
-
+    protected static function update_record($record, $data, $teameval) {
         $id = $data->id;
-        
-        $transaction = $teameval->should_update_question("likert", $id, $USER->id);
-
-        if ($transaction == null) {
-            throw new moodle_exception("cannotupdatequestion", "local_teameval");
-        }
-
         $any_response_submitted = false;
         if ($id > 0) {
             $question = new question($teameval, $id);
             $any_response_submitted = $question->any_response_submitted();
         }
 
-        //get or create the record
-        $record = ($id > 0) ? $DB->get_record('teamevalquestion_likert', array('id' => $id)) : new stdClass;
-        
         //update the values
         $record->title = $data->title;
         $record->description = $data->description['text'];
@@ -85,52 +57,37 @@ class external extends external_api {
         }
 
         $record->meanings = json_encode($record->meanings);
+    }
 
-        //save the record back to the DB
-        if ($id > 0) {
-            $DB->update_record('teamevalquestion_likert', $record);
-        } else {
-            $transaction->id = $DB->insert_record('teamevalquestion_likert', $record);
-        }
-        
-        //finally tell the teameval we're done
-        $teameval->update_question($transaction, $data->ordinal);
+    public static function update_question_returns() {
+        return new external_single_structure([
+            "id" => new external_value(PARAM_INT, 'id of question'),
+            "submissionContext" => new external_value(PARAM_RAW, 'json encoded submission context')
+        ]);
+    }
 
-        $question = new question($teameval, $transaction->id);
+    public static function update_question($teamevalid, $formdata) {
+        global $DB, $USER, $PAGE;
+
+        $id = static::update_question_internal($teamevalid, $formdata);
+
+        $teameval = new team_evaluation($teamevalid);
+
+        $question = new question($teameval, $id);
 
         $output = $PAGE->get_renderer('teamevalquestion_likert');
-        return ["id" => $transaction->id, "submissionContext" => json_encode($question->submission_view()->export_for_template($output))];
+        return ["id" => $id, "submissionContext" => json_encode($question->submission_view()->export_for_template($output))];
 
     }
 
     /* delete_question */
 
-    public static function delete_question_parameters() {
-        return new external_function_parameters([
-            'teamevalid' => new external_value(PARAM_INT, 'id of teameval'),
-            'id' => new external_value(PARAM_INT, 'id of question')
-        ]);
-    }
+    use traits\question\simple_delete;
 
-    public static function delete_question_returns() {
-        return null;
-    }
-
-    public static function delete_question($teamevalid, $id) {
-        global $DB, $USER;
-
-        team_evaluation::guard_capability($teamevalid, ['local/teameval:createquestionnaire']);
-
-        $teameval = new team_evaluation($teamevalid);
-
-        $transaction = $teameval->should_delete_question("likert", $id, $USER->id);
-        if ($transaction == null) {
-            throw new moodle_exception("cannotupdatequestion", "local_teameval");
-        }
-
+    public static function delete_records($id) {
+        global $DB;
         $DB->delete_records('teamevalquestion_likert', array('id' => $id));
-
-        $teameval->delete_question($transaction);
+        $DB->delete_records('teamevalquestion_likert_resp', array('questionid' => $id));
     }
 
     /* submit_response */

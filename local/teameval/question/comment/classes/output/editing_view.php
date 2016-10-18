@@ -9,24 +9,11 @@ use templatable;
 use stdClass;
 use renderer_base;
 
-class editing_view implements renderable, templatable {
+class editing_view implements renderable {
 
-    function __construct(question $question, $locked = false) {
-        $this->question = $question;
+    function __construct($formdata, $locked = false) {
+        $this->formdata = $formdata;
         $this->locked = $locked;
-    }
-
-    function export_for_template(renderer_base $output) {
-
-        return [
-            'id' => $this->question->id, 
-            'title' => $this->question->title, 
-            'description' => $this->question->description, 
-            'anonymous' => $this->question->anonymous, 
-            'optional' => $this->question->optional, 
-            'locked' => $this->locked
-        ];
-
     }
 
 }
