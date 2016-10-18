@@ -58,8 +58,4 @@ class settings_form extends ajaxform {
         }
     }
 
-    function get_errors() {
-        return $this->_form->_errors;
-    }
-
 }

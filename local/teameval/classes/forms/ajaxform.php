@@ -103,14 +103,12 @@ abstract class ajaxform extends moodleform {
         return $cleantype;
     }
 
-    public function get_form_identifier() {
-        $ident = parent::get_form_identifier();
-
-        return $ident + uniqid();
-    }
-
     function process_data($json) {
         $this->_form->updateSubmission($json, []);
+    }
+
+    public function get_errors() {
+        return $this->_form->_errors;
     }
 
 }
