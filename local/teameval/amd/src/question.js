@@ -21,9 +21,9 @@ define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/
 
 function Question(container, teameval, contextid, self, editable, questionID, context) {
     this.teameval = teameval;
-    this.questionID = questionID
-    this.container = container
-    this.contextid = contextid
+    this.questionID = questionID;
+    this.container = container;
+    this.contextid = contextid;
 }
 
 /**
