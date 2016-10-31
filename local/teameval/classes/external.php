@@ -353,7 +353,7 @@ class external extends external_api {
             $r = new stdClass;
             $r->type = $q->type;
             $r->questionid = $q->questionid;
-            $r->context = json_encode($q->question->context_data());
+            $r->context = json_encode($q->question->context_data($PAGE->get_renderer("teamevalquestion_{$q->type}")));
             $returns[] = $r;
         }
 
@@ -410,7 +410,7 @@ class external extends external_api {
             $r = new stdClass;
             $r->type = $q->type;
             $r->questionid = $q->questionid;
-            $r->context = json_encode($q->question->context_data());
+            $r->context = json_encode($q->question->context_data($PAGE->get_renderer("teamevalquestion_{$q->type}")));
             $returns[] = $r;
         }
 

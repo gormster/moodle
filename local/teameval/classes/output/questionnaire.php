@@ -48,14 +48,12 @@ class questionnaire implements renderable, templatable {
 
         foreach($teameval->get_questions() as $q) {
             $locked = !$teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
-            $submissionview = $q->question->submission_view($locked);
-
-            $contextdata = $q->question->context_data();
+            
             $this->questions[] = [
                 "type" => $q->plugininfo->name,
                 "questionid" => $q->questionid,
-                "submissionview" => $submissionview,
-                "context" => $contextdata
+                "locked" => $locked,
+                "question" => $q->question,
                 ];
         }
 
@@ -112,11 +110,17 @@ class questionnaire implements renderable, templatable {
 
             $renderer = $renderers[$qtype];
 
-            $q['content'] = $renderer->render($q['submissionview']);
+            $locked = $q['locked'];
 
-            $q['context'] = json_encode($q['context']);
+            $submissionview = $q['question']->submission_view($locked);
 
-            unset($q['submissionview']);
+            $contextdata = $q['question']->context_data($renderer, $locked);
+
+            $q['content'] = $renderer->render($submissionview);
+
+            $q['context'] = json_encode($contextdata);
+
+            unset($q['question']);
             
             $c->questions[] = $q;
         }
