@@ -57,6 +57,17 @@
   background: linear-gradient(to right, white 0px, white 1px, #d9d9d9 1px, rgba(217, 217, 217, 0) 1.5px, rgba(255, 255, 255, 0) 2px, white 2px, white 3px, #d9d9d9 3px, rgba(217, 217, 217, 0) 3.5px) center/3px 30% no-repeat, linear-gradient(to right, transparent 0%, #e6e6e6 0%, #e6e6e6 100%, transparent 100%) center/7px 100% no-repeat;
 }
 
+.teamevalquestion-split100 .hundred .divider {
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  z-index: 1;
+  width: 3px;
+  margin-left: -1px;
+  background-color: #666;
+}
+
+
 .teamevalquestion-split100 .overflows .name {
   display: none;
   clear: both;

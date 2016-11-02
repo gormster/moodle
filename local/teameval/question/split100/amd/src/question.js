@@ -21,6 +21,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
     function realToDisplay (real, n) {
         var m = 100 / (100 - MIN_SIZE * n);
+        console.debug((real + MIN_SIZE * m));
         return (real + MIN_SIZE * m) / m;
     }
 
@@ -75,7 +76,6 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         this.self = self;
         this.context = context || {};
         this.pluginName = "split100";
-        console.log(this.context);
 
         if (this.container.find('.hundred').length) {
             // we've already got submission contents, initialise it
@@ -152,9 +152,11 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             return;
         }
 
+        var n = this.context.users.length;
+
         if (!this.sizes) {
             this.sizes = this.context.users.map(function(v) {
-                return realToDisplay(v.pct, this.context.users.length);
+                return realToDisplay(parseFloat(v.pct), n);
             }, this);
         }
 
@@ -205,7 +207,6 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                     || (split.scrollHeight > split.clientHeight)) {
                 $(split).find('.split-label .name').hide();
                 this.showOverflow(i);
-                // this.container.find('.overflows').children('.name').eq(i).show();
             } else {
                 this.container.find('.overflows').children('.name').eq(i).hide();
             }

@@ -40,7 +40,7 @@ class question implements \local_teameval\question {
     }
 
     public function submission_view($locked = false) {
-        return new output\submission_view($this, $this->teameval);   
+        return new output\submission_view($this, $this->teameval, $locked);   
     }
 
     public function editing_view() {

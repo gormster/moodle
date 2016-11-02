@@ -25,7 +25,9 @@ class submission_view implements renderable, templatable {
 
     protected $self;
 
-    public function __construct(question $question, team_evaluation $teameval) {
+    protected $locked;
+
+    public function __construct(question $question, team_evaluation $teameval, $locked = false) {
         global $USER, $DB;
 
         $this->self = $teameval->get_settings()->self;
@@ -44,6 +46,7 @@ class submission_view implements renderable, templatable {
                 $u->pct = $response->opinion_of($id) ?: 100.0 / count($teammates);
                 $this->users[] = $u;
             }
+            $this->locked = $locked;
         } else {
             $this->users = [];
             $this->demo = true;
@@ -71,6 +74,8 @@ class submission_view implements renderable, templatable {
             }
         }
 
+        $rounded = $this->rounded($users);
+
         $totalwidth = 0;
         foreach ($users as $user) {
             $user->width = question::real_to_display($user->pct, count($users));
@@ -90,8 +95,38 @@ class submission_view implements renderable, templatable {
         $c->title = $this->title;
         $c->description = $this->description;
         $c->users = $users;
+        $c->locked = $this->locked;
 
         return $c;
+    }
+
+    private function rounded($users) {
+        $fixed = [];
+        $percents = [];
+        foreach($users as $k => $v) {
+            $percents[$k] = $v->pct;
+            $fixed[$k] = round($v->pct);
+        }
+
+        $sum = array_sum($fixed);
+
+        if ($sum != 100) {
+            $difference = $sum - 100;
+
+            $corrector = ($difference < 0) ? 1 : -1;
+
+            uksort($fixed, function($a, $b) use ($corrector, $fixed, $percents) {
+                return ($fixed[$a] + $corrector - $percents[$a]) - ($fixed[$b] + $corrector - $percents[$b]);
+            });
+
+            for ($i=0; $i < abs($difference); $i++) { 
+                list($k, $v) = each($fixed);
+                $v += $corrector;
+                $fixed[$k] = $v;
+            }
+        }
+
+        return $fixed;
     }
 
 }

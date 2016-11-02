@@ -37,9 +37,11 @@ Example context (json): {
     {{{description}}}
     <div class="hundred">
     {{#users}}
-        {{^first}}
+        {{^first}}{{#locked}}
+            <div class="divider" style="left: {{left}}%"></div>
+        {{/locked}}{{^locked}}
             <div class="handle" style="left: {{left}}%"></div>
-        {{/first}}
+        {{/locked}}{{/first}}
         <div class="split{{#self}} self{{/self}}" style="width: {{width}}%; left: {{left}}%" data-user-id="{{id}}"><span class="split-label">
             <span class="name">{{#pic}}{{{pic}}} {{/pic}}{{name}}</span>
             <span class="value">{{rounded}}%</span>
