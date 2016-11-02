@@ -25,10 +25,15 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
     }
 
     // percents MUST sum to exactly 100
-    function fixDisplayValues(percents) {
+    // fixFirst is an array of indices that should be adjusted first
+    // namely when a user is dragging a handle, they don't expect other
+    // segments to change value
+    function fixDisplayValues(percents, fixFirst) {
         var fixed = percents.map(function(v) {
             return Math.round(v);
         });
+
+        fixFirst = fixFirst || [];
         
         var sum = sumToIndex(fixed);
         
@@ -44,7 +49,12 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             // sort by the difference between the actual values and the corrected fixed values
             // we want the numbers which will be made *more* accurate by correcting them
             mapped.sort(function(a, b) {
-               return Math.abs(fixed[a.i] + corrector - a.v) - Math.abs(fixed[b.i] + corrector - b.v);
+                var fixa = fixFirst.indexOf(a.i) != -1;
+                var fixb = fixFirst.indexOf(b.i) != -1;
+                if (fixa != fixb) {
+                    return fixa ? -1 : 1;
+                }
+                return Math.abs(fixed[a.i] + corrector - a.v) - Math.abs(fixed[b.i] + corrector - b.v);
             });
 
             // by definition, |difference| < percents.length
@@ -135,7 +145,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         }
     }
 
-    Split100Question.prototype.updateView = function() {
+    Split100Question.prototype.updateView = function(movingIndices) {
         
         if (!this.context) {
             // no context? can't display.
@@ -171,7 +181,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
             this.sizes = realValues.map(this.realToDisplay, this);
         }
 
-        var displayValues = fixDisplayValues(realValues);
+        var displayValues = fixDisplayValues(realValues, movingIndices);
         
         var splits = split100.children('.split');
         var handles = split100.children('.handle');
@@ -292,7 +302,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
                      this.sizes[rightIndex] -= shift;
                 }
                 
-                this.updateView();
+                this.updateView([leftIndex, rightIndex]);
             }
         }.bind(this))
         .on('mouseup mouseleave touchend touchcancel', function(evt) {
