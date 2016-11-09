@@ -61,9 +61,9 @@ class response implements \local_teameval\response {
 
     public function opinion_of_readable($userid, $source = null) {
         if ($this->_marks_given) {
-            return $this->splits[$userid] . '%';
+            return new output\opinion($this->splits[$userid]);
         }
-        return get_string('nomark', 'teamevalquestion_split100');
+        return new output\opinion();
     }
 
     public function update_splits($splits) {

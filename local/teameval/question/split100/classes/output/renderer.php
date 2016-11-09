@@ -17,4 +17,9 @@ class renderer extends plugin_renderer_base {
         return $view->form->render();
     }
 
+    public function render_opinion(opinion $view) {
+        $data = $view->export_for_template($this);
+        return parent::render_from_template('teamevalquestion_split100/opinion', $data);
+    }
+
 }
