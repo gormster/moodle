@@ -4,6 +4,7 @@ namespace teamevalquestion_comment;
 
 use coding_exception;
 use stdClass;
+use renderer_base;
 use local_teameval\team_evaluation;
 
 use local_teameval\traits;
@@ -74,11 +75,8 @@ class question implements \local_teameval\question {
         return $data;
     }
 
-    public function context_data($locked = false) {
-        global $PAGE;
-
+    public function context_data(renderer_base $output, $locked = false) {
         $context = new stdClass;
-        $output = $PAGE->get_renderer('local_teameval');
         
         if (team_evaluation::check_capability($this->teameval, ['local/teameval:createquestionnaire'])) {
             $context->editingcontext = $this->edit_form_data();

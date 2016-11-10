@@ -2,6 +2,8 @@
 
 namespace local_teameval;
 
+use renderer_base;
+
 interface question {
     
     /**
@@ -79,7 +81,7 @@ interface question {
      * 
      * @return mixed JSON-encodable data.
      */
-    public function context_data($locked = false);
+    public function context_data(renderer_base $output, $locked = false);
 
     /**
      * Return the name of this teamevalquestion subplugin
