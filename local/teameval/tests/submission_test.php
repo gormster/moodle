@@ -67,10 +67,10 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
     }
 
-    private function add_questions($numQuestions = 3) {
+    private function add_questions($numQuestions = 3, $start = 0) {
         global $USER;
 
-        for ($i = 0; $i < $numQuestions; $i++) {
+        for ($i = $start; $i < $start + $numQuestions; $i++) {
             $id = $i + 1;
 
             $tx = $this->teameval->should_update_question('mock', 0, $USER->id);
@@ -108,7 +108,23 @@ class local_teameval_submission_testcase extends advanced_testcase {
             $this->assertEquals(1, $rslt);
         }
 
-        $this->add_questions(3);
+        // now add a question with no completion
+        
+        $this->add_questions(1);
+
+        $question = current($this->questions);
+
+        $question->completion = false;
+        $question->value = false;
+
+        // user completion should still be 100%
+        
+        foreach($this->students as $id => $user) {
+            $rslt = $this->teameval->user_completion($id);
+            $this->assertEquals(1, $rslt);
+        }
+
+        $this->add_questions(3, 1);
 
         foreach($this->students as $id => $user) {
             $rslt = $this->teameval->user_completion($id);
@@ -118,7 +134,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         // pick someone and get them to respond
 
         $student = current(next($this->members));
-        list($question0, $question1, $question2) = $this->questions;
+        list(, $question0, $question1, $question2) = $this->questions;
 
         $response = new mock_response($this->teameval, $question0, $student->id);
 

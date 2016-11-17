@@ -195,4 +195,66 @@ class local_teameval_evaluation_context_testcase extends advanced_testcase {
 
     }
 
+    public function test_default_imps() {
+
+        $ns = evaluation_context::plugin_namespace();
+
+        $this->assertEquals("local_teameval", $ns);
+
+        $component = evaluation_context::component_string();
+
+        $this->assertEquals("Team evaluation", $component);
+
+        $component = \mod_assign\evaluation_context::component_string();
+
+        $this->assertEquals("Assignments", $component);
+
+        $grade = $this->evalcontext->format_grade(12.3456);
+
+        $this->assertEquals('12.35', $grade);
+
+    }
+
+    /**
+     * Test failing call when a module does not support team evaluation
+     */
+    public function test_context_for_module_fail() {
+        
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_url');
+        $module = $generator->create_instance(array('course'=>$this->course->id));
+
+        $cm = get_fast_modinfo($this->course)->cms[$module->cmid];
+
+        $result = evaluation_context::context_for_module($cm, false);
+
+        $this->assertEmpty($result);
+
+        $this->setExpectedException('moodle_exception');
+
+        $result = evaluation_context::context_for_module($cm);        
+
+        // Fail with moodle_exception
+    }
+
+    /**
+     * Test getting team evaluation instance via context_for_module
+     */
+    public function test_get_teameval() {
+        $cm = get_fast_modinfo($this->course)->cms[$this->assign->cmid];
+
+        $evalcontext = evaluation_context::context_for_module($cm);
+
+        $teameval = $evalcontext->team_evaluation();
+
+        $this->assertEquals($this->teameval->id, $teameval->id);
+    }
+
+    /**
+     * TODO
+     * This is going to be pretty bloody difficult to mock up.
+     */
+    public function test_userdata_reset() {
+
+    }
+
 }
