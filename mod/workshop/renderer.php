@@ -1021,14 +1021,14 @@ HTML;
                 $o .= $this->output->container_start('inline-block');
                 $o .= $this->output->heading(get_string('assessmentreference','workshop'), 2, 'reference-assessment');
             
-                $o .= $this->inner_overall_feedback($assessment);
+                $o .= $this->inner_overall_feedback($assessment->reference_assessment);
             
                 $o .= $this->output->container_end();
 
                 $o .= $this->output->container_start('inline-block');
                 $o .= $this->output->heading(get_string('assessmentbyfullname','workshop', fullname($assessment->reviewer)), 2, 'example-assessment');
             
-                $o .= $this->inner_overall_feedback($assessment->reference_assessment);
+                $o .= $this->inner_overall_feedback($assessment);
             
                 $o .= $this->output->container_end();
                 $o .= $this->output->container_end();
