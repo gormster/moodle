@@ -33,6 +33,8 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $this->course = $this->getDataGenerator()->create_course();
 
+        team_evaluation::_clear_groups_members_cache();
+
         // we use assign because it's one of the default implementers
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));

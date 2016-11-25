@@ -38,6 +38,8 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
 
+        team_evaluation::_clear_groups_members_cache();
+
         // make some users & some groups
 
         for($i = 0; $i < 3; $i++) {
@@ -299,7 +301,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $self = current($teammates);
         $this->assertEquals($user->id, $self->id);
 
-        $this->assertEquals(count($teammates), count($members));
+        $this->assertEquals(count($members), count($teammates));
         foreach($teammates as $t) {
             $this->assertArrayHasKey($t->id, $members);
         }
