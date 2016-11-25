@@ -4,6 +4,8 @@ use local_teameval\team_evaluation;
 use local_teameval\evaluation_context;
 use local_teameval\evaluator;
 
+require_once('mocks/mock_evaluator.php');
+
 class local_teameval_evaluation_context_testcase extends advanced_testcase {
 
     private $course;
@@ -149,21 +151,14 @@ class local_teameval_evaluation_context_testcase extends advanced_testcase {
 
     public function test_update_grades() {
 
-        // This is kind of complicated, because it involves mocking the evaluator, as well
         $mock_scores = [1.53,1.23,1.65,0.67,0.21,0.34,1.42,0.46,0.75,1.61,1.60,1.00,0.83,0.93,0.64];
         $scores = [];
         foreach(array_map(null, $this->users, $mock_scores) as list($user, $score)) {
             $scores[$user->id] = $score;
         }
 
-        $evaluator = $this->getMock(evaluator::class, ['__construct', 'scores'], [$this->teameval, null]);
-        $evaluator->method('scores')
-            ->willReturn($scores);
-
-        $reflection = new ReflectionClass(team_evaluation::class);
-        $prop = $reflection->getProperty('evaluator');
-        $prop->setAccessible(true);
-        $prop->setValue($this->teameval, $evaluator);
+        $evaluator = mock_evaluator::install_mock($this->teameval);
+        $evaluator->scores = $scores;
 
         $mock_grades = [40, 60, 90];
         $grades = [];
@@ -256,5 +251,7 @@ class local_teameval_evaluation_context_testcase extends advanced_testcase {
     public function test_userdata_reset() {
 
     }
+
+    
 
 }

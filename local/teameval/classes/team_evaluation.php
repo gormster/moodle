@@ -1073,8 +1073,7 @@ class team_evaluation {
      * @return type
      */
     public function group_members($groupid) {
-        $groupcache = self::$groupcache;
-        if (!isset($groupcache[$groupid])) {
+        if (!isset(self::$groupcache[$groupid])) {
             if (empty($groupid)) {
                 $members = get_users_by_capability($this->context, 'local/teameval:submitquestionnaire');
             } else {
@@ -1083,9 +1082,9 @@ class team_evaluation {
                     return has_capability('local/teameval:submitquestionnaire', $this->context, $u->id, false);
                 });
             }
-            $groupcache[$groupid] = $members; 
+            self::$groupcache[$groupid] = $members; 
         } else {
-            $members = $groupcache[$groupid];
+            $members = self::$groupcache[$groupid];
         }
         return $members;
     }
@@ -1112,7 +1111,7 @@ class team_evaluation {
 
         $group = $evalcontext->group_for_user($userid);
 
-        $unadjusted = $evalcontext->grade_for_group($group->id);
+        $unadjusted = $evalcontext->grade_for_group($group ? $group->id : 0);
 
         if ($this->marks_available($userid)) {
 
@@ -1338,6 +1337,11 @@ class team_evaluation {
     }
 
     public function marks_available($userid) {
+        // Before anything, check if the user can even submit in this teameval
+        if (!has_capability('local/teameval:submitquestionnaire', $this->context, $userid, false)) {
+            return false;
+        }
+
         // First check if the marks are released.
         if (!$this->marks_released($userid)) {
             return false;
