@@ -1089,6 +1089,10 @@ class team_evaluation {
         return $members;
     }
 
+    public static function _clear_groups_members_cache() {
+        self::$groupcache = [];   
+    }
+
     /**
      * It's only two lines, but it gets called a lot, so now it's a convenience function.
      * @param stdClass $questioninfo The question object from from get_questions()
