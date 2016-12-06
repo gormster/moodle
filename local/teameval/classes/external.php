@@ -18,7 +18,7 @@ use context_system;
 use context_module;
 use context_user;
 
-defined(MOODLE_INTERNAL) || die();
+defined('MOODLE_INTERNAL') || die();
 
 class external extends external_api {
 
