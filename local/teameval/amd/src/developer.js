@@ -25,7 +25,7 @@ define(['jquery', 'local_teameval/langen'], function($, LanGen) { return {
                 sizes = sizes.map(function() {
                     return Math.random();
                 });
-                total = sizes.reduce(function(a, b) {
+                var total = sizes.reduce(function(a, b) {
                     return a + b;
                 });
                 sizes = sizes.map(function(v) {
