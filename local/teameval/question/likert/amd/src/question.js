@@ -50,7 +50,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
             marks.push(m);
         });
 
-        var promises = ajax.call([{
+        var promises = Ajax.call([{
             methodname: 'teamevalquestion_likert_submit_response',
             args: {
                 teamevalid: this.teameval,
@@ -110,16 +110,16 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
 
     LikertQuestion.prototype.checkComplete = function() {
 
-        var userids = this.submissioncontext.users.map(function() { return this.userid; });
+        var userids = this._submissioncontext.users.map(function(v) { return parseInt(v.userid); });
 
-        var markedUsers = questionContainer.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
+        var markedUsers = this.container.find('input:radio:checked').map(function() { return $(this).data('touser'); }).get();
 
         var missingUsers = userids.filter(function(v) { return markedUsers.indexOf(v) == -1; });
 
         if (missingUsers.length > 0) {
-            questionContainer.parent().addClass('incomplete');
+            this.container.parent().addClass('incomplete');
         } else {
-            questionContainer.parent().removeClass('incomplete');
+            this.container.parent().removeClass('incomplete');
         }
 
         return (missingUsers.length > 0);

@@ -74,6 +74,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
     function Split100Question(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
         this.self = self;
+
         this.context = context || {};
         this.pluginName = "split100";
 
@@ -318,15 +319,19 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         return Question.prototype.submissionView.apply(this, arguments).done(function() {
             this.updateView();
             this.initialiseSubmissionView();
-        });
+        }.bind(this));
+    };
+
+    Split100Question.prototype.submissionContext = function() {
+        return this.context;
     };
 
     Split100Question.prototype.editingView = function() {
         var formdata = {
-            title: this.title,
+            title: this.context.title,
             description: {
                 format: 1,
-                text: this.description
+                text: this.context.description
             }
         }
         return this.editForm('\\teamevalquestion_split100\\forms\\edit_form', $.param(formdata), {});
@@ -336,8 +341,8 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
         var form = this.container.find('form');
 
         var data = FormParse.serializeObject(form);
-        this.title = data.title;
-        this.description = data.description.text;
+        this.context.title = data.title;
+        this.context.description = data.description.text;
 
         var strs = [this.self ? 'yourself' : 'exampleuser', 'exampleuser', 'exampleuser', 'exampleuser'].map(function(v, i) {
             return {key: v, component: 'teamevalquestion_split100', param: this.self ? i : i + 1};
