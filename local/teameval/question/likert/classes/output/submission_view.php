@@ -3,6 +3,7 @@
 namespace teamevalquestion_likert\output;
 
 use teamevalquestion_likert\question;
+use teamevalquestion_likert\response;
 use local_teameval\team_evaluation;
 use renderable;
 use templatable;
