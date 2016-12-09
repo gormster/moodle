@@ -36,10 +36,9 @@ Question.prototype.submissionView = function() {
     if (submissionTemplate) {
         var submissionContext = this.submissionContext();
         var promise = Templates.render(submissionTemplate, submissionContext);
-        promise.done(function(html, js) {
+        return promise.done(function(html, js) {
             Templates.replaceNodeContents(this.container, html, js);
         }.bind(this));
-        return promise;
     }
 }
 
