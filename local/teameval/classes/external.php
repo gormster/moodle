@@ -152,7 +152,9 @@ class external extends external_api {
     public static function report($cmid, $plugin) {
         global $USER, $PAGE;
 
-        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
+
+        $PAGE->set_context($context);
 
         $teameval = team_evaluation::from_cmid($cmid);
         $teameval->set_report_plugin($plugin);
