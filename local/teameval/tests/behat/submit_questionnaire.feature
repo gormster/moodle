@@ -32,7 +32,7 @@ Feature: In a team evaluation, students submit responses to a questionnaire
     Scenario: Team evaluation not yet available
         Given I log in as "student1"
         And I follow "Course 1"
-        
+
         When I follow "Test assignment name"
-        
+
         Then I should not see "Team evaluation"

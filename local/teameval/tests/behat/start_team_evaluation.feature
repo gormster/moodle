@@ -42,7 +42,7 @@ Feature: In a course, a teacher creates a module and starts team evaluation
             | assignsubmission_file_enabled | 0 |
             | teamsubmission | Yes |
             | groupmode | Visible groups |
-        
+
         When I follow "Test teameval assignment"
         And I wait until the page is ready
 
@@ -67,12 +67,10 @@ Feature: In a course, a teacher creates a module and starts team evaluation
             | assignsubmission_file_enabled | 0 |
             | teamsubmission | No |
             | groupmode | Visible groups |
-        
+
         When I follow "Test teameval assignment"
         And I wait until the page is ready
 
         Then ".local-teameval-container-heading" "css_element" should not exist
 
     # TODO: Add workshep checks if installed. Not quite sure what the step is to skip if an activity doesn't exist.
-
-            

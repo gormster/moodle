@@ -56,7 +56,7 @@ class behat_local_teameval extends behat_base {
      * Course shortname (string) shortname of course
      * Groups (int) the number of groups
      * Students per group (int) the number of students per group
-     * 
+     *
      * Optional fields:
      * Teacher (string) full name of the teacher
      * Group name format (string) format for group names
@@ -80,7 +80,7 @@ class behat_local_teameval extends behat_base {
         foreach ($required as $r) {
             if (!isset($options[$r])) {
                 throw new DriverException($r . ' is a required key');
-            }    
+            }
         }
 
         $optional = [
@@ -117,11 +117,11 @@ class behat_local_teameval extends behat_base {
         $users[] = $teacheruser;
         $enrolments[] = [$teacheruser[0], $shortcourse, 'editingteacher'];
 
-        for ($i=0; $i < $ngroups; $i++) { 
+        for ($i=0; $i < $ngroups; $i++) {
             $groupname = groups_parse_name($groupformat, $i);
             $groups[] = [$groupname, $shortcourse];
 
-            for ($j=0; $j < $npergroup; $j++) { 
+            for ($j=0; $j < $npergroup; $j++) {
                 $fullname = groups_parse_name($studentformat, $i * $npergroup + $j);
                 $user = $this->user_record($fullname);
                 $users[] = $user;
@@ -163,7 +163,7 @@ class behat_local_teameval extends behat_base {
         if (!empty($teamevaloptions)) {
             $teameval->update_settings($teamevaloptions);
         }
-        
+
     }
 
 }
