@@ -41,7 +41,7 @@ define(__NAMESPACE__ . '\LOCKED_REASON_MARKED', -2);
 // evaluation_controller (handling the evaluators and grade updates)
 // release_controller (handling mark release)
 // rescind_controller (handling feedback approve/rescind)
-// 
+//
 // Also all those namespaced constants should probably be class constants.
 
 class team_evaluation {
@@ -161,14 +161,14 @@ class team_evaluation {
             return $context;
         }
 
-        
+
         if ($check) {
             if (has_all_capabilities($caps, $context, null, $doanything)) {
                 return $context;
             } else {
                 return null;
             }
-        } 
+        }
 
         foreach($caps as $cap) {
             require_capability($cap, $context, null, $doanything);
@@ -209,7 +209,7 @@ class team_evaluation {
         }
 
         $this->get_settings();
-    
+
     }
 
     public function get_evaluation_context() {
@@ -236,15 +236,15 @@ class team_evaluation {
      * Gets the default settings for team evaluation. I want to explain why evaluation is enabled by
      * default. There have been a lot of times during development of this plugin when I have had to
      * check whether or not teameval is enabled on a given module, and nearly always the correct solution
-     * would not have been to instantiate a teameval and check ->enabled. For starters, instiatiating 
+     * would not have been to instantiate a teameval and check ->enabled. For starters, instiatiating
      * a team evaluation can have significant side effects, some of which are unknown to the plugin
      * itself. But mostly, when you need to check if team evaluation is enabled, you probably want
-     * to ask an evaluation context, not a team evaluation. The eval context is the object responsible 
+     * to ask an evaluation context, not a team evaluation. The eval context is the object responsible
      * for the module, and it's the one you should be talking to about module-side settings.
-     * 
+     *
      * Basically, when you call new team_evaluation(), you know the ONLY reason it is disabled is if
      * the user disabled it deliberately.
-     * 
+     *
      * @return type
      */
     protected static function default_settings() {
@@ -266,7 +266,7 @@ class team_evaluation {
 
     public function get_settings()
     {
-    
+
         global $DB;
 
         $cache = cache::make('local_teameval', 'settings');
@@ -281,7 +281,7 @@ class team_evaluation {
                     $this->settings = $DB->get_record('teameval', array('id' => $this->id));
                 }
             }
-            
+
             if ($this->settings === false) {
                 $settings = team_evaluation::default_settings();
                 if (isset($this->cm)) {
@@ -293,7 +293,7 @@ class team_evaluation {
                 } else {
                     throw new coding_exception("Team evaluation does not exist.");
                 }
-                
+
                 $this->id = $DB->insert_record('teameval', $settings);
 
                 $this->settings = $settings;
@@ -341,7 +341,7 @@ class team_evaluation {
 
         foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'] as $i) {
             if (isset($settings->$i)) {
-                
+
                 // validation
                 switch($i) {
                     case 'title':
@@ -361,9 +361,9 @@ class team_evaluation {
         // insert that bad boy
         $record = clone $this->settings;
         $record->id = $this->id;
-        
+
         $DB->update_record('teameval', $record);
-        
+
         // set contextid if cm is empty, set cmid if cm is full
         $record->contextid = empty($this->cm) ? $this->context->id : null;
         $record->cmid = empty($this->cm) ? null : $this->cm->id;
@@ -455,8 +455,8 @@ class team_evaluation {
      * Ask teameval if a user should be allowed to update a question. Must be called before
      * update_question as the transaction returned from this function must be passed to
      * update_question.
-     * 
-     * @param string $type The question subplugin type 
+     *
+     * @param string $type The question subplugin type
      * @param int $id The question ID. 0 if new question.
      * @param int $userid The ID of the user trying to update this question
      * @return polymorph_transaction|null Transaction if allowed, or null if not allowed
@@ -481,33 +481,43 @@ class team_evaluation {
     /**
      * Update teameval's internal question table. You must pass a transaction returned from
      * should_update_question.
-     * 
+     *
      * @param polymorph_transaction $transaction The transaction returned from should_update_question
      * @param int $ordinal The position of the question in order. This is passed to the save handler.
      */
     public function update_question(polymorph_transaction $transaction, $ordinal) {
         global $DB;
 
-        if ($transaction->class != 'question') {
-            throw new coding_exception('Wrong type of transaction handed to update_question');
+        try {
+            if ($transaction->class != 'question') {
+                throw new coding_exception('Wrong type of transaction handed to update_question');
+            }
+
+            if ($transaction->querytype == SQL_QUERY_UPDATE) {
+                $record = $DB->get_record("teameval_questions", array("teamevalid" => $this->id, "qtype" => $transaction->polytype, "questionid" => $transaction->id));
+                $record->ordinal = $ordinal;
+                $DB->update_record("teameval_questions", $record);
+            } else if ($transaction->querytype == SQL_QUERY_INSERT) {
+                $record = new stdClass;
+                $record->teamevalid = $this->id;
+                $record->qtype = $transaction->polytype;
+                $record->questionid = $transaction->id;
+                $record->ordinal = $ordinal;
+                $DB->insert_record("teameval_questions", $record);
+            } else {
+                throw new coding_exception('Wrong type of transaction handed to update_question');
+            }
+
+            $transaction->transaction->allow_commit();
+
+        } catch (moodle_exception $e) {
+            if ($transaction->transaction) {
+                $transaction->transaction->rollback($e);
+            } else {
+                throw $e;
+            }
         }
 
-        if ($transaction->querytype == SQL_QUERY_UPDATE) {
-            $record = $DB->get_record("teameval_questions", array("teamevalid" => $this->id, "qtype" => $transaction->polytype, "questionid" => $transaction->id));
-            $record->ordinal = $ordinal;
-            $DB->update_record("teameval_questions", $record);
-        } else if ($transaction->querytype == SQL_QUERY_INSERT) {
-            $record = new stdClass;
-            $record->teamevalid = $this->id;
-            $record->qtype = $transaction->polytype;
-            $record->questionid = $transaction->id;
-            $record->ordinal = $ordinal;
-            $DB->insert_record("teameval_questions", $record);
-        } else {
-            throw new coding_exception('Wrong type of transaction handed to update_question');
-        }
-
-        $transaction->transaction->allow_commit();
     }
 
     /**
@@ -529,7 +539,7 @@ class team_evaluation {
 
             $tx = $DB->start_delegated_transaction();
             $transaction = new polymorph_transaction($tx, 'question', $type, $id, SQL_QUERY_DELETE);
-            return $transaction;    
+            return $transaction;
         }
 
         return null;
@@ -545,17 +555,27 @@ class team_evaluation {
     public function delete_question(polymorph_transaction $transaction) {
         global $DB;
 
-        if ($transaction->class != 'question') {
-            throw new coding_exception('Wrong type of transaction handed to delete_question');
-        }
+        try {
 
-        if ($transaction->querytype == SQL_QUERY_DELETE) {
-            $DB->delete_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $transaction->polytype, "questionid" => $transaction->id));
-        } else {
-            throw new coding_exception('Wrong type of transaction handed to delete_question');
+            if ($transaction->class != 'question') {
+                throw new coding_exception('Wrong type of transaction handed to delete_question');
+            }
+
+            if ($transaction->querytype == SQL_QUERY_DELETE) {
+                $DB->delete_records("teameval_questions", array("teamevalid" => $this->id, "qtype" => $transaction->polytype, "questionid" => $transaction->id));
+            } else {
+                throw new coding_exception('Wrong type of transaction handed to delete_question');
+            }
+
+            $transaction->transaction->allow_commit();
+
+        } catch (moodle_exception $e) {
+            if ($transaction->transaction) {
+                $transaction->transaction->rollback($e);
+            } else {
+                throw $e;
+            }
         }
-        
-        $transaction->transaction->allow_commit();
     }
 
     public function can_submit($userid) {
@@ -653,7 +673,7 @@ class team_evaluation {
     public function get_questions() {
         global $DB;
         $barequestions = $this->get_bare_questions();
-        
+
         $questions = [];
         foreach($barequestions as $bareq) {
             $questioninfo = new question_info($this, $bareq->id, $bareq->qtype, $bareq->questionid);
@@ -680,7 +700,7 @@ class team_evaluation {
         $questions = [];
         foreach($records as $r) {
             $questions[$r->qtype][$r->questionid] = $r;
-        }        
+        }
 
         // set the ordinals according to $order
 
@@ -711,11 +731,11 @@ class team_evaluation {
         $this->get_evaluation_context();
 
         // The logic here is:
-        
+
         // The questionnaire is locked if a single marking user has evaluation_permitted
         // This type of lock is not permanent – the questionnaire can be unlocked again
         // by changing availability
-        
+
         // The questionnaire is locked permanently if a single marking user has completed
         // a question that has_completion
 
@@ -729,7 +749,7 @@ class team_evaluation {
         $marking_users = $info->filter_user_list($marking_users);
 
         $reason = false;
-        
+
         foreach($marking_users as $userid => $user) {
             if ($this->has_questions_with_completion()) {
                 if ($this->user_completion($userid) > 0) {
@@ -794,7 +814,7 @@ class team_evaluation {
      * Is this group ready to receive their adjusted marks?
      * @param int $groupid The group in question
      * @return bool If the group is ready
-     */ 
+     */
     public function group_ready($groupid) {
 
         $members = $this->group_members($groupid);
@@ -892,7 +912,7 @@ class team_evaluation {
     }
 
     /**
-     * Takes a 0..1 score from an evaluator and turns it into a grade multiplier 
+     * Takes a 0..1 score from an evaluator and turns it into a grade multiplier
      */
     protected function score_to_multiplier($score, $uid) {
         $fraction = $this->get_settings()->fraction;
@@ -953,7 +973,7 @@ class team_evaluation {
         if (! isset($scores[$userid])) {
             return null;
         }
-        
+
         $score = $scores[$userid];
 
         return $this->score_to_multiplier($score, $userid);
@@ -989,9 +1009,9 @@ class team_evaluation {
         }
 
         return moodle_url::make_pluginfile_url(
-            $this->get_context()->id, 
-            'local_teameval', 
-            'report', 
+            $this->get_context()->id,
+            'local_teameval',
+            'report',
             $this->cm->id,
             "/$plugin/", $filename);
     }
@@ -1015,7 +1035,7 @@ class team_evaluation {
         return in_array($subtype, $supported_subtypes);
     }
 
-    
+
 
 
     // interface to evalcontext
@@ -1054,7 +1074,7 @@ class team_evaluation {
         } else {
             $members = $this->group_members($group->id);
         }
-        
+
         // always put user first
         if($include_self == false) {
             unset($members[$userid]);
@@ -1069,7 +1089,7 @@ class team_evaluation {
 
     /**
      * Cached and filtered version of groups_get_members.
-     * @param type $groupid 
+     * @param type $groupid
      * @return type
      */
     public function group_members($groupid) {
@@ -1082,7 +1102,7 @@ class team_evaluation {
                     return has_capability('local/teameval:submitquestionnaire', $this->context, $u->id, false);
                 });
             }
-            self::$groupcache[$groupid] = $members; 
+            self::$groupcache[$groupid] = $members;
         } else {
             $members = self::$groupcache[$groupid];
         }
@@ -1090,7 +1110,7 @@ class team_evaluation {
     }
 
     public static function _clear_groups_members_cache() {
-        self::$groupcache = [];   
+        self::$groupcache = [];
     }
 
     /**
@@ -1267,7 +1287,7 @@ class team_evaluation {
         if (($set == false) && ($record !== false)) {
             $DB->delete_records('teameval_release', (array)$record);
         }
-        
+
         $this->releases[] = $release;
 
         // figure who we need to trigger grades for
@@ -1467,7 +1487,7 @@ class team_evaluation {
     }
 
     protected static function delete_questionnaire_f($barequestions) {
-        global $DB;        
+        global $DB;
 
         $sorted = [];
         foreach($barequestions as $barequestion) {
@@ -1491,7 +1511,7 @@ class team_evaluation {
         // And since we're in the middle of tearing down our teameval that could be problematic.
 
         $barequestions = $this->get_bare_questions();
-        
+
         self::delete_questionnaire_f($barequestions);
 
         $evalcontext = $this->get_evaluation_context();
@@ -1529,7 +1549,7 @@ class team_evaluation {
         $task->build();
         $task->execute();
         $file = $task->file;
-        
+
         return $file;
     }
 

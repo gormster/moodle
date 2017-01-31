@@ -49,7 +49,7 @@ class external extends external_api {
             'cmid' => new external_value(PARAM_INT, 'coursemodule id for the teameval')
         ]);
     }
-    
+
     public static function get_settings_returns() {
         return new external_single_structure([
             'enabled' => new external_value(PARAM_BOOL, 'is teameval enabled for this module'),
@@ -70,7 +70,7 @@ class external extends external_api {
 
     public static function update_settings_parameters() {
         global $PAGE; // we need to set the context to construct a moodleform
-        $PAGE->set_context(context_system::instance()); 
+        $PAGE->set_context(context_system::instance());
 
         $settingsform = new \local_teameval\forms\settings_form;
         return $settingsform->external_parameters();
@@ -81,7 +81,6 @@ class external extends external_api {
         $PAGE->set_context(context_system::instance());
 
         $settingsform = new \local_teameval\forms\settings_form;
-        error_log(print_r($settingsform->returns(), true));
         return $settingsform->returns();
     }
 
@@ -204,9 +203,9 @@ class external extends external_api {
         $teameval = team_evaluation::from_cmid($cmid);
 
         foreach($release as $r) {
-            $teameval->release_marks_for($r['target'], $r['level'], $r['release']);    
+            $teameval->release_marks_for($r['target'], $r['level'], $r['release']);
         }
-        
+
     }
 
     /* get_release */
@@ -281,15 +280,13 @@ class external extends external_api {
                 try {
                     team_evaluation::guard_capability($result->objectid, ['local/teameval:viewtemplate'], ['child_context' => $context]);
 
-                    error_log("check passed");
-
                     $teameval = new team_evaluation($result->objectid);
                     $numqs = $teameval->num_questions();
                     $tags = $result->tags;
                     $results[] = [
                         'title' => $teameval->get_title(),
-                        'id' => $teameval->id, 
-                        'from' => $teameval->get_context()->get_context_name(), 
+                        'id' => $teameval->id,
+                        'from' => $teameval->get_context()->get_context_name(),
                         'tags' => $tags,
                         'numqs' => $numqs
                     ];

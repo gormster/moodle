@@ -70,7 +70,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $questions = $this->teameval->get_questions();
 
-        $this->assertEquals(5, count($questions));        
+        $this->assertEquals(5, count($questions));
 
         $questionInfo = next($questions); // get the SECOND question in the list. this makes sure ordinals are working correctly.
 
@@ -98,7 +98,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $this->add_questions(5);
 
-        $reorder = [5, 2, 1, 3, 4]; 
+        $reorder = [5, 2, 1, 3, 4];
 
         foreach($this->questions as $question) {
             $tx = $this->teameval->should_update_question('mock', $question->id, $USER->id);
@@ -153,7 +153,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $this->add_questions(5);
 
-        $reorder = [5, 2, 1, 3, 4]; 
+        $reorder = [5, 2, 1, 3, 4];
         $setorder = array_map(function($i) {
             return ['type' => 'mock', 'id' => $i];
         }, $reorder);
@@ -176,14 +176,14 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $this->add_questions(5);
 
-        $reorder = [5, 2, 1, 3]; 
+        $reorder = [5, 2, 1, 3];
         $setorder = array_map(function($i) {
             return ['type' => 'mock', 'id' => $i];
         }, $reorder);
 
         $this->teameval->questionnaire_set_order($setorder);
     }
-    
+
     /**
      * @expectedException moodle_exception
      */
@@ -192,7 +192,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $this->add_questions(5);
 
-        $reorder = [6, 2, 1, 3, 4]; 
+        $reorder = [6, 2, 1, 3, 4];
         $setorder = array_map(function($i) {
             return ['type' => 'mock', 'id' => $i];
         }, $reorder);
