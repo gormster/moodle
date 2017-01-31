@@ -10,6 +10,8 @@ use external_single_structure;
 use local_teameval\traits;
 use local_teameval\team_evaluation;
 
+use moodle_exception;
+
 class external extends external_api {
 
     use traits\question\update_from_form;
@@ -61,7 +63,7 @@ class external extends external_api {
             foreach($percents as $p) {
                 $splits[$p['userid']] = $p['pct'];
             }
-            
+
             $response->update_splits($splits);
         } else {
             // todo: which exception is the right one here

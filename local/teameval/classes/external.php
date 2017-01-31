@@ -144,15 +144,17 @@ class external extends external_api {
     }
 
     public static function questionnaire_submitted($cmid) {
-        global $USER;
+        global $USER, $PAGE;
 
-        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:submitquestionnaire'], ['must_exist' => true, 'doanything' => false]);
+        $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:submitquestionnaire'], ['must_exist' => true, 'doanything' => false]);
+
+        $PAGE->set_context($context);
 
         $teameval = team_evaluation::from_cmid($cmid);
 
         if ($teameval->marks_available($USER->id)) {
             //trigger a grade update for this user's group
-            $users = $this->group_members($target);
+            $users = $teameval->teammates($USER->id, true);
             $teameval->get_evaluation_context()->trigger_grade_update(array_keys($users));
         }
     }
