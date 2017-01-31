@@ -131,6 +131,32 @@ class external extends external_api {
         $teameval->questionnaire_set_order($order);
     }
 
+    /* questionnaire_submitted */
+
+    public static function questionnaire_submitted_parameters() {
+        return new external_function_parameters([
+            'cmid' => new external_value(PARAM_INT, 'coursemodule id for teameval')
+        ]);
+    }
+
+    public static function questionnaire_submitted_returns() {
+        return null;
+    }
+
+    public static function questionnaire_submitted($cmid) {
+        global $USER;
+
+        team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:submitquestionnaire'], ['must_exist' => true, 'doanything' => false]);
+
+        $teameval = team_evaluation::from_cmid($cmid);
+
+        if ($teameval->marks_available($USER->id)) {
+            //trigger a grade update for this user's group
+            $users = $this->group_members($target);
+            $teameval->get_evaluation_context()->trigger_grade_update(array_keys($users));
+        }
+    }
+
     /* report */
 
     public static function report_parameters() {

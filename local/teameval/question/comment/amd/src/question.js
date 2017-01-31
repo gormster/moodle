@@ -1,6 +1,6 @@
 /* jshint maxlen: 150 */
-define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'], 
-    function($, Question, Ajax, Templates, Notification, Strings, Formparse){
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'],
+    function($, Question, Templates, Notification, Strings, Formparse){
 
     function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
         Question.apply(this, arguments);
@@ -23,11 +23,11 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
     CommentQuestion.prototype.submissionView = function() {
         return Question.prototype.submissionView.apply(this, arguments);
     };
-    
+
     CommentQuestion.prototype.editingContext = function() { return this._editingcontext; };
 
     CommentQuestion.prototype.editingView = function() {
-        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form', 
+        return this.editForm('\\teamevalquestion_comment\\forms\\edit_form',
             $.param(this._editingcontext), {'locked': this._editinglocked});
     };
 
@@ -63,7 +63,7 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
     CommentQuestion.prototype.validateData = function(form) {
 
         var deferred = $.Deferred();
-        
+
         var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
 
         if ((data.title.trim().length === 0) && (data.description.trim().length === 0)) {
@@ -77,7 +77,7 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
         return deferred.promise();
     };
 
-    CommentQuestion.prototype.submit = function() {
+    CommentQuestion.prototype.submit = function(call) {
         var comments = [];
         this.container.find('.comments textarea').each(function() {
             var toUser = $(this).data('touser');
@@ -87,23 +87,21 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
             comments.push(m);
         });
 
-        var promises = Ajax.call([{
+        call({
             methodname: 'teamevalquestion_comment_submit_response',
             args: {
                 teamevalid: this.teameval,
                 id: this.questionID,
                 comments: comments
             }
-        }]);
+        });
 
         var incomplete = false;
         if (this._submissioncontext.optional) {
             incomplete = checkComplete();
         }
 
-        return promises[0].then(function() {
-            return {'incomplete': incomplete};
-        });
+        return !incomplete;
     };
 
     function checkComplete() {
@@ -119,20 +117,6 @@ define(['jquery', 'local_teameval/question', 'core/ajax', 'core/templates', 'cor
 
         return incomplete.length > 0;
     }
-
-    CommentQuestion.prototype.delete = function() {
-
-        var promises = Ajax.call([{
-            methodname: 'teamevalquestion_comment_delete_question',
-            args: {
-                teamevalid: this.teameval,
-                id: this.questionID
-            }
-        }]);
-
-        return promises[0];
-
-    };
 
     return CommentQuestion;
 

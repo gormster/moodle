@@ -8,7 +8,7 @@ for use within your plugin.
 
 /**
  * Your constructor must conform to this signature, even if you do not use some of these parameters.
- * 
+ *
  * @param container {jQuery} The top level of your question. Insert your content in this container.
  * @param teameval {int} The ID of the team evaluation instance. Useful to pass to web services.
  * @param self {bool} If self-evaluation is enabled.
@@ -17,7 +17,7 @@ for use within your plugin.
  * @param context {Object|null} Context data provided by your question subclass
  */
 
-define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'], 
+define(['jquery', 'core/fragment', 'core/notification', 'core/templates', 'core/ajax'],
     function($, Fragment, Notification, Templates, Ajax) {
 
  /*jshint unused:false*/
@@ -59,7 +59,7 @@ Question.prototype.editingView = function() {
         return promise;
     }
 };
-    
+
 /**
  * Save question data back to the database in Moodle. You must use should_update_question/update_question.
  * @param ordinal {int} The index of this question in the questionnaire. You must pass this to update_question().
@@ -72,18 +72,16 @@ Question.prototype.save = function(ordinal) {};
  * @return {Promise} A promise that resolves when the question has been deleted.
  */
 Question.prototype.delete = function() {
-    if (this.questionID) {
-        if (this.pluginName) {
-            var promises = Ajax.call([{
-                methodname: 'teamevalquestion_'+this.pluginName+'_delete_question',
-                args: {
-                    teamevalid: this.teameval,
-                    id: this.questionID
-                }
-            }]);
+    if (this.questionID && this.pluginName) {
+        var promises = Ajax.call([{
+            methodname: 'teamevalquestion_'+this.pluginName+'_delete_question',
+            args: {
+                teamevalid: this.teameval,
+                id: this.questionID
+            }
+        }]);
 
-            return promises[0];
-        }
+        return promises[0];
     }
     // No ID, never been saved
     return $.Deferred().resolve();
@@ -158,7 +156,7 @@ Question.prototype.submitForm = function(form, method, args) {
         }]);
 
         return promises[0];
-            
+
     }.bind(this));
 
     promise.fail(function(error) {
