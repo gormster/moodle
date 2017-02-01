@@ -18,20 +18,17 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
 
             var incompletes = 0;
 
+            $('.local-teameval-submit-buttons .submit').prop('disabled', true);
+
             // These promises resolve to objects with question, ajaxCall and deferred properties
             // This allows submit methods to return their AJAX call data asynchronously if necessary
             var questionPromises = $('#local-teameval-questions').find('.question-container').map(function() {
 
-                var uiblocker = $('<div class="ui-blocker" />');
-                $(this).append(uiblocker);
                 var questionObject = $(this).data('question');
                 var p = $.Deferred();
 
                 var complete = questionObject.submit(function(args) {
                     var d = $.Deferred();
-                    d.always(function() {
-                        uiblocker.remove();
-                    });
 
                     if (args && args.methodname) {
                         p.resolve({
@@ -82,7 +79,9 @@ define(['jquery', 'core/templates', 'core/ajax', 'core/notification', 'core/str'
                 }
 
                 var allPromises = $.when.apply($, promises);
-                allPromises.done(function() {
+                allPromises.always(function() {
+                    $('.local-teameval-submit-buttons .submit').prop('disabled', false);
+                }).done(function() {
                     if (incompletes > 0) {
                         var key = incompletes == 1 ? 'incompletewarning1' : 'incompletewarning';
                         Str.get_string(key, 'local_teameval', incompletes)
