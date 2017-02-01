@@ -89,9 +89,32 @@ Question.prototype.delete = function() {
 
 /**
  * Submit this response to Moodle. You should check if the user can submit using can_submit_response.
- * @return {Promise} A promise that resolves when the response has been submitted.
+ * You MUST call the function that is passed to you as the first argument to submit(). You should call
+ * this with either the arguments to an Ajax.call method (an object with "methodname" and "args"), or
+ * you can call it with no arguments to indicate that no AJAX call is needed. The callback will return
+ * the Promise that corresponds to your AJAX call.
+ *
+ * You SHOULD return a boolean true or false stating whether or not the question has been sufficiently
+ * filled out to constitute being complete. If this does not make sense for your question type, you MUST
+ * return true.
+ *
+ * Basically, your function should look like this:
+ *
+ *     var promise = callback({ methodname: "my_plugin_submit_question",
+ *         args: { teamevalid: this.teameval, id: this.questionID, response: myUsersResponseData }});
+ *     promise.done(function(data) {
+ *         // this bit is totally optional
+ *         updateDisplay(data);
+ *     });
+ *
+ * If submission involves multiple webservice calls, you should return the one that finalises the response.
+ * In other words, given a fully completed questionnaire, Team Evaluation should be able to use your
+ * response to calculate scores. If you need to make calls to update your state that don't affect the
+ * response, you may do so afterward, using promise.done.
+ *
+ * @return {bool} true if the question is complete, otherwise false
  */
-Question.prototype.submit = function() {};
+Question.prototype.submit = function(callback) {};
 
 
 // The following are convenience methods or helpers for default implementations
