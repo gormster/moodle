@@ -10,15 +10,13 @@
     in the question's AMD module. For each question, there are three distinct objects:
 
         * question: the DOM node representing the list item, containing all information about a question
-        * questionContainer: the DOM node representing the div, containing the parts of the 
+        * questionContainer: the DOM node representing the div, containing the parts of the
           question rendered by the plugin. Holds a reference to questionObject.
         * questionObject: the object returned by initialising the AMD module, used to interact with
           the question plugin from JavaScript. Holds a reference to questionContainer.
 }}
 <div class="local-teameval-questionnaire">
-{{#deadline}}
-<div class="deadline">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
-{{/deadline}}
+<div class="deadline {{^deadline}}hidden{{/deadline}}">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
 {{#noncompletion}}
 <div class="noncompletion-advice">
 {{#str}} incompletesummary, local_teameval, { "n" : {{n}}, "penalty": {{penalty}} }{{/str}}
