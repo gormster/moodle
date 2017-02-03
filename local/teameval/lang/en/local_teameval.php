@@ -1,5 +1,5 @@
 <?php
-    
+
     $string['pluginname'] = 'Team evaluation';
     $string['teameval'] = 'Team evaluation plugin';
 
@@ -70,7 +70,7 @@
 
     $string['youradjustedscore'] = 'Your adjusted score';
     $string['yourteammatesfeedback'] = 'Your teammates\' feedback';
-    
+
     $string['incompleteadvice'] = 'This question is incomplete.';
     $string['incompletewarning'] = 'There are {$a} incomplete questions.';
     $string['incompletewarning1'] = 'There is 1 incomplete question.';
@@ -94,3 +94,4 @@
 
     $string['contextnotchild'] = '{$a->child} is not a child of {$a->parent}.';
     $string['questionidsoutofsync'] = 'Tried to set order of questions, but not all questions were included. Try reloading the page.';
+    $string['tooearly'] = 'The task tried to run before the deadline.';

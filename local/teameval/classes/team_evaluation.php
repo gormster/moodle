@@ -352,6 +352,23 @@ class team_evaluation {
 
                         $settings->title = $this->available_title($settings->title);
                         break;
+
+                    case 'deadline':
+                        if (empty($this->cm) || empty($settings->deadline)) {
+                            // only matters for real teamevals & teamevals with deadlines
+                            break;
+                        }
+
+                        $mindeadline = $this->get_evaluation_context()->minimum_deadline();
+                        if (!empty($mindeadline) && $settings->deadline < $mindeadline) {
+                            $settings->deadline = $mindeadline;
+                        }
+
+                        // now reschedule the deadline task
+                        if ($this->settings->deadline != $settings->deadline) {
+                            $this->schedule_deadline_task($settings->deadline);
+                        }
+                        break;
                 }
 
                 $this->settings->$i = $settings->$i;
@@ -441,6 +458,9 @@ class team_evaluation {
     }
 
     public function __get($k) {
+        if (isset($this->settings->$k)) {
+            return $this->get_settings()->$k;
+        }
         switch($k) {
             case 'id':
                 return $this->id;
@@ -808,6 +828,17 @@ class team_evaluation {
         }
 
         return false;
+    }
+
+    protected function schedule_deadline_task($deadline) {
+        // irritatingly there's no way to cancel the existing task
+        // but the task checks if the current deadline matches the
+        // deadline when the task was created, and if they don't match
+        // the task is not executed. so as long as we only call this
+        // when we change the deadline, then the task only gets executed
+        // once.
+        $task = new tasks\deadline_task($this->id, $deadline);
+        \core\task\manager::queue_adhoc_task($task);
     }
 
     /**

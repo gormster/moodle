@@ -42,6 +42,25 @@ abstract class evaluation_context {
     }
 
     /**
+     * Provide a sensible default deadline value. Deadlines are still off by default, but this
+     * will be the default value if the user enables it.
+     * @return int Timestamp of the default deadline for this team evaluation
+     */
+    abstract public function default_deadline();
+
+    /**
+     * Provide the absolute earliest date before which teameval should not accept a value
+     * for deadline. If there is a date before which evaluation_permitted always returns false,
+     * return that date.
+     *
+     * Optional. Return NULL if there is no minimum deadline.
+     * @return int|null Timestamp of the minimum deadline
+     */
+    public function minimum_deadline() {
+        return NULL;
+    }
+
+    /**
      * What group is this user associated with?
      * @param type $userid User ID
      * @return stdClass groups record
@@ -131,9 +150,9 @@ abstract class evaluation_context {
      */
     public function format_grade($grade) {
         $gradeitem = \grade_item::fetch([
-            'itemtype' => 'mod', 
-            'itemmodule' => $this->cm->modname, 
-            'iteminstance' => $this->cm->instance, 
+            'itemtype' => 'mod',
+            'itemmodule' => $this->cm->modname,
+            'iteminstance' => $this->cm->instance,
             'itemnumber' => 0]);
         if ($gradeitem) {
             return (string)round($grade, $gradeitem->get_decimals());
@@ -148,7 +167,7 @@ abstract class evaluation_context {
 
 
     /*
-     * The above methods were teameval calling in to your plugin. 
+     * The above methods were teameval calling in to your plugin.
      * These are methods for you to call into teameval.
      * You should probably not override these, as teameval uses them as well.
      */
@@ -202,7 +221,7 @@ abstract class evaluation_context {
     /**
      * Deprecated. Use team_evaluation() instead.
      * @deprecated
-     * @param int $userid 
+     * @param int $userid
      * @return bool
      */
     public function marks_available($userid) {
@@ -216,7 +235,7 @@ abstract class evaluation_context {
     /**
      * Deprecated. Use team_evaluation() instead.
      * @deprecated
-     * @param int $userid 
+     * @param int $userid
      * @return float
      */
     public function user_completion($userid) {
@@ -269,7 +288,7 @@ abstract class evaluation_context {
 
         return $grades;
     }
-    
+
 
     // COURSE RESET
 

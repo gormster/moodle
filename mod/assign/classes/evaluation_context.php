@@ -32,6 +32,21 @@ class evaluation_context extends \local_teameval\evaluation_context {
 
     }
 
+    public function default_deadline() {
+        $duedate = $this->assign->get_instance()->duedate;
+        if ($duedate) {
+            // By default, due date plus seven days
+            return $duedate + 604800;
+        } else {
+            // otherwise one week after the assignment was created
+            return $this->cm->added + 604800;
+        }
+    }
+
+    public function minimum_deadline() {
+        return $this->assign->get_instance()->duedate;
+    }
+
     public function group_for_user($userid) {
         return $this->assign->get_submission_group($userid);
     }
