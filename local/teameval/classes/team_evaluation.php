@@ -533,9 +533,9 @@ class team_evaluation {
         } catch (moodle_exception $e) {
             if ($transaction->transaction) {
                 $transaction->transaction->rollback($e);
-            } else {
-                throw $e;
             }
+
+            throw $e;
         }
 
     }
@@ -592,9 +592,9 @@ class team_evaluation {
         } catch (moodle_exception $e) {
             if ($transaction->transaction) {
                 $transaction->transaction->rollback($e);
-            } else {
-                throw $e;
             }
+
+            throw $e;
         }
     }
 

@@ -125,7 +125,6 @@ abstract class evaluation_context {
     /**
      * You can override this function to customise the appearance of Teameval feedback in the gradebook.
      * TODO make this less awful (use a template)
-     * @codeCoverageIgnore
      */
     protected function format_feedback($feedbacks) {
         $o = '<h3>Team Evaluation</h3>';
@@ -274,7 +273,7 @@ abstract class evaluation_context {
                     $grade->rawgrade = min(max(0, $grade->rawgrade), 100);
                     $feedbacks = $teameval->all_feedback($userid);
                     if(count($feedbacks)) {
-                        if (empty($grade->feedbacks)) {
+                        if (empty($grade->feedback)) {
                             $grade->feedback = "";
                         }
                         $grade->feedback .= $this->format_feedback($feedbacks);
