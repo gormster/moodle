@@ -1070,15 +1070,25 @@ class team_evaluation {
 
 
     // interface to evalcontext
+    // deprecated, use get_evaluation_context instead
 
+    /**
+     * @deprecated
+     */
     public function group_for_user($userid) {
         return $this->get_evaluation_context()->group_for_user($userid);
     }
 
+    /**
+     * @deprecated
+     */
     public function all_groups() {
         return $this->get_evaluation_context()->all_groups();
     }
 
+    /**
+     * @deprecated
+     */
     public function marking_users() {
         return $this->get_evaluation_context()->marking_users();
     }
@@ -1220,14 +1230,6 @@ class team_evaluation {
 
         return $feedbacks;
 
-    }
-
-    public function questionnaire_is_visible($userid = null) {
-        $blockinstalled = !is_null(get_capability_info('blocks/teameval_templates:viewtemplate'));
-        return (
-            ($blockinstalled && has_capability('blocks/teameval_templates:viewtemplate', $this->context, $userid)) ||
-            has_capability('local/teameval:viewtemplate', $this->context, $userid)
-            );
     }
 
     // TEMPLATES
