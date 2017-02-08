@@ -16,6 +16,9 @@ class mock_question implements question {
     static $questions = [];
     private $underlying;
 
+    // if true, duplication always fails
+    static $failduplicate = false;
+
     public function __construct(team_evaluation $teameval, $questionid = null) {
         $this->id = $questionid;
         if (empty(static::$questions[$questionid])) {
@@ -83,15 +86,27 @@ class mock_question implements question {
     }
 
     public static function duplicate_question($questionid, $newteameval) {
+        if (static::$failduplicate) {
+            return;
+        }
 
+        $question = static::$questions[$questionid];
+        $id = max(array_keys(static::$questions));
+        $id++;
+        $q = new static($newteameval, $id);
+        $q->min = $question->min;
+        $q->max = $question->max;
+        $q->completion = $question->completion;
+        $q->value = $question->value;
+        return $id;
     }
 
     public static function delete_questions($questionids) {
-
+        static::clear_questions();
     }
 
     public static function reset_userdata($questionids) {
-
+        mock_response::clear_responses();
     }
 
     public static function mock_question_plugininfo($phpunit) {

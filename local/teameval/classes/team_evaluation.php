@@ -283,7 +283,7 @@ class team_evaluation {
             }
 
             if ($this->settings === false) {
-                $settings = team_evaluation::default_settings();
+                $settings = static::default_settings();
                 if (isset($this->cm)) {
                     $settings->cmid = $this->cm->id;
                     unset($settings->title); // real teamevals don't have titles
@@ -333,7 +333,7 @@ class team_evaluation {
         return $s;
     }
 
-    private static $settings_keys = ['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'];
+    protected static $settings_keys = ['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'];
 
     public function update_settings($settings) {
         global $DB;
@@ -341,7 +341,7 @@ class team_evaluation {
         //fetch settings if they're not set
         $this->get_settings();
 
-        foreach(self::$settings_keys as $i) {
+        foreach(static::$settings_keys as $i) {
             if (isset($settings->$i)) {
 
                 // validation
@@ -460,7 +460,7 @@ class team_evaluation {
     }
 
     public function __get($k) {
-        if (in_array($k, self::$settings_keys)) {
+        if (in_array($k, static::$settings_keys)) {
             return $this->get_settings()->$k;
         }
         switch($k) {
@@ -674,7 +674,7 @@ class team_evaluation {
      * @codeCoverageIgnore This is always mocked in our tests
      */
     public function get_question_plugins() {
-        return self::get_question_plugins_static();
+        return static::get_question_plugins_static();
     }
 
     /**
@@ -1049,6 +1049,13 @@ class team_evaluation {
             "/$plugin/", $filename);
     }
 
+    /**
+     * Renderer subtypes power report downloads
+     * @param  string $plugin  frankenstyle plugin name
+     * @param  string|array|null $subtype plugin subtype or subtypes to check for; null returns all plugin subtypes
+     * @return array|bool array of matching subtypes, or true if the requested subtype is supported, otherwise false
+     * @codeCoverageIgnore it's almost impossible to test thing function
+     */
     public static function plugin_supports_renderer_subtype($plugin, $subtype = null) {
         $plugininfo = core_plugin_manager::instance()->get_plugin_info($plugin);
         $supported_subtypes = [];
@@ -1246,7 +1253,7 @@ class team_evaluation {
         }
 
         foreach($titletags as $tag) {
-            $tag = self::tagify($tag);
+            $tag = static::tagify($tag);
             if (empty($weights[$tag])) {
                 $weights[$tag] = 0;
             }
@@ -1255,7 +1262,7 @@ class team_evaluation {
 
         $contexttags = str_word_count($this->context->get_context_name(), 1);
         foreach($contexttags as $tag) {
-            $tag = self::tagify($tag);
+            $tag = static::tagify($tag);
             if (empty($weights[$tag])) {
                 $weights[$tag] = 0;
             }
@@ -1350,7 +1357,7 @@ class team_evaluation {
         $this->release_marks_for($userid, RELEASE_USER, $set);
     }
 
-    protected function get_releases() {
+    public function get_releases() {
         if (!isset($this->cm)) {
             return [];
         }
@@ -1492,9 +1499,9 @@ class team_evaluation {
             return false;
         }
 
-        $barequestions = $DB->get_records('teameval_questions', ['teamevalid' => $id]);
+        $barequestions = $DB->get_records('teameval_questions', ['teamevalid' => $teameval->id]);
 
-        self::delete_questionnaire_f($barequestions);
+        static::delete_questionnaire_f($barequestions);
 
         if ($cmid) {
             $DB->delete_records('teameval_release', ['cmid' => $cmid]);
@@ -1531,7 +1538,7 @@ class team_evaluation {
             $sorted[$barequestion->qtype][] = $barequestion->questionid;
         }
 
-        $questionplugins = self::get_question_plugins_static();
+        $questionplugins = static::get_question_plugins_static();
         foreach($sorted as $qtype => $ids) {
             $plugin = $questionplugins[$qtype]->get_question_class();
             $plugin::delete_questions($ids);
@@ -1549,7 +1556,7 @@ class team_evaluation {
 
         $barequestions = $this->get_bare_questions();
 
-        self::delete_questionnaire_f($barequestions);
+        static::delete_questionnaire_f($barequestions);
 
         $evalcontext = $this->get_evaluation_context();
         return ['component' => $evalcontext::component_string(), 'item' => get_string('resetquestionnaire', 'local_teameval'), 'error' => false];
