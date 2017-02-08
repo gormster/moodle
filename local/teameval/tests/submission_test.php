@@ -46,7 +46,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
             $group = $this->getDataGenerator()->create_group(['courseid' => $this->course->id]);
             $this->groups[$group->id] = $group;
             $this->members[$group->id] = [];
-         
+
             for($j = 0; $j < 5; $j++) {
                 $user = $this->getDataGenerator()->create_user();
                 $this->students[$user->id] = $user;
@@ -100,6 +100,9 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
     }
 
+    /**
+     * TODO: potential problem here with $opinions not being userid indexed
+     */
     private function add_responses($userid, $questions, $opinions = [1,2,3,4,5]) {
         foreach($questions as $q) {
             $response = new mock_response($this->teameval, $q, $userid);
@@ -119,7 +122,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         }
 
         // now add a question with no completion
-        
+
         $this->add_questions(1);
 
         $question = current($this->questions);
@@ -128,7 +131,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $question->value = false;
 
         // user completion should still be 100%
-        
+
         foreach($this->students as $id => $user) {
             $rslt = $this->teameval->user_completion($id);
             $this->assertEquals(1, $rslt);
@@ -203,7 +206,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
         $rslt = $this->teameval->group_ready($groupA->id);
         $this->assertTrue($rslt);
-        
+
         $rslt = $this->teameval->group_ready($groupB->id);
         $this->assertFalse($rslt);
 
@@ -239,13 +242,13 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $multis = $this->teameval->multipliers();
 
         // multis should be equal to scores
-        
+
         foreach ($multis as $key => $value) {
             $this->assertEquals($value, $scores[$key]);
         }
 
         // now add a non completion penalty
-        
+
         $this->add_questions();
 
         $settings->noncompletionpenalty = 0.1;
@@ -257,8 +260,8 @@ class local_teameval_submission_testcase extends advanced_testcase {
             $this->assertEquals($value, ($scores[$key] * 0.5 + 0.5) - 0.1);
         }
 
-        // now get a user to fill out the questionnaire        
-        
+        // now get a user to fill out the questionnaire
+
         list($question0, $question1, $question2) = $this->questions;
 
         $group = reset($this->groups);
@@ -273,7 +276,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assertEquals($multis[$id], $value);
 
         $multis = $this->teameval->multipliers_for_group($group->id);
-        $this->assertEquals($multis[$id], $value);        
+        $this->assertEquals($multis[$id], $value);
 
         $this->add_responses($id, [$question1]);
         $value = $this->teameval->multiplier_for_user($id);
@@ -284,7 +287,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assertEquals($value, ($scores[$id] * 0.5 + 0.5));
 
         // try and get a score for someone not in the teameval
-        
+
         $notascore = $this->teameval->multiplier_for_user($this->teacher->id);
         $this->assertNull($notascore);
 
@@ -350,7 +353,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         }
 
         // and finally check the adjusted grade of someone not in the group
-        
+
         $notagrade = $this->teameval->adjusted_grade($this->teacher->id);
         $this->assertNull($notagrade);
 
