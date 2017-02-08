@@ -1520,6 +1520,7 @@ class team_evaluation {
         if (isset($this->cm)) {
             //delete release data
             $DB->delete_records('teameval_release', ['cmid' => $this->cm->id ]);
+            unset($this->releases);
 
             //delete rescinds
             $questions = array_keys($DB->get_records('teameval_questions', ['teamevalid' => $this->id], '', 'id'));
