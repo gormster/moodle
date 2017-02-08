@@ -190,7 +190,8 @@ class local_teameval_feedback_testcase extends advanced_testcase {
     }
 
     public function test_rescind_feedback() {
-        global $PAGE;
+        $rescinds = $this->teameval->all_rescind_states();
+        $this->assertEmpty($rescinds);
 
         $this->add_questions(3);
 
@@ -245,6 +246,25 @@ class local_teameval_feedback_testcase extends advanced_testcase {
         $this->assertCount(5, reset($questions)->teammates);
         $this->assertCount(0, next($questions)->teammates);
         $this->assertCount(5, next($questions)->teammates);
+
+        // get all rescind states
+
+        $rescinded = $this->teameval->all_rescind_states();
+        $this->assertCount(8, $rescinded);
+
+        // manually approve some feedback
+
+        $this->teameval->rescind_feedback_for($question0->id, $student1->id, $student0->id, local_teameval\FEEDBACK_APPROVED);
+        $this->teameval->rescind_feedback_for($question0->id, $student0->id, $student4->id, local_teameval\FEEDBACK_APPROVED);
+
+        $rescinded = $this->teameval->all_rescind_states();
+        $this->assertCount(9, $rescinded);
+
+        $approves = array_filter($rescinded, function($v) {
+            return $v->state == local_teameval\FEEDBACK_APPROVED;
+        });
+
+        $this->assertCount(2, $approves);
 
     }
 
