@@ -27,10 +27,10 @@ class submission_view implements renderable, templatable {
 
         // context[id, title, description, users[ord, remaining, name], options[value, meaning, users[userid, name, checked]]]
 
-        $context = ["id" => $this->question->id, "title" => $this->question->title, "description" => $this->question->description, "self" => $this->teameval->get_settings()->self];
+        $context = ["id" => $this->question->id, "title" => $this->question->title, "description" => $this->question->description, "self" => $this->teameval->self];
 
         $options = [];
-        for ($i=$this->question->minval; $i <= $this->question->maxval; $i++) { 
+        for ($i=$this->question->minval; $i <= $this->question->maxval; $i++) {
             $o = ["value" => $i];
             if (isset($this->question->meanings->$i)) {
                 $meaning = $this->question->meanings->$i;
@@ -49,7 +49,7 @@ class submission_view implements renderable, templatable {
             // get any response this user has given already
             $response = new response($this->teameval, $this->question, $userid);
             $marks = $response->raw_marks();
-            
+
             $members = $this->teameval->teammates($userid);
 
             $ord = 0;
@@ -103,7 +103,7 @@ class submission_view implements renderable, templatable {
 
             $opts = [];
             foreach($options as $o) {
-                
+
                 $users = [];
                 foreach($members as $markeduser) {
                     $u = [
@@ -117,7 +117,7 @@ class submission_view implements renderable, templatable {
                     if (isset($marks[$markeduser->id])) {
                         $mark = $marks[$markeduser->id];
                         $u['checked'] = ($o['value'] == $mark);
-                    }    
+                    }
                     $users[] = $u;
                 }
                 $o['users'] = $users;
@@ -139,7 +139,7 @@ class submission_view implements renderable, templatable {
 
             $opts = [];
 
-            if ($this->teameval->get_settings()->self) {
+            if ($this->teameval->self) {
                 $context['headers'] = [
                     [
                         "ord" => 1,
@@ -204,10 +204,10 @@ class submission_view implements renderable, templatable {
                 }
                 $context['users'] = [$user];
             }
-            
+
             $context['options'] = $opts;
             $context['optionwidth'] = 100 / count($opts);
-            
+
 
         }
 
@@ -220,7 +220,7 @@ class submission_view implements renderable, templatable {
         $maxstrlen = 0;
         $maxwordlen = 0;
 
-        foreach ($options as $o) { 
+        foreach ($options as $o) {
             if (!empty($o['meaning'])) {
                 $meaning = $o['meaning'];
                 $totalstrlen += strlen($meaning);

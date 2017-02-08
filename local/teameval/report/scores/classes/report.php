@@ -37,12 +37,12 @@ class report implements local_teameval\report {
                 $datum->grade = $grade;
 
                 if (!is_null($grade)) {
-                	$fraction = $this->teameval->get_settings()->fraction;
+                	$fraction = $this->teameval->fraction;
                 	$multiplier = (1 - $fraction) + ($score * $fraction);
                 	$intermediategrade = $grade * $multiplier;
                 	$noncompletionpenalty = $this->teameval->non_completion_penalty($uid);
                 	$finalgrade = $grade * $this->teameval->multiplier_for_user($uid);
-            	
+
                 	$datum->intermediategrade = $evalcontext->format_grade($intermediategrade);
                 	$datum->noncompletionpenalty = $noncompletionpenalty;
                 	$datum->finalgrade = $evalcontext->format_grade($finalgrade);

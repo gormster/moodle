@@ -114,7 +114,7 @@ class external extends external_api {
 
         // If we've gone from disabled to enabled, temporarily set it back to disabled
         // (This can pretty much only happen when we're creating a new team evaluation)
-        if (($enabled == false) && ($to->get_settings()->enabled == true)) {
+        if (($enabled == false) && ($to->enabled == true)) {
             $created = true;
             $to->update_settings(['enabled' => false]);
         }

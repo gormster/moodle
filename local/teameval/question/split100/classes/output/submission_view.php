@@ -30,7 +30,7 @@ class submission_view implements renderable, templatable {
     public function __construct(question $question, team_evaluation $teameval, $locked = false) {
         global $USER, $DB;
 
-        $this->self = $teameval->get_settings()->self;
+        $this->self = $teameval->self;
 
         $this->title = $question->title;
         $this->description = $question->description;

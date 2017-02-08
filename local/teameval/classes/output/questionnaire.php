@@ -39,7 +39,7 @@ class questionnaire implements renderable, templatable {
         global $USER;
 
         $context = $teameval->get_context();
-        
+
         $this->id = $teameval->id;
 
         $this->contextid = $context->id;
@@ -48,7 +48,7 @@ class questionnaire implements renderable, templatable {
 
         foreach($teameval->get_questions() as $q) {
             $locked = !$teameval->can_submit_response($q->plugininfo->name, $q->questionid, $USER->id);
-            
+
             $this->questions[] = [
                 "type" => $q->plugininfo->name,
                 "questionid" => $q->questionid,
@@ -57,16 +57,16 @@ class questionnaire implements renderable, templatable {
                 ];
         }
 
-        $this->deadline = $teameval->get_settings()->deadline;
+        $this->deadline = $teameval->deadline;
 
-        $this->selfassessment = $teameval->get_settings()->self;
+        $this->selfassessment = $teameval->self;
 
         $this->noncompletion = null;
 
         $this->submission = $teameval->can_submit($USER->id);
 
         if ($this->submission) {
-            
+
             $this->cmid = $teameval->get_coursemodule()->id;
 
         } else if (has_capability('local/teameval:submitquestionnaire', $context, null, false)) {
@@ -103,7 +103,7 @@ class questionnaire implements renderable, templatable {
         $c->questions = [];
         foreach($this->questions as $q) {
             $qtype = $q['type'];
-            
+
             if (empty($renderers[$qtype])) {
                 $renderers[$qtype] = $PAGE->get_renderer('teamevalquestion_' . $qtype);
             }
@@ -121,7 +121,7 @@ class questionnaire implements renderable, templatable {
             $q['context'] = json_encode($contextdata);
 
             unset($q['question']);
-            
+
             $c->questions[] = $q;
         }
 

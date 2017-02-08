@@ -333,13 +333,15 @@ class team_evaluation {
         return $s;
     }
 
+    private static $settings_keys = ['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'];
+
     public function update_settings($settings) {
         global $DB;
 
         //fetch settings if they're not set
         $this->get_settings();
 
-        foreach(['enabled', 'public', 'self', 'autorelease', 'fraction', 'noncompletionpenalty', 'deadline', 'title'] as $i) {
+        foreach(self::$settings_keys as $i) {
             if (isset($settings->$i)) {
 
                 // validation
@@ -458,7 +460,7 @@ class team_evaluation {
     }
 
     public function __get($k) {
-        if (isset($this->settings->$k)) {
+        if (in_array($k, self::$settings_keys)) {
             return $this->get_settings()->$k;
         }
         switch($k) {
@@ -533,7 +535,7 @@ class team_evaluation {
         } catch (moodle_exception $e) {
             if ($transaction->transaction) {
                 $transaction->transaction->rollback($e);
-            }
+            } // @codeCoverageIgnore
 
             throw $e;
         }
@@ -592,7 +594,7 @@ class team_evaluation {
         } catch (moodle_exception $e) {
             if ($transaction->transaction) {
                 $transaction->transaction->rollback($e);
-            }
+            } // @codeCoverageIgnore
 
             throw $e;
         }
@@ -611,7 +613,7 @@ class team_evaluation {
         }
 
         // if a deadline is set, has it passed?
-        if (($this->get_settings()->deadline > 0) && ($this->get_settings()->deadline < time())) {
+        if (($this->deadline > 0) && ($this->deadline < time())) {
             return false;
         }
 
@@ -823,7 +825,7 @@ class team_evaluation {
     }
 
     public function deadline_passed() {
-        if (($this->get_settings()->deadline > 0) && ($this->get_settings()->deadline < time())) {
+        if (($this->deadline > 0) && ($this->deadline < time())) {
             return true;
         }
 
@@ -936,7 +938,7 @@ class team_evaluation {
     }
 
     public function non_completion_penalty($uid) {
-        $noncompletion = $this->get_settings()->noncompletionpenalty;
+        $noncompletion = $this->noncompletionpenalty;
         $completion = $this->user_completion($uid);
         $penalty = $noncompletion * (1 - $completion);
         return $penalty;
@@ -946,7 +948,7 @@ class team_evaluation {
      * Takes a 0..1 score from an evaluator and turns it into a grade multiplier
      */
     protected function score_to_multiplier($score, $uid) {
-        $fraction = $this->get_settings()->fraction;
+        $fraction = $this->fraction;
         $multiplier = (1 - $fraction) + ($score * $fraction);
 
         $penalty = $this->non_completion_penalty($uid);
@@ -1104,7 +1106,7 @@ class team_evaluation {
     public function teammates($userid, $include_self=null) {
 
         if (is_null($include_self)) {
-            $include_self = $this->get_settings()->self;
+            $include_self = $this->self;
         }
 
         $group = $this->group_for_user($userid);
@@ -1364,7 +1366,7 @@ class team_evaluation {
         $grp = $this->group_for_user($userid);
         $is_released = false;
 
-        if ($this->get_settings()->autorelease) {
+        if ($this->autorelease) {
             $is_released = true;
         } else {
             $releases = $this->get_releases();
