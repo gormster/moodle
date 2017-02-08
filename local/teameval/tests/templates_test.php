@@ -187,7 +187,7 @@ class local_teameval_templates_testcase extends advanced_testcase {
         $this->assertCount(3, $questions);
 
         $templateids = array_map(function($v) { return $v->id; }, $templatequestions);
-        $questionids = array_map(function($v) { return $v->questionid; }, $templatequestions);
+        $questionids = array_map(function($v) { return $v->questionid; }, $questions);
 
         $this->assertCount(0, array_intersect($templateids, $questionids), 'Questions not copied on add_questions_from_template');
 
@@ -217,8 +217,6 @@ class local_teameval_templates_testcase extends advanced_testcase {
             mock_question::$failduplicate = false;
         }
     }
-
-
 
 
 }
