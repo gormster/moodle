@@ -1317,13 +1317,15 @@ class team_evaluation {
 
         if (($set == true) && ($record === false)) {
             $DB->insert_record('teameval_release', $release);
+            $this->releases[] = $release;
         }
 
         if (($set == false) && ($record !== false)) {
-            $DB->delete_records('teameval_release', (array)$record);
+            $DB->delete_records('teameval_release', (array)$release);
+            $this->releases = array_filter($this->releases, function($v) use ($release) {
+                return $v != $release;
+            });
         }
-
-        $this->releases[] = $release;
 
         // figure who we need to trigger grades for
         if ($level == RELEASE_ALL) {
