@@ -66,7 +66,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
 
         var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
 
-        if ((data.title.trim().length === 0) && (data.description.trim().length === 0)) {
+        if ((data('title').trim().length === 0) && (data('description').trim().length === 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_comment').done(function(str) {
                 deferred.reject({invalid: true, errors: { title: str, description: str} });
             });
