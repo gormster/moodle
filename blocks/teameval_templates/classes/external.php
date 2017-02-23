@@ -27,7 +27,10 @@ class external extends external_api {
     }
 
     public static function update_title($id, $title) {
-        team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+        global $PAGE;
+
+        $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
+        $PAGE->set_context($context);
 
         $teameval = new team_evaluation($id);
 
