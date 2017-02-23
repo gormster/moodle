@@ -350,14 +350,21 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
         var valuePromise = Strings.get_strings(strs).then(function(s) {
             var pcts = [20, 10, 15, 55];
-            this.users = s.map(function(v, i) {
+            var widths = [21, 13, 17, 49];
+            var lefts = [0, 21, 34, 51];
+            this.context.users = s.map(function(v, i) {
                 return {
                     name: v,
                     id: -i,
-                    pct: pcts[i]
+                    pct: pcts[i],
+                    width: widths[i],
+                    left: lefts[i],
+                    rounded: pcts[i],
+                    first: (i === 0),
+                    self: (this.self ? i === 0 : false)
                 };
-            });
-        });
+            }.bind(this));
+        }.bind(this));
 
         var savePromise = this.saveForm(form, ordinal);
 
