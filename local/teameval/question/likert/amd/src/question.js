@@ -1,5 +1,5 @@
-define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str'],
-    function($, Question, Templates, Ajax, Strings) {
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str', 'local_teameval/editor'],
+    function($, Question, Templates, Ajax, Strings, Editor) {
 
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
@@ -36,6 +36,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         this.updateMeanings();
 
         var form = this.container.find('form');
+        Editor.saveAll(form);
 
         return this.saveForm(form, ordinal, {}, function(result) {
             this._submissioncontext = JSON.parse(result.submissionContext);

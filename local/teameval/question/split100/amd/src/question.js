@@ -1,6 +1,6 @@
 /* jshint shadow: true */
-define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse'],
-    function(Question, $, Strings, FormParse) {
+define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formparse', 'local_teameval/editor'],
+    function(Question, $, Strings, FormParse, Editor) {
 
     // 5% width = 0% score
     var MIN_SIZE = 5;
@@ -339,6 +339,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
     Split100Question.prototype.save = function(ordinal) {
         var form = this.container.find('form');
+        Editor.saveAll(form);
 
         var data = FormParse.serializeObject(form);
         this.context.title = data.title;

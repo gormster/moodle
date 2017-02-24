@@ -1,6 +1,6 @@
 /* jshint maxlen: 150 */
-define(['jquery', 'local_teameval/question', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse'],
-    function($, Question, Templates, Notification, Strings, Formparse){
+define(['jquery', 'local_teameval/question', 'core/templates', 'core/notification', 'core/str', 'local_teameval/formparse', 'local_teameval/editor'],
+    function($, Question, Templates, Notification, Strings, Formparse, Editor){
 
     function CommentQuestion(container, teameval, contextid, self, editing, questionID, context) {
         Question.apply(this, arguments);
@@ -33,6 +33,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/notificatio
 
     CommentQuestion.prototype.save = function(ordinal) {
         var form = this.container.find('form');
+        Editor.saveAll(form);
 
         var data = Formparse.serializeObject(form);
 
