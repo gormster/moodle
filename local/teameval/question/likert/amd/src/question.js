@@ -1,5 +1,11 @@
-define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'core/str', 'local_teameval/editor'],
-    function($, Question, Templates, Ajax, Strings, Editor) {
+define(['jquery',
+        'local_teameval/question',
+        'core/templates',
+        'core/ajax',
+        'core/str',
+        'local_teameval/editor',
+        'local_teameval/formparse'],
+    function($, Question, Templates, Ajax, Strings, Editor, FormParse) {
 
     function LikertQuestion(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
@@ -12,7 +18,7 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         this._editingcontext = context.editingcontext || {};
         this._editinglocked = context.editinglocked || false;
 
-        this._editingcontext._id = this.teameval;
+        this._editingcontext.teameval = this.teameval;
 
         this._meanings = {};
 
@@ -38,8 +44,12 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
         var form = this.container.find('form');
         Editor.saveAll(form);
 
+        var data = FormParse.serializeObject(form);
+
         return this.saveForm(form, ordinal, {}, function(result) {
             this._submissioncontext = JSON.parse(result.submissionContext);
+            this._editingcontext = data;
+            this._editingcontext.id = result.id;
         }.bind(this));
 
     };
@@ -77,9 +87,6 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
             this._meanings[i] = meaning.val();
 
             if (!this._editinglocked) {
-                if (this._meanings[i]) {
-                    meaning.val(this._meanings[i]);
-                }
                 if ((i >= minval) && (i <= maxval)) {
                     meaning.closest('.fitem').addBack().removeClass('hidden');
                 } else {
@@ -93,16 +100,16 @@ define(['jquery', 'local_teameval/question', 'core/templates', 'core/ajax', 'cor
 
         var deferred = $.Deferred();
 
-        var data = function(v) { return $(form).find('[name="'+v+'"]').val(); };
+        var data = FormParse.serializeObject(form);
 
-        if ((data('title').trim().length === 0) && (data('description').trim().length === 0)) {
+        if ((data.title.trim().length === 0) && (data.description.text.trim().length === 0)) {
             Strings.get_string('titleordescription', 'teamevalquestion_likert').done(function(str) {
                 this.container.find('[name=title]')
                     .closest('.control-group').addClass('error').end()
                     .next('.help-inline').text(str);
 
                 deferred.reject();
-            });
+            }.bind(this));
         } else {
             deferred.resolve();
         }
