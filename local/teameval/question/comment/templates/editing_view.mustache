@@ -1,0 +1,27 @@
+<div class="local-teamevalquestion-comment" id="question-content-{{uniqid}}">
+    <div class="control-group">
+        <label class="control-label" for="question-title-{{uniqid}}">{{#str}}title, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <input type="text" maxlength="255" id="question-title-{{uniqid}}" name="title" placeholder="Title" value="{{title}}" />
+            <span class="help-inline"></span>
+        </div>
+
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="question-description-{{uniqid}}">{{#str}}description, teamevalquestion_comment{{/str}}</label>
+        <div class="controls">
+            <textarea id="question-description-{{uniqid}}" name="description">{{description}}</textarea>
+            <span class="help-inline"></span>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-anonymous-{{uniqid}}" name="anonymous" {{#anonymous}} checked="checked" {{/anonymous}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}anonymous, teamevalquestion_comment{{/str}}</label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="control-label"><input type="checkbox" id="question-optional-{{uniqid}}" name="optional" {{#optional}} checked="checked" {{/optional}} {{#locked}} disabled="disabled" {{/locked}} /> {{#str}}optional, teamevalquestion_comment{{/str}}</label>
+        </div>
+    </div>
+</div>
