@@ -34,6 +34,7 @@ class local_teameval_access_testcase extends advanced_testcase {
         $this->course = $this->getDataGenerator()->create_course();
 
         team_evaluation::_clear_groups_members_cache();
+        team_evaluation::_clear_response_cache();
 
         // we use assign because it's one of the default implementers
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_assign');
@@ -45,7 +46,7 @@ class local_teameval_access_testcase extends advanced_testcase {
             $group = $this->getDataGenerator()->create_group(['courseid' => $this->course->id]);
             $this->groups[$group->id] = $group;
             $this->members[$group->id] = [];
-         
+
             for($j = 0; $j < 5; $j++) {
                 $user = $this->getDataGenerator()->create_user();
                 $this->students[$user->id] = $user;
@@ -71,7 +72,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
     private function add_questions($numQuestions = 3) {
         global $USER;
-        
+
         for ($i = 0; $i < $numQuestions; $i++) {
             $id = $i + 1;
 
@@ -237,10 +238,10 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         $context = team_evaluation::guard_capability(['contextid' => $coursecontext->id], ['local/teameval:createquestionnaire'], ['child_context' => $this->teameval->get_context()]);
 
-        $this->assertEquals($context->id, $this->teameval->get_context()->id);        
+        $this->assertEquals($context->id, $this->teameval->get_context()->id);
 
         // now create a second course, to test the fail condition
-        
+
         $course2 = $this->getDataGenerator()->create_course();
         $course2context = context_course::instance($course2->id);
         $template2 = team_evaluation::new_with_contextid($course2context->id);
@@ -265,10 +266,10 @@ class local_teameval_access_testcase extends advanced_testcase {
         $this->setUser(next($this->students));
 
         $this->setExpectedException('required_capability_exception');
-        
+
         team_evaluation::guard_capability($usercontext, ['local/teameval:submitquestionnaire']);
     }
-    
+
 
     public function test_should_update_question() {
         global $USER;
@@ -283,7 +284,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         // should work for teacher
         $this->setUser($this->teacher);
-        
+
         $tx = $this->teameval->should_update_question('mock', 0, $USER->id);
         $this->assertNotEmpty($tx);
         // do nothing
@@ -314,7 +315,7 @@ class local_teameval_access_testcase extends advanced_testcase {
         $tx = $this->teameval->should_update_question('mock', 0, $USER->id);
         $this->assertEmpty($tx);
 
-        // should work to update existing questions 
+        // should work to update existing questions
         $tx = $this->teameval->should_update_question('mock', 1, $USER->id);
         $this->assertNotEmpty($tx);
         $tx->transaction->allow_commit();
@@ -338,7 +339,7 @@ class local_teameval_access_testcase extends advanced_testcase {
 
         // should work for teacher
         $this->setUser($this->teacher);
-        
+
         $tx = $this->teameval->should_delete_question('mock', 1, $USER->id);
         $this->assertNotEmpty($tx);
         $tx->transaction->allow_commit();

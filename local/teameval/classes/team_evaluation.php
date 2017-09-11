@@ -213,8 +213,6 @@ class team_evaluation {
     }
 
     public function get_evaluation_context() {
-        global $CFG;
-
         // if this is a template, there's no evaluation context
         if (! isset($this->cm)) {
             return null;
@@ -269,10 +267,10 @@ class team_evaluation {
 
         global $DB;
 
-        $cache = cache::make('local_teameval', 'settings');
-
         // initialise settings if they're not already
         if (!isset($this->settings)) {
+
+            $cache = cache::make('local_teameval', 'settings');
 
             // retrieve from MUC or from the database
             if (isset($this->id)) {
@@ -530,6 +528,9 @@ class team_evaluation {
                 throw new coding_exception('Wrong type of transaction handed to update_question');
             }
 
+            // Invalidate the cached questions
+            $this->cached_questions = null;
+
             $transaction->transaction->allow_commit();
 
         } catch (moodle_exception $e) {
@@ -588,6 +589,9 @@ class team_evaluation {
             } else {
                 throw new coding_exception('Wrong type of transaction handed to delete_question');
             }
+
+            // Invalidate the cached questions
+            $this->cached_questions = null;
 
             $transaction->transaction->allow_commit();
 
@@ -692,17 +696,22 @@ class team_evaluation {
      * Gets all the questions in this teameval questionnaire, along with some helpful context
      * @return question_info
      */
+    private $cached_questions;
     public function get_questions() {
-        global $DB;
-        $barequestions = $this->get_bare_questions();
 
-        $questions = [];
-        foreach($barequestions as $bareq) {
-            $questioninfo = new question_info($this, $bareq->id, $bareq->qtype, $bareq->questionid);
-            $questions[] = $questioninfo;
+        if (empty($this->cached_questions)) {
+            $barequestions = $this->get_bare_questions();
+
+            $questions = [];
+            foreach($barequestions as $bareq) {
+                $questioninfo = new question_info($this, $bareq->id, $bareq->qtype, $bareq->questionid);
+                $questions[] = $questioninfo;
+            }
+
+            $this->cached_questions = $questions;
         }
 
-        return $questions;
+        return $this->cached_questions;
     }
 
     public function questionnaire_set_order($order) {
@@ -770,10 +779,16 @@ class team_evaluation {
         $info = new \core_availability\info_module($this->cm);
         $marking_users = $info->filter_user_list($marking_users);
 
+        $has_completion = $this->has_questions_with_completion();
+
+        if ($has_completion) {
+            $this->prepare_all_responses($marking_users);
+        }
+
         $reason = false;
 
         foreach($marking_users as $userid => $user) {
-            if ($this->has_questions_with_completion()) {
+            if ($has_completion) {
                 if ($this->user_completion($userid) > 0) {
                     return [LOCKED_REASON_MARKED, $user];
                 }
@@ -855,6 +870,8 @@ class team_evaluation {
 
         $ready = true;
 
+        $this->prepare_all_responses($members);
+
         foreach($questions as $q) {
             if ($q->question->has_completion()) {
                 foreach($members as $m) {
@@ -904,6 +921,20 @@ class team_evaluation {
     }
 
     /**
+     * Occasionally it might be useful to call this when you know you're getting everyone's responses
+     */
+    protected function prepare_all_responses($users = null) {
+        if (is_null($users)) {
+            $users = $this->get_evaluation_context()->marking_users();
+        }
+        foreach($this->get_questions() as $q) {
+            if ($q->question instanceof question_response_preparing) {
+                $q->question->prepare_responses($users);
+            }
+        }
+    }
+
+    /**
      * @codeCoverageIgnore we mock the evaluator in our tests
      */
     public function get_evaluator() {
@@ -919,6 +950,8 @@ class team_evaluation {
             $evaluator_cls = $plugininfo->get_evaluator_class();
 
             $markable_users = $this->evalcontext->marking_users();
+
+            $this->prepare_all_responses($markable_users);
 
             $questions = $this->get_questions();
             $responses = [];
@@ -1075,18 +1108,8 @@ class team_evaluation {
         return in_array($subtype, $supported_subtypes);
     }
 
-
-
-
     // interface to evalcontext
     // deprecated, use get_evaluation_context instead
-
-    /**
-     * @deprecated
-     */
-    public function group_for_user($userid) {
-        return $this->get_evaluation_context()->group_for_user($userid);
-    }
 
     /**
      * @deprecated
@@ -1105,6 +1128,20 @@ class team_evaluation {
     // convenience functions
 
     /**
+     * Request-cached version of evaluation context method
+     * Turns out the evalcontext method can be pretty heavy!
+     */
+    private $reverse_members = [];
+    public function group_for_user($userid) {
+        // cache user membership in reverse
+        if (!isset($this->reverse_members[$userid])) {
+            $this->reverse_members[$userid] = $this->get_evaluation_context()->group_for_user($userid);
+        }
+
+        return $this->reverse_members[$userid];
+    }
+
+    /**
      * Gets the teammates in a user's team.
      * @param int $userid User to get the teammates for
      * @param bool $include_self Include user in teammates. Defaults to $this->settings->self.
@@ -1113,7 +1150,7 @@ class team_evaluation {
     public function teammates($userid, $include_self=null) {
 
         if (is_null($include_self)) {
-            $include_self = $this->self;
+            $include_self = $this->settings->self;
         }
 
         $group = $this->group_for_user($userid);
@@ -1123,6 +1160,11 @@ class team_evaluation {
             $members = $this->group_members(null);
         } else {
             $members = $this->group_members($group->id);
+        }
+
+        // Help out group_for_user by inserting the user IDs into reverse_members
+        foreach ($members as $uid => $_) {
+            $this->reverse_members[$uid] = $group;
         }
 
         // always put user first
@@ -1142,19 +1184,37 @@ class team_evaluation {
      * @param type $groupid
      * @return type
      */
-    public function group_members($groupid) {
-        if (!isset(self::$groupcache[$groupid])) {
-            if (empty($groupid)) {
+    public function group_members($groupid=0) {
+        // TODO: This returns u.*
+        // See if we can get away with returning fewer fields...
+        //
+        // TODO: shouldn't this be using marking_users?
+
+        if (!isset(self::$groupcache[$this->context->id])) {
+            $everyone = get_users_by_capability($this->context, 'local/teameval:submitquestionnaire');
+            self::$groupcache[$this->context->id] = [0 => $everyone];
+        }
+
+        if (!isset(self::$groupcache[$this->context->id][$groupid])) {
+            if (!isset(self::$groupcache[$this->context->id][0])) {
+                // This should never really happen, but let's proof it anyway
                 $members = get_users_by_capability($this->context, 'local/teameval:submitquestionnaire');
-            } else {
-                $members = groups_get_members($groupid);
-                $members = array_filter($members, function($u) {
-                    return has_capability('local/teameval:submitquestionnaire', $this->context, $u->id, false);
-                });
+                self::$groupcache[$this->context->id][0] = $members;
             }
-            self::$groupcache[$groupid] = $members;
+
+            $everyone = self::$groupcache[$this->context->id][0];
+            if (empty($groupid)) {
+                $members = $everyone;
+            } else {
+                $group_members = groups_get_members($groupid, 'u.id');
+                $members = [];
+                foreach ($group_members as $uid => $value) {
+                    $members[$uid] = $everyone[$uid];
+                }
+            }
+            self::$groupcache[$this->context->id][$groupid] = $members;
         } else {
-            $members = self::$groupcache[$groupid];
+            $members = self::$groupcache[$this->context->id][$groupid];
         }
         return $members;
     }
@@ -1168,9 +1228,26 @@ class team_evaluation {
      * @param stdClass $questioninfo The question object from from get_questions()
      * @param int $userid The ID of the user who's response we need
      */
+    private static $response_cache = [];
     public function get_response($questioninfo, $userid) {
-        $response_cls = $questioninfo->plugininfo->get_response_class();
-        return new $response_cls($this, $questioninfo->question, $userid);
+        // cache these responses per request
+
+        if (!isset(self::$response_cache[$questioninfo->id])) {
+            self::$response_cache[$questioninfo->id] = [];
+        }
+        if (!isset(self::$response_cache[$questioninfo->id][$userid])) {
+            if ($questioninfo->question instanceof question_response_preparing) {
+                self::$response_cache[$questioninfo->id][$userid] = $questioninfo->question->get_response($userid);
+            } else {
+                $response_cls = $questioninfo->plugininfo->get_response_class();
+                self::$response_cache[$questioninfo->id][$userid] = new $response_cls($this, $questioninfo->question, $userid);
+            }
+        }
+        return self::$response_cache[$questioninfo->id][$userid];
+    }
+
+    public static function _clear_response_cache() {
+        self::$response_cache = [];
     }
 
     /**
@@ -1179,17 +1256,16 @@ class team_evaluation {
      * @return float The adjusted grade, in terms of the evaluation context
      */
 
-    public function adjusted_grade($userid) {
+    public function adjusted_grade($userid, $checkavailable = true) {
 
         $evalcontext = $this->get_evaluation_context();
 
-        $group = $evalcontext->group_for_user($userid);
+        $group = $this->group_for_user($userid);
 
         $unadjusted = $evalcontext->grade_for_group($group ? $group->id : 0);
 
-        if ($this->marks_available($userid)) {
-
-            return $unadjusted * $this->multiplier_for_user($userid);
+        if (!is_null($unadjusted) && (!$checkavailable || $this->marks_available($userid))) {
+            return min(100,max(0,$unadjusted * $this->multiplier_for_user($userid)));
 
         }
 
@@ -1206,6 +1282,8 @@ class team_evaluation {
             if ($qi->question->has_feedback() == false) {
                 continue;
             }
+
+            // TODO: question_response_preparing
 
             $q = new stdClass;
             $q->title = $qi->question->get_title();
@@ -1370,8 +1448,6 @@ class team_evaluation {
     }
 
     public function marks_released($userid) {
-        global $DB;
-
         $grp = $this->group_for_user($userid);
         $is_released = false;
 
@@ -1550,8 +1626,6 @@ class team_evaluation {
     }
 
     public function delete_questionnaire() {
-        global $DB;
-
         // We're not using get_questions because that actually instantiates a copy of our question
         // And since we're in the middle of tearing down our teameval that could be problematic.
 
@@ -1565,8 +1639,6 @@ class team_evaluation {
     }
 
     public function reset_questionnaire() {
-        global $DB;
-
         // Yes, this IS a lot of repeated code. The reason we're not DRYing this out is because
         // delete_questionnaire is so destructive.
 
@@ -1602,6 +1674,7 @@ class team_evaluation {
         $task = new import_task('import', $this, $file);
         $task->build();
         $task->execute();
+        $this->cached_questions = null;
     }
 
 }

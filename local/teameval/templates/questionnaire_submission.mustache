@@ -16,7 +16,9 @@
           the question plugin from JavaScript. Holds a reference to questionContainer.
 }}
 <div class="local-teameval-questionnaire">
-<div class="deadline {{^deadline}}hidden{{/deadline}}">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
+{{#deadline}}
+<div class="deadline">{{#str}} deadline, local_teameval {{/str}}: <time>{{deadline}}</time></div>
+{{/deadline}}
 {{#noncompletion}}
 <div class="noncompletion-advice">
 {{#str}} incompletesummary, local_teameval, { "n" : {{n}}, "penalty": {{penalty}} }{{/str}}

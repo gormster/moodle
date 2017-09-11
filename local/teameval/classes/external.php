@@ -177,7 +177,7 @@ class external extends external_api {
     }
 
     public static function report($cmid, $plugin) {
-        global $USER, $PAGE;
+        global $PAGE;
 
         $context = team_evaluation::guard_capability(['cmid' => $cmid], ['local/teameval:viewallteams'], ['must_exist' => true]);
 
@@ -286,7 +286,7 @@ class external extends external_api {
     }
 
     public static function template_search($id, $term) {
-        global $DB, $PAGE;
+        global $PAGE;
 
         $context = team_evaluation::guard_capability($id, ['local/teameval:createquestionnaire']);
 
@@ -357,7 +357,7 @@ class external extends external_api {
     }
 
     public static function add_from_template($from, $to) {
-        global $USER, $PAGE;
+        global $PAGE;
 
         $childcontext = team_evaluation::guard_capability($to, ['local/teameval:createquestionnaire'], ['must_exist' => true]);
         team_evaluation::guard_capability($from, ['local/teameval:viewtemplate'], ['child_context' => $childcontext, 'must_exist' => true]);

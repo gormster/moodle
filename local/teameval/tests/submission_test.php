@@ -39,6 +39,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
 
         team_evaluation::_clear_groups_members_cache();
+        team_evaluation::_clear_response_cache();
 
         // make some users & some groups
 
@@ -341,15 +342,72 @@ class local_teameval_submission_testcase extends advanced_testcase {
 
         $evalcontext = mock_evaluation_context::install_mock($this->teameval);
 
+        $this->add_questions(3);
+        $rawresponses = [
+            // Group A
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[],[]]
+            ],
+            // Group B
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [[1,1,1,1,1],[2,2,2,2,2],[]],
+                [],
+                [[1,1,1,1,1],[],[]],
+                [[1,1,1,1,1],[],[]]
+            ],
+            // Group C
+            [
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]],
+                [],
+                [],
+                []
+            ]
+        ];
+
+        $responses = mock_response::get_responses($this->teameval, $this->members, $this->questions, $rawresponses);
+
         foreach (array_map(null, $this->groups, [40, 60, 90]) as list($group, $grade)) {
             $evalcontext->groupgrades[$group->id] = $grade;
         }
 
-        $expected_results = [50.60,44.60,53.00,33.40,24.20,40.20,72.60,43.80,52.50,78.30,117.00,90.00,82.35,86.85,73.80];
+        $settings = new stdClass;
+        $settings->deadline = time() - 1;
+        $settings->noncompletionpenalty = 0;
+        $settings->fraction = 0.5;
+        $this->teameval->update_settings($settings);
+
+        //Note: this includes one result that has been bounds-checked to 100
+        $expected_results = [50.60,44.60,53.00,33.40,24.20,40.20,72.60,43.80,52.50,78.30,100.00,90.00,82.35,86.85,73.80];
 
         foreach(array_map(null, $this->students, $expected_results) as list($user, $expected)) {
             $grade = $this->teameval->adjusted_grade($user->id);
             $this->assertEquals($expected, $grade);
+        }
+
+        // Check that bounds checking to 0...100 works
+
+        $settings = new stdClass;
+        $settings->noncompletionpenalty = 0.5;
+        $settings->fraction = 1;
+        $this->teameval->update_settings($settings);
+
+        // 3rd student in Group A should have 2/3 completion rate
+        $group = reset($this->members);
+        $uid = array_keys($group)[2];
+        $completion = $this->teameval->user_completion($uid);
+        $this->assertEquals(2/3, $completion);
+
+        $expected_results = [61.20,49.20,59.33,20.13, 0,10.40,75.20, 0,25.00,76.60,100.00,90.00,29.70,38.70,12.60];
+
+        foreach(array_map(null, $this->students, $expected_results) as list($user, $expected)) {
+            $grade = $this->teameval->adjusted_grade($user->id);
+            $this->assertEquals($expected, $grade, 'Adjusted grade not equal to expected grade with noncompletionpenalty', 0.01);
         }
 
         // and finally check the adjusted grade of someone not in the group

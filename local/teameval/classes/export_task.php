@@ -89,7 +89,7 @@ class export_task extends backup_task {
     }
 
     // wish there was a better place to do this, but the built-in helper classes
-    // have it hard wired as /backup/. 
+    // have it hard wired as /backup/.
     public function get_basepath() {
         global $CFG;
 

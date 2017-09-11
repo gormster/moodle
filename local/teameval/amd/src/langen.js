@@ -26,15 +26,15 @@ define([], function() {
             var el = Math.floor(Math.random() * hiragana.length);
             output += hiragana[el];
         }
-        
+
         return output;
 
     }
 
     String.prototype.capitalise = function() {
-        
+
         return this.charAt(0).toUpperCase() + this.substring(1);
-        
+
     };
 
     function generateSentence() {
@@ -51,7 +51,7 @@ define([], function() {
         }
 
         var sentence = output.join(" ");
-        
+
         return sentence.capitalise() + ".";
 
     }

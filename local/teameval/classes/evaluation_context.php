@@ -44,9 +44,13 @@ abstract class evaluation_context {
     /**
      * Provide a sensible default deadline value. Deadlines are still off by default, but this
      * will be the default value if the user enables it.
-     * @return int Timestamp of the default deadline for this team evaluation
+     *
+     * Optional. Return NULL if there is no default deadline.
+     * @return int|null Timestamp of the default deadline
      */
-    abstract public function default_deadline();
+    public function default_deadline() {
+        return NULL;
+    }
 
     /**
      * Provide the absolute earliest date before which teameval should not accept a value
@@ -148,15 +152,25 @@ abstract class evaluation_context {
      * grades to your users, you can do it here.
      */
     public function format_grade($grade) {
-        $gradeitem = \grade_item::fetch([
-            'itemtype' => 'mod',
-            'itemmodule' => $this->cm->modname,
-            'iteminstance' => $this->cm->instance,
-            'itemnumber' => 0]);
-        if ($gradeitem) {
-            return (string)round($grade, $gradeitem->get_decimals());
+        static $decimals = null;
+        // blech, but phpunit process separation straight up doesn't work, so ignore the static when testing
+        if (defined('PHPUNIT_TEST')) {
+            $decimals = null;
         }
-        return (string)round($grade, 2);
+
+        if ($decimals == null) {
+            $gradeitem = \grade_item::fetch([
+                'itemtype' => 'mod',
+                'itemmodule' => $this->cm->modname,
+                'iteminstance' => $this->cm->instance,
+                'itemnumber' => 0]);
+            if ($gradeitem) {
+                $decimals = $gradeitem->get_decimals();
+            } else {
+                $decimals = 2;
+            }
+        }
+        return (string)round($grade, $decimals);
     }
 
 
@@ -318,8 +332,6 @@ abstract class evaluation_context {
     }
 
     public function reset_userdata($options) {
-        global $DB;
-
         $ns = static::plugin_namespace() . '_';
 
         $resetresponses = $ns . 'reset_teameval_responses';

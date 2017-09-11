@@ -75,7 +75,6 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
     function Split100Question(container, teameval, contextid, self, editable, questionID, context) {
         Question.apply(this, arguments);
         this.self = self;
-
         this.context = context || {};
         this.pluginName = "split100";
 
@@ -347,7 +346,7 @@ define(['local_teameval/question', 'jquery', 'core/str', 'local_teameval/formpar
 
         var strs = [this.self ? 'yourself' : 'exampleuser', 'exampleuser', 'exampleuser', 'exampleuser'].map(function(v, i) {
             return {key: v, component: 'teamevalquestion_split100', param: this.self ? i : i + 1};
-        });
+        }, this);
 
         var valuePromise = Strings.get_strings(strs).then(function(s) {
             var pcts = [20, 10, 15, 55];

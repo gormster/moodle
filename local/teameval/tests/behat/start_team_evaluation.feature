@@ -74,3 +74,4 @@ Feature: In a course, a teacher creates a module and starts team evaluation
         Then ".local-teameval-container-heading" "css_element" should not exist
 
     # TODO: Add workshep checks if installed. Not quite sure what the step is to skip if an activity doesn't exist.
+

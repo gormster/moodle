@@ -24,7 +24,7 @@ class report implements local_teameval\report {
 
         $data = [];
         foreach ($scores as $uid => $score) {
-        	$group = $this->teameval->get_evaluation_context()->group_for_user($uid);
+            $group = $this->teameval->group_for_user($uid);
             $datum = new stdClass;
             $datum->group = $group;
             $datum->completion = $this->teameval->user_completion($uid);
@@ -33,7 +33,7 @@ class report implements local_teameval\report {
                 // only show scores for groups who are finished, or if the deadline has passed
                 $datum->score = $score;
 
-            	$grade = $this->teameval->get_evaluation_context()->grade_for_group($group->id);
+                $grade = $this->teameval->get_evaluation_context()->grade_for_group($group->id);
                 $datum->grade = $grade;
 
                 if (!is_null($grade)) {
@@ -41,7 +41,7 @@ class report implements local_teameval\report {
                 	$multiplier = (1 - $fraction) + ($score * $fraction);
                 	$intermediategrade = $grade * $multiplier;
                 	$noncompletionpenalty = $this->teameval->non_completion_penalty($uid);
-                	$finalgrade = $grade * $this->teameval->multiplier_for_user($uid);
+                	$finalgrade = $this->teameval->adjusted_grade($uid, false);
 
                 	$datum->intermediategrade = $evalcontext->format_grade($intermediategrade);
                 	$datum->noncompletionpenalty = $noncompletionpenalty;
@@ -49,7 +49,7 @@ class report implements local_teameval\report {
                 }
             }
 
-        	$data[$uid] = $datum;
+            $data[$uid] = $datum;
         }
 
         return new output\scores_report($data);

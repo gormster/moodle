@@ -59,7 +59,7 @@ class external extends external_api {
             if (!isset($approves[$uid])) {
                 $approves[$uid] = 0;
             }
-            // either approve or reject counts	
+            // either approve or reject counts
             $approves[$uid]++;
         }
 

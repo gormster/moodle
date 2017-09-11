@@ -128,6 +128,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $tx = $this->teameval->should_delete_question('mock', $question->id, $USER->id);
 
+        $this->setExpectedException('coding_exception');
         $this->teameval->update_question($tx, 0);
     }
 
@@ -142,6 +143,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $tx = new polymorph_transaction(null, 'plumbus', 'hizzard', $question->id, SQL_QUERY_UPDATE);
 
+        $this->setExpectedException('coding_exception');
         $this->teameval->update_question($tx, 0);
     }
 
@@ -247,6 +249,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $tx = $this->teameval->should_update_question('mock', $question->id, $USER->id);
 
+        $this->setExpectedException('coding_exception');
         $this->teameval->delete_question($tx);
     }
 
@@ -261,6 +264,7 @@ class local_teameval_questions_testcase extends advanced_testcase {
 
         $tx = new polymorph_transaction(null, 'plumbus', 'hizzard', $question->id, SQL_QUERY_DELETE);
 
+        $this->setExpectedException('coding_exception');
         $this->teameval->delete_question($tx, 0);
     }
 

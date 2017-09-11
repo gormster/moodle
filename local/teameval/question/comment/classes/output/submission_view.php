@@ -6,11 +6,10 @@ use teamevalquestion_comment\question;
 use teamevalquestion_comment\response;
 use local_teameval\team_evaluation;
 use renderable;
-use templatable;
 use stdClass;
 use renderer_base;
 
-class submission_view implements renderable, templatable {
+class submission_view implements renderable {
 
     function __construct(question $question, team_evaluation $teameval, $locked = false) {
         $this->question = $question;

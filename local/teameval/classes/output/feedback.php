@@ -25,7 +25,7 @@ class feedback implements \renderable, \templatable {
 
         $questions = array_filter($allquestions, function($q) {
             return $q->question->has_feedback();
-        });		
+        });
 
         $teammates = $teameval->teammates($userid);
 

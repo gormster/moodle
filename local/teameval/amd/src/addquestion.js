@@ -3,12 +3,12 @@
  * @copyright  2015 Morgan Harris
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
- 
+
  /**
   * Add question button for teameval blocks
   * @module local_teameval/addquestion
   */
-define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'], 
+define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/notification'],
     function($, ui, str, templates, ajax, notification) {
 
     "use strict";
@@ -148,7 +148,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             var questionContainer = question.find('.question-container');
 
             var questionObject = questionContainer.data("question");
-            
+
             questionObject.editingView().done(function() {
 
                 question.addClass('editing');
@@ -189,7 +189,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             questionObject.submissionView().done(function() {
 
                 question.removeClass('editing');
-                
+
                 question.find('.local-teameval-save-cancel-buttons').hide();
                 question.find('.local-teameval-question-actions').show();
 
@@ -229,7 +229,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
             }]);
 
             promises[0].done(function() {
-                
+
             }).fail(notification.exception);
         },
 
@@ -376,11 +376,6 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                     _templatePreviewFunction();
                 });
 
-                _searchBar.change(function() {
-                    _templateAddButton.prop('disabled', true);
-                    _templatePreviewFunction();
-                });
-
                 _searchBar.autocomplete( "instance" )._renderItem = options.autocompleteRenderFunction;
 
                 // SET UP TEMPLATE DOWNLOAD
@@ -415,7 +410,7 @@ define(['jquery', 'jqueryui', 'core/str', 'core/templates', 'core/ajax', 'core/n
                     _initialised = $.Deferred();
                 }
                 _initialised.resolve();
-                
+
 
             }
 

@@ -39,6 +39,7 @@ trait local_teameval_base_testcase {
         $this->assign = $generator->create_instance(array('course'=>$this->course->id, 'teamsubmission' => true));
 
         team_evaluation::_clear_groups_members_cache();
+        team_evaluation::_clear_response_cache();
 
         // make some users & some groups
 

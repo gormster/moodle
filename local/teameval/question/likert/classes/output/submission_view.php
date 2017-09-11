@@ -144,26 +144,26 @@ class submission_view implements renderable, templatable {
                     [
                         "ord" => 1,
                         "remaining" => 2,
-                        "name" => get_string('yourself', 'local_teameval'),
+                        "name" => "Yourself",
                         "previous" => []
                     ],
                     [
                         "ord" => 2,
                         "remaining" => 1,
-                        "name" => get_string('exampleuser', 'local_teameval'),
-                        "previous" => [get_string('yourself', 'local_teameval')]
+                        "name" => "Example user",
+                        "previous" => ["Yourself"]
                     ]
                 ];
 
                 foreach ($options as $o) {
                     $o["users"] = [
                         [
-                            "name" => get_string('yourself', 'local_teameval'),
+                            "name" => "Yourself",
                             "userid" => $userid,
                             "checked" => false
                         ],
                         [
-                            "name" => get_string('exampleuser', 'local_teameval'),
+                            "name" => "Example user",
                             "userid" => 0,
                             "checked" => false
                         ]
@@ -171,11 +171,11 @@ class submission_view implements renderable, templatable {
                     ];
                     $opts[] = $o;
 
-                    $yourself = ["name" => get_string('yourself', 'local_teameval'), "userid" => -1];
-                    $user = ["name" => get_string('exampleuser', 'local_teameval'), "userid" => 0];
-                    foreach ($options as $o) {
-                        $yourself["options"][] = ["value" => $o['value'], "checked" => false];
-                        $user["options"][] = ["value" => $o['value'], "checked" => false];
+                    $yourself = ["name" => "Yourself", "userid" => -1];
+                    $user = ["name" => "Example user", "userid" => 0];
+                    foreach ($options as $o2) {
+                        $yourself["options"][] = ["value" => $o2['value'], "checked" => false];
+                        $user["options"][] = ["value" => $o2['value'], "checked" => false];
                     }
                     $context['users'] = [$yourself, $user];
                 }
@@ -185,29 +185,33 @@ class submission_view implements renderable, templatable {
                     [
                         "ord" => 1,
                         "remaining" => 1,
-                        "name" => get_string('exampleuser', 'local_teameval'),
+                        "name" => "Example user",
                         "previous" => []
                     ]
                 ];
 
-                $o["users"] = [
-                    [
-                        "name" => get_string('exampleuser', 'local_teameval'),
-                        "userid" => 0,
-                        "checked" => false
-                    ]
-                ];
-
-                $user = ["name" => get_string('exampleuser', 'local_teameval'), "userid" => 0];
                 foreach ($options as $o) {
-                    $user["options"][] = ["value" => $o['value'], "checked" => false];
+
+                    $o["users"] = [
+                        [
+                            "name" => "Example user",
+                            "userid" => 0,
+                            "checked" => false
+                        ]
+                    ];
+
+                    $opts[] = $o;
+
+                    $user = ["name" => "Example user", "userid" => 0];
+                    foreach ($options as $o2) {
+                        $user["options"][] = ["value" => $o2['value'], "checked" => false];
+                    }
+                    $context['users'] = [$user];
                 }
-                $context['users'] = [$user];
             }
 
             $context['options'] = $opts;
             $context['optionwidth'] = 100 / count($opts);
-
 
         }
 

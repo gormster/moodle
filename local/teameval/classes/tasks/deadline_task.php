@@ -3,7 +3,7 @@
 namespace local_teameval\tasks;
 
 use \local_teameval\team_evaluation;
-use moodle_exception;
+use coding_exception, moodle_exception;
 
 class deadline_task extends \core\task\adhoc_task {
 
