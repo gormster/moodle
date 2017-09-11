@@ -210,7 +210,7 @@ if (!$result->correctanswer && !$result->noanswer && !$result->isessayquestion &
 
 $url = new moodle_url('/mod/lesson/view.php', array('id'=>$cm->id, 'pageid'=>$result->newpageid));
 if ($lesson->review && !$result->correctanswer && !$result->noanswer && !$result->isessayquestion && !$result->maxattemptsreached) {
-    // Review button continue
+    // Button to continue the lesson (the page to go is configured by the teacher).
     echo $OUTPUT->single_button($url, get_string('reviewquestioncontinue', 'lesson'));
 } else {
     // Normal continue button
