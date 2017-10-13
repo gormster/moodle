@@ -173,9 +173,9 @@ class submission_view implements renderable, templatable {
 
                     $yourself = ["name" => "Yourself", "userid" => -1];
                     $user = ["name" => "Example user", "userid" => 0];
-                    foreach ($options as $o) {
-                        $yourself["options"][] = ["value" => $o['value'], "checked" => false];
-                        $user["options"][] = ["value" => $o['value'], "checked" => false];
+                    foreach ($options as $o2) {
+                        $yourself["options"][] = ["value" => $o2['value'], "checked" => false];
+                        $user["options"][] = ["value" => $o2['value'], "checked" => false];
                     }
                     $context['users'] = [$yourself, $user];
                 }
@@ -203,8 +203,8 @@ class submission_view implements renderable, templatable {
                     $opts[] = $o;
 
                     $user = ["name" => "Example user", "userid" => 0];
-                    foreach ($options as $o) {
-                        $user["options"][] = ["value" => $o['value'], "checked" => false];
+                    foreach ($options as $o2) {
+                        $user["options"][] = ["value" => $o2['value'], "checked" => false];
                     }
                     $context['users'] = [$user];
                 }

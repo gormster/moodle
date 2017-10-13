@@ -62,7 +62,7 @@ class local_teameval_submission_testcase extends advanced_testcase {
         // make a teacher role
 
         $this->teacher = $this->getDataGenerator()->create_user();
-        $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, 'teacher');
+        $this->getDataGenerator()->enrol_user($this->teacher->id, $this->course->id, 'editingteacher');
 
         mock_question::clear_questions();
         mock_response::clear_responses();
@@ -329,6 +329,25 @@ class local_teameval_submission_testcase extends advanced_testcase {
         $teammates2 = $this->teameval->teammates($user->id);
 
         $this->assertEquals($teammates, $teammates2);
+
+    }
+
+    public function test_group_members_must_have_permission_to_submit() {
+
+        $group = reset($this->groups);
+        $members = $this->members[$group->id];
+
+        $ta = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($ta->id, $this->course->id, 'teacher');
+
+        $this->getDataGenerator()->create_group_member(['userid' => $ta->id, 'groupid' => $group->id]);
+
+        team_evaluation::_clear_groups_members_cache();
+
+        $testmembers = $this->teameval->group_members($group->id);
+
+        $this->assertEquals(count($members), count($testmembers));
+        $this->assertArrayNotHasKey($ta->id, $testmembers);
 
     }
 

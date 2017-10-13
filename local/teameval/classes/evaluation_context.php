@@ -3,6 +3,7 @@
 namespace local_teameval;
 
 use moodle_exception;
+use coding_exception;
 
 abstract class evaluation_context {
 
@@ -201,7 +202,7 @@ abstract class evaluation_context {
         if (!function_exists($function)) {
             // throw something
             if ($throw) {
-                throw new moodle_exception("noevaluationcontext");
+                throw new coding_exception("{$modname}_get_evaluation_context is not defined", empty($cm));
             }
             return null;
         }

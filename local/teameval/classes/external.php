@@ -249,7 +249,6 @@ class external extends external_api {
             new external_single_structure([
                 'level' => new external_value(PARAM_INT, 'release level'),
                 'target' => new external_value(PARAM_INT, 'target of release'),
-                'release' => new external_value(PARAM_BOOL, 'set or unset release')
             ])
         );
     }

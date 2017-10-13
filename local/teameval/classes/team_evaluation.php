@@ -1209,7 +1209,9 @@ class team_evaluation {
                 $group_members = groups_get_members($groupid, 'u.id');
                 $members = [];
                 foreach ($group_members as $uid => $value) {
-                    $members[$uid] = $everyone[$uid];
+                    if (!empty($everyone[$uid])) {
+                        $members[$uid] = $everyone[$uid];
+                    }
                 }
             }
             self::$groupcache[$this->context->id][$groupid] = $members;
