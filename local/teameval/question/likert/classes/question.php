@@ -85,21 +85,23 @@ class question implements \local_teameval\question_response_preparing {
         return $DB->record_exists('teamevalquestion_likert_resp', ['questionid' => $this->id]);
     }
 
-    private $response_data = null;
+    protected $response_data = [];
     public function prepare_responses($users) {
         global $DB;
 
-        // prepare_responses might be called more than once
-        if (!is_null($this->response_data)) {
+        $unprepared = array_diff_key($users, $this->response_data);
+
+        if (empty($unprepared)) {
             return;
         }
 
-        $this->response_data = [];
-        foreach ($users as $uid => $_) {
+        // prepare_responses might be called more than once
+        foreach ($unprepared as $uid => $_) {
             $this->response_data[$uid] = [];
         }
 
-        list($sql, $params) = $DB->get_in_or_equal(array_keys($users), SQL_PARAMS_NAMED, 'user');
+
+        list($sql, $params) = $DB->get_in_or_equal(array_keys($unprepared), SQL_PARAMS_NAMED, 'user');
         $recordset = $DB->get_recordset_select("teamevalquestion_likert_resp", "questionid = :questionid AND fromuser $sql", ["questionid" => $this->id] + $params, '', 'id,fromuser,touser,mark,markdate');
 
         foreach ($recordset as $record) {
