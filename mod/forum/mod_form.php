@@ -199,8 +199,18 @@ class mod_forum_mod_form extends moodleform_mod {
         $this->standard_grading_coursemodule_elements();
 
         $this->standard_coursemodule_elements();
+
+        // Add the rating type before aggregate type
+
+        $el = $mform->createElement('select', 'ratingtype', get_string('ratingtype', 'forum'), forum_get_rating_types());
+        $mform->insertElementBefore($el, 'assessed');
+
+        $mform->disabledIf('assessed', 'ratingtype', 'neq', FORUM_RATING_TYPE_DEFAULT);
+        $mform->disabledIf('scale', 'ratingtype', 'neq', FORUM_RATING_TYPE_DEFAULT);
+
 //-------------------------------------------------------------------------------
 // buttons
+
         $this->add_action_buttons();
 
     }

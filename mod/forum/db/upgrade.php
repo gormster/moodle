@@ -192,6 +192,22 @@ function xmldb_forum_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2016091200, 'forum');
     }
 
+    if ($oldversion < 2017051501) {
+
+        // Define field ratingtype to be added to forum.
+        $table = new xmldb_table('forum');
+        $field = new xmldb_field('ratingtype', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'scale');
+
+        // Conditionally launch add field ratingtype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Forum savepoint reached.
+        upgrade_mod_savepoint(true, 2017051501, 'forum');
+    }
+
+
     // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 

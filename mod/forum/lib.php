@@ -98,6 +98,12 @@ function forum_add_instance($forum, $mform = null) {
         $forum->assesstimefinish = 0;
     }
 
+    if ($forum->ratingtype == FORUM_RATING_TYPE_VOTE) {
+        // Override the scale field
+        $forum->assessed = RATING_AGGREGATE_SUM;
+        $forum->scale = 1;
+    }
+
     $forum->id = $DB->insert_record('forum', $forum);
     $modcontext = context_module::instance($forum->coursemodule);
 
@@ -175,6 +181,12 @@ function forum_update_instance($forum, $mform) {
     if (empty($forum->ratingtime) or empty($forum->assessed)) {
         $forum->assesstimestart  = 0;
         $forum->assesstimefinish = 0;
+    }
+
+    if ($forum->ratingtype == FORUM_RATING_TYPE_VOTE) {
+        // Override the scale field
+        $forum->assessed = RATING_AGGREGATE_SUM;
+        $forum->scale = 1;
     }
 
     $oldforum = $DB->get_record('forum', array('id'=>$forum->id));
@@ -3129,7 +3141,7 @@ function forum_get_course_forum($courseid, $type) {
  */
 function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=false, $reply=false, $link=false,
                           $footer="", $highlight="", $postisread=null, $dummyifcantsee=true, $istracked=null, $return=false) {
-    global $USER, $CFG, $OUTPUT;
+    global $USER, $CFG, $OUTPUT, $PAGE;
 
     require_once($CFG->libdir . '/filelib.php');
 
@@ -3426,18 +3438,53 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // Row with the forum post content.
     $output .= html_writer::start_div('row maincontent clearfix');
     // Show if author is not hidden or we have groups.
-    if (!$authorhidden || $groups) {
+    if (!$authorhidden || $groups || ($forum->ratingtype == FORUM_RATING_TYPE_VOTE)) {
         $output .= html_writer::start_div('left');
         $groupoutput = '';
         if ($groups) {
             $groupoutput = print_group_picture($groups, $course->id, false, true, true);
         }
-        if (empty($groupoutput)) {
-            $groupoutput = '&nbsp;';
+        if (!empty($groupoutput)) {
+            $output .= html_writer::div($groupoutput, 'grouppictures');
         }
-        $output .= html_writer::div($groupoutput, 'grouppictures');
+
+        if (!empty($post->rating) && ($forum->ratingtype == FORUM_RATING_TYPE_VOTE)) {
+            $classes = ['forum-post-voting'];
+            if ($post->rating->rating == 1) {
+                $classes[] = 'upvoted';
+            } else if ($post->rating->rating == -1) {
+                $classes[] = 'downvoted';
+            }
+            $agg = $post->rating->aggregate ?: 0;
+            $votingid = html_writer::random_id('voting');
+            $userdata = ['contextlevel'  => 'module',
+                         'instanceid'    => $post->rating->context->instanceid,
+                         'component'     => $post->rating->component,
+                         'ratingarea'    => $post->rating->ratingarea,
+                         'itemid'        => $post->rating->itemid,
+                         'scaleid'       => $post->rating->settings->scale->id,
+                         'rateduserid'   => $post->rating->itemuserid,
+                         'aggregation'   => $post->rating->settings->aggregationmethod];
+            $PAGE->requires->js_call_amd('mod_forum/vote', 'initpost', [$votingid, $userdata]);
+            if ($post->rating->user_can_rate()) {
+                $upvote = html_writer::div('👍','upvote');
+                $downvote = html_writer::div('👎','downvote');
+            } else {
+                $upvote = html_writer::div('');
+                $downvote = html_writer::div('');
+            }
+            if ($post->rating->user_can_view_aggregate()) {
+                $agg = html_writer::div($agg, 'agg');
+            } else {
+                $agg = '';
+            }
+            $output .= html_writer::tag('div', $upvote . $agg . $downvote, array('class'=>implode(' ', $classes), 'id'=>$votingid));
+        }
+
         $output .= html_writer::end_div(); // Left side.
     }
+
+
 
     $output .= html_writer::start_tag('div', array('class'=>'no-overflow'));
     $output .= html_writer::start_tag('div', array('class'=>'content'));
@@ -3487,7 +3534,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     }
 
     // Output ratings
-    if (!empty($post->rating)) {
+    if (!empty($post->rating) && ($forum->ratingtype == FORUM_RATING_TYPE_DEFAULT)) {
         $output .= html_writer::tag('div', $OUTPUT->render($post->rating), array('class'=>'forum-post-rating'));
     }
 
@@ -3632,8 +3679,14 @@ function forum_rating_validate($params) {
     //check that the submitted rating is valid for the scale
 
     // lower limit
-    if ($params['rating'] < 0  && $params['rating'] != RATING_UNSET_RATING) {
-        throw new rating_exception('invalidnum');
+    if ($forum->ratingtype == FORUM_RATING_TYPE_VOTE) {
+        if (($params['rating'] < -1) || ($params['rating'] > 1)) {
+            throw new rating_exception('invalidnum');
+        }
+    } else {
+        if ($params['rating'] < 0  && $params['rating'] != RATING_UNSET_RATING) {
+            throw new rating_exception('invalidnum');
+        }
     }
 
     // upper limit
@@ -8339,4 +8392,14 @@ function mod_forum_get_completion_active_rule_descriptions($cm) {
         }
     }
     return $descriptions;
+}
+
+// Rating types
+
+define('FORUM_RATING_TYPE_DEFAULT', 0);
+define('FORUM_RATING_TYPE_VOTE', 1);
+
+function forum_get_rating_types() {
+    return [FORUM_RATING_TYPE_DEFAULT => get_string('ratingtypedefault', 'forum'),
+        FORUM_RATING_TYPE_VOTE => get_string('ratingtypevote', 'forum')];
 }

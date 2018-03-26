@@ -566,3 +566,7 @@ $string['emaildigestupdated_default'] = 'Your default profile setting of \'{$a->
 $string['emaildigest_0'] = 'You will receive one e-mail per forum post.';
 $string['emaildigest_1'] = 'You will receive one digest e-mail per day containing the complete contents of each forum post.';
 $string['emaildigest_2'] = 'You will receive one digest e-mail per day containing the subject of each forum post.';
+
+$string['ratingtype'] = 'Rating type';
+$string['ratingtypedefault'] = 'Scale or point ratings';
+$string['ratingtypevote'] = 'Upvote and downvote';

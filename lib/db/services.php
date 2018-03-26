@@ -1009,6 +1009,7 @@ $functions = array(
         'description' => 'Rates an item.',
         'type' => 'write',
         'capabilities' => 'moodle/rating:rate',
+        'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
     'core_role_assign_roles' => array(

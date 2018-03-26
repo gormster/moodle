@@ -320,3 +320,16 @@ span.unread {
 #page-mod-forum-view img.timedpost {
     margin-right: 5px;
 }
+
+.forum-post-voting {
+    text-align: center;
+}
+
+.forum-post-voting .downvote, .forum-post-voting .upvote {
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.forum-post-voting.downvoted .downvote, .forum-post-voting.upvoted .upvote {
+    opacity: 1.0;
+}
